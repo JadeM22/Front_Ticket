@@ -1,1 +1,41 @@
-@import	"tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-azul-noche: #0b1f3a;
+  --color-azul-institucional: #14427a;
+  --color-azul-medio: #2f6fb5;
+  --color-azul-niebla: #e8f0fa;
+  --color-menta: #3dd9b3;
+  --color-menta-profundo: #0f9d7e;
+  --color-menta-bruma: #e6faf4;
+  --color-fondo: #f6f9fc;
+  --color-tinta: #1b2b3f;
+  --color-tinta-suave: #5b6b7f;
+  --color-ambar: #c98a1c;
+  --color-ambar-bruma: #fdf2e0;
+  --color-coral: #c23d3d;
+  --color-coral-bruma: #fbe9e9;
+  --color-indigo-suave: #5b63d3;
+  --color-indigo-bruma: #eceeff;
+}
+
+body {
+  background-color: var(--color-fondo);
+  color: var(--color-tinta);
+  font-family: var(--font-sans);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
