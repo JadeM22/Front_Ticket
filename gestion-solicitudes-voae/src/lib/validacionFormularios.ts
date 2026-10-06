@@ -1,81 +1,120 @@
-import type { DetalleFormulario, TipoSolicitudNombre } from '../types/domain'
+import { hoyTegucigalpaISO } from './date'
+import { esUrlHttp } from './archivos'
+import type {
+  DetalleArte,
+  DetalleDircom,
+  DetalleFormulario,
+  DetalleGenerico,
+  DetalleProtocolo,
+  DetalleVideo,
+  FormularioCodigo,
+} from '../types/domain'
 
-export function detalleInicial(tipo: TipoSolicitudNombre): DetalleFormulario {
-  switch (tipo) {
-    case 'Afiche':
-      return { dimensiones: '', orientacion: 'Vertical', texto_principal: '' }
-    case 'Comunicado':
-      return { titulo: '', contenido_comunicado: '', dirigido_a: '' }
-    case 'Aviso':
-      return { titulo_aviso: '', urgencia: 'Media', medio_difusion: '' }
-    case 'Cobertura de eventos':
-      return { nombre_evento: '', lugar: '', fecha_inicio: '', fecha_fin: '' }
-    case 'Edición fotográfica':
-      return { cantidad_fotos: 1, estilo_edicion: '', enlace_drive: '' }
-    case 'Publicación en redes sociales':
-      return { plataformas: [], texto_copy: '', hora_sugerida: null }
+export function detalleInicial(formulario: FormularioCodigo): DetalleFormulario {
+  switch (formulario) {
+    case 'ARTE':
+      return {
+        titulo: '',
+        fecha: null,
+        hora_inicio: null,
+        hora_fin: null,
+        lugar: null,
+        modalidad: null,
+        aplica_articulo_140: false,
+        enlace_qr: null,
+        alcance: null,
+        informacion_adicional: null,
+        logotipos: [],
+      }
+    case 'VIDEO':
+      return {
+        objetivo: '',
+        fecha_entrega_publicacion: '',
+        participacion_estudiantes: 'No aplica',
+        informacion_producto: null,
+        encargado_actividad: '',
+        logotipos: ['Logo de VOAE', 'Logo de la UNAH'],
+      }
+    case 'DIRCOM':
+      return {
+        tipo_material: '',
+        fecha_necesaria: '',
+        informacion_valor: '',
+        necesita_dictamen: false,
+        logotipos: ['Logo de VOAE', 'Logo de la UNAH'],
+      }
+    case 'PROTOCOLO':
+      return {
+        nombre_actividad: '',
+        lugar_propuesto: '',
+        cantidad_invitados: null,
+        fecha: '',
+        hora: '',
+        elaborar_invitacion: false,
+        informacion_programa: null,
+        necesita_maestro_ceremonia: false,
+        maestro_ceremonia_preferido: null,
+        equipo_requerido: null,
+        necesita_edecanes: false,
+        necesita_pumas: false,
+      }
+    case 'GENERICO':
+      return {
+        titulo: '',
+        descripcion: '',
+        fecha_requerida: null,
+        informacion_producto: null,
+        logotipos: [],
+        observaciones: null,
+      }
   }
+}
+
+function fechaNoPasada(fecha: string | null | undefined): boolean {
+  if (!fecha) return true
+  return fecha >= hoyTegucigalpaISO()
 }
 
 /** Valida en el cliente antes de llamar al RPC; la base vuelve a validar todo igual. */
-export function validarDetalle(tipo: TipoSolicitudNombre, detalle: DetalleFormulario): string | null {
-  switch (tipo) {
-    case 'Afiche': {
-      const d = detalle as { dimensiones: string; texto_principal: string }
-      if (!d.dimensiones.trim() || !d.texto_principal.trim()) return 'Completa las dimensiones y el texto principal.'
+export function validarDetalle(formulario: FormularioCodigo, detalle: DetalleFormulario): string | null {
+  switch (formulario) {
+    case 'ARTE': {
+      const d = detalle as DetalleArte
+      if (!d.titulo.trim()) return 'Escribe un título.'
+      if (!fechaNoPasada(d.fecha)) return 'La fecha no puede ser anterior a hoy.'
+      if (d.hora_inicio && d.hora_fin && d.hora_fin < d.hora_inicio) return 'La hora de fin debe ser posterior a la de inicio.'
+      if (d.enlace_qr && !esUrlHttp(d.enlace_qr)) return 'El enlace del QR debe iniciar con http:// o https://.'
       return null
     }
-    case 'Comunicado': {
-      const d = detalle as { titulo: string; contenido_comunicado: string; dirigido_a: string }
-      if (!d.titulo.trim() || !d.contenido_comunicado.trim() || !d.dirigido_a.trim())
-        return 'Completa el título, el contenido y a quién va dirigido.'
+    case 'VIDEO': {
+      const d = detalle as DetalleVideo
+      if (!d.objetivo.trim() || !d.encargado_actividad.trim()) return 'Completa el objetivo y el encargado de la actividad.'
+      if (!d.fecha_entrega_publicacion) return 'Indica la fecha de entrega/publicación.'
+      if (!fechaNoPasada(d.fecha_entrega_publicacion)) return 'La fecha de entrega no puede ser anterior a hoy.'
       return null
     }
-    case 'Aviso': {
-      const d = detalle as { titulo_aviso: string; medio_difusion: string }
-      if (!d.titulo_aviso.trim() || !d.medio_difusion.trim()) return 'Completa el título y el medio de difusión.'
+    case 'DIRCOM': {
+      const d = detalle as DetalleDircom
+      if (!d.tipo_material.trim() || !d.informacion_valor.trim()) return 'Completa el tipo de material y el contexto del requerimiento.'
+      if (!d.fecha_necesaria) return 'Indica la fecha en que lo necesitas.'
+      if (!fechaNoPasada(d.fecha_necesaria)) return 'La fecha no puede ser anterior a hoy.'
       return null
     }
-    case 'Cobertura de eventos': {
-      const d = detalle as { nombre_evento: string; lugar: string; fecha_inicio: string; fecha_fin: string }
-      if (!d.nombre_evento.trim() || !d.lugar.trim() || !d.fecha_inicio || !d.fecha_fin)
-        return 'Completa el evento, el lugar y las fechas.'
-      if (new Date(d.fecha_fin) < new Date(d.fecha_inicio)) return 'La fecha de fin debe ser posterior a la de inicio.'
+    case 'PROTOCOLO': {
+      const d = detalle as DetalleProtocolo
+      if (!d.nombre_actividad.trim() || !d.lugar_propuesto.trim()) return 'Completa el nombre de la actividad y el lugar propuesto.'
+      if (!d.fecha || !d.hora) return 'Indica la fecha y la hora.'
+      if (!fechaNoPasada(d.fecha)) return 'La fecha no puede ser anterior a hoy.'
+      if (d.cantidad_invitados != null && d.cantidad_invitados <= 0) return 'La cantidad de invitados debe ser mayor a 0.'
+      if (d.necesita_maestro_ceremonia && !d.maestro_ceremonia_preferido?.trim())
+        return 'Indica el maestro de ceremonia preferido, o desmarca la opción.'
       return null
     }
-    case 'Edición fotográfica': {
-      const d = detalle as { cantidad_fotos: number; estilo_edicion: string; enlace_drive: string }
-      if (d.cantidad_fotos <= 0) return 'La cantidad de fotos debe ser mayor a 0.'
-      if (!d.estilo_edicion.trim()) return 'Indica el estilo de edición.'
-      if (!/^https?:\/\//i.test(d.enlace_drive)) return 'El enlace de Drive debe iniciar con http:// o https://.'
-      return null
-    }
-    case 'Publicación en redes sociales': {
-      const d = detalle as { plataformas: string[]; texto_copy: string }
-      if (d.plataformas.length === 0) return 'Selecciona al menos una plataforma.'
-      if (!d.texto_copy.trim()) return 'Escribe el texto / copy de la publicación.'
+    case 'GENERICO': {
+      const d = detalle as DetalleGenerico
+      if (!d.titulo.trim() || !d.descripcion.trim()) return 'Completa el título y la descripción.'
+      if (!fechaNoPasada(d.fecha_requerida)) return 'La fecha requerida no puede ser anterior a hoy.'
       return null
     }
   }
-}
-
-/**
- * Los <input type="datetime-local"> no llevan zona horaria: el navegador los interpretaría
- * con SU propia zona local, que no es necesariamente America/Tegucigalpa (UTC-6 todo el año,
- * sin horario de verano). Por eso se fija el offset -06:00 explícitamente antes de convertir a ISO.
- */
-function localTegucigalpaAIso(valorDatetimeLocal: string): string {
-  return new Date(`${valorDatetimeLocal}:00-06:00`).toISOString()
-}
-
-export function normalizarDetalleParaEnvio(tipo: TipoSolicitudNombre, detalle: DetalleFormulario): DetalleFormulario {
-  if (tipo === 'Cobertura de eventos') {
-    const d = detalle as { nombre_evento: string; lugar: string; fecha_inicio: string; fecha_fin: string }
-    return {
-      ...d,
-      fecha_inicio: localTegucigalpaAIso(d.fecha_inicio),
-      fecha_fin: localTegucigalpaAIso(d.fecha_fin),
-    }
-  }
-  return detalle
 }

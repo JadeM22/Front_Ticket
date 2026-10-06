@@ -2,11 +2,14 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { Plus } from 'lucide-react'
 import { obtenerTicketCompleto, tomarTicket } from '../data/tickets'
 import { crearDictamen } from '../data/dictamenes'
 import { mensajeError } from '../lib/errors'
 import { formatFecha, formatFechaHora } from '../lib/date'
 import { useAuth } from '../auth/useAuth'
+import { useNombresUsuarios } from '../hooks/useNombresUsuarios'
+import { MAXIMO_ADJUNTOS_POR_TICKET } from '../data/adjuntos'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { SkeletonLista } from '../components/ui/Skeleton'
@@ -15,7 +18,9 @@ import { EstadoChip } from '../components/EstadoChip'
 import { Timeline } from '../components/ui/Timeline'
 import { ProgressRing } from '../components/ui/ProgressRing'
 import { ListaEntregables } from '../components/ListaEntregables'
+import { ListaAdjuntos } from '../components/ListaAdjuntos'
 import { SubirEntregableModal } from '../components/SubirEntregableModal'
+import { AgregarAdjuntoModal } from '../components/AgregarAdjuntoModal'
 import { DictamenModal } from '../components/DictamenModal'
 import { DetalleFormularioVista } from '../components/formularios/DetalleFormularioVista'
 import type { DecisionJefe } from '../types/domain'
@@ -24,8 +29,10 @@ export function TicketDetailPage() {
   const { id } = useParams<{ id: string }>()
   const ticketId = Number(id)
   const { perfil, tieneRol } = useAuth()
+  const { nombreDe } = useNombresUsuarios()
   const queryClient = useQueryClient()
   const [modalEntregable, setModalEntregable] = useState(false)
+  const [modalAdjunto, setModalAdjunto] = useState(false)
   const [modalDictamen, setModalDictamen] = useState(false)
   const [tomando, setTomando] = useState(false)
 
@@ -72,17 +79,21 @@ export function TicketDetailPage() {
     return <EmptyState titulo="Ticket no encontrado" descripcion="No existe o no tienes permiso para verlo." />
   }
 
-  const { estadoReal } = ticket
+  const { estadoReal, tipoSolicitud } = ticket
   const esMiTicketDeDiseno = tieneRol('Diseñador') && estadoReal.disenador_id === perfil?.id
   const puedeTomar = tieneRol('Diseñador') && !estadoReal.disenador_id
   const puedeSubirEntregable =
     esMiTicketDeDiseno && (estadoReal.estado_real === 'En proceso' || estadoReal.estado_real === 'Corrección' || estadoReal.estado_real === 'Retrasado')
   const puedeDictaminar = tieneRol('Jefe de Área') && estadoReal.estado_real === 'Finalizado'
+  const esSolicitante = perfil?.id === estadoReal.usuario_registro
+  const puedeAgregarAdjunto =
+    esSolicitante && estadoReal.estado_real !== 'Aprobado' && ticket.adjuntos.length < MAXIMO_ADJUNTOS_POR_TICKET
 
   const eventosTimeline = ticket.log.map((entrada) => ({
     id: entrada.id,
     descripcion: entrada.descripcion_cambio,
     fecha: entrada.fecha_registro,
+    autor: nombreDe(entrada.usuario_registro),
   }))
 
   return (
@@ -105,8 +116,13 @@ export function TicketDetailPage() {
             <p>{formatFecha(estadoReal.fecha_registro)}</p>
           </div>
           <div>
-            <p className="text-xs text-tinta-suave">Fecha límite</p>
-            <p>{formatFecha(estadoReal.fecha_limite)}</p>
+            <p className="text-xs text-tinta-suave">Vence</p>
+            <p>
+              {formatFecha(estadoReal.fecha_limite)}
+              {tipoSolicitud && (
+                <span className="text-tinta-suave"> ({tipoSolicitud.dias_estimados} día(s) {tipoSolicitud.dias_habiles ? 'hábiles' : 'corridos'})</span>
+              )}
+            </p>
           </div>
           <div>
             <p className="text-xs text-tinta-suave">Diseñador</p>
@@ -150,6 +166,20 @@ export function TicketDetailPage() {
       </Card>
 
       <Card>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-semibold text-azul-noche">
+            Adjuntos del solicitante ({ticket.adjuntos.length} / {MAXIMO_ADJUNTOS_POR_TICKET})
+          </h2>
+          {puedeAgregarAdjunto && (
+            <Button variante="secundario" onClick={() => setModalAdjunto(true)}>
+              <Plus size={14} /> Agregar
+            </Button>
+          )}
+        </div>
+        <ListaAdjuntos adjuntos={ticket.adjuntos} />
+      </Card>
+
+      <Card>
         <h2 className="mb-3 font-semibold text-azul-noche">Entregables</h2>
         <ListaEntregables entregables={ticket.entregables} />
       </Card>
@@ -185,6 +215,13 @@ export function TicketDetailPage() {
           disenadorId={perfil.id}
         />
       )}
+
+      <AgregarAdjuntoModal
+        abierto={modalAdjunto}
+        onCerrar={() => setModalAdjunto(false)}
+        onAgregado={invalidar}
+        ticketId={estadoReal.ticket_id!}
+      />
 
       <DictamenModal
         abierto={modalDictamen}

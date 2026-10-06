@@ -16,6 +16,8 @@ import { AdminDashboard } from '../pages/admin/Dashboard'
 import { AdminUsuariosPage } from '../pages/admin/Usuarios'
 import { AdminCatalogosPage } from '../pages/admin/Catalogos'
 import { AdminBitacoraPage } from '../pages/admin/Bitacora'
+import { AdminFeriadosPage } from '../pages/admin/Feriados'
+import { AnalistaDashboard } from '../pages/analista/Dashboard'
 import { TicketDetailPage } from '../pages/TicketDetail'
 import { NotFoundPage } from '../pages/NotFound'
 
@@ -36,8 +38,11 @@ export const router = createBrowserRouter([
               { path: '/tickets/:id', element: <TicketDetailPage /> },
               {
                 element: <RequireRole roles={['Empleado']} />,
+                children: [{ path: '/empleado', element: <EmpleadoDashboard /> }],
+              },
+              {
+                element: <RequireRole roles={['Empleado', 'Analista']} />,
                 children: [
-                  { path: '/empleado', element: <EmpleadoDashboard /> },
                   { path: '/empleado/nueva', element: <NuevaSolicitudPage /> },
                   { path: '/empleado/solicitudes', element: <EmpleadoSolicitudesPage /> },
                 ],
@@ -51,11 +56,16 @@ export const router = createBrowserRouter([
                 children: [{ path: '/jefe', element: <JefeDashboard /> }],
               },
               {
+                element: <RequireRole roles={['Analista', 'Administrador']} />,
+                children: [{ path: '/analista', element: <AnalistaDashboard /> }],
+              },
+              {
                 element: <RequireRole roles={['Administrador']} />,
                 children: [
                   { path: '/admin', element: <AdminDashboard /> },
                   { path: '/admin/usuarios', element: <AdminUsuariosPage /> },
                   { path: '/admin/catalogos', element: <AdminCatalogosPage /> },
+                  { path: '/admin/feriados', element: <AdminFeriadosPage /> },
                   { path: '/admin/bitacora', element: <AdminBitacoraPage /> },
                 ],
               },

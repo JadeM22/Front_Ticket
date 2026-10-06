@@ -1,11 +1,12 @@
 import type { Tables } from './database'
 
-export type RolNombre = 'Administrador' | 'Jefe de Área' | 'Diseñador' | 'Empleado'
+export type RolNombre = 'Administrador' | 'Jefe de Área' | 'Diseñador' | 'Analista' | 'Empleado'
 
 export const JERARQUIA_ROLES: RolNombre[] = [
   'Administrador',
   'Jefe de Área',
   'Diseñador',
+  'Analista',
   'Empleado',
 ]
 
@@ -13,6 +14,7 @@ export const RUTA_POR_ROL: Record<RolNombre, string> = {
   Administrador: '/admin',
   'Jefe de Área': '/jefe',
   Diseñador: '/disenador',
+  Analista: '/analista',
   Empleado: '/empleado',
 }
 
@@ -26,13 +28,8 @@ export interface Perfil {
   roles: RolNombre[]
 }
 
-export type TipoSolicitudNombre =
-  | 'Afiche'
-  | 'Edición fotográfica'
-  | 'Cobertura de eventos'
-  | 'Comunicado'
-  | 'Publicación en redes sociales'
-  | 'Aviso'
+/** Qué formulario mostrar para un tipo de solicitud — se elige por esta columna, nunca por el nombre. */
+export type FormularioCodigo = 'ARTE' | 'VIDEO' | 'DIRCOM' | 'PROTOCOLO' | 'GENERICO'
 
 export type EstadoRegistrado =
   | 'Enviado'
@@ -49,49 +46,63 @@ export type TicketEstadoReal = Tables<{ schema: 'Solicitudes' }, 'vw_TicketsEsta
 
 export type TipoEntregable = 'LINK' | 'PDF' | 'IMAGEN' | 'VIDEO' | 'OTRO'
 
+export type TipoAdjunto = 'ARCHIVO' | 'LINK'
+
 export type DecisionJefe = 'APROBADO' | 'CORRECCION'
 
-export interface DetalleFormularioAfiche {
-  dimensiones: string
-  orientacion: 'Vertical' | 'Horizontal'
-  texto_principal: string
-}
-
-export interface DetalleFormularioComunicado {
+export interface DetalleArte {
   titulo: string
-  contenido_comunicado: string
-  dirigido_a: string
+  fecha: string | null
+  hora_inicio: string | null
+  hora_fin: string | null
+  lugar: string | null
+  modalidad: 'Presencial' | 'No presencial' | null
+  aplica_articulo_140: boolean
+  enlace_qr: string | null
+  alcance: 'Todos los centros regionales' | 'Solo Ciudad Universitaria' | null
+  informacion_adicional: string | null
+  logotipos: string[]
 }
 
-export interface DetalleFormularioAviso {
-  titulo_aviso: string
-  urgencia: 'Baja' | 'Media' | 'Alta'
-  medio_difusion: string
+export interface DetalleVideo {
+  objetivo: string
+  fecha_entrega_publicacion: string
+  participacion_estudiantes: 'No aplica' | 'Artículo 140' | 'Horas beca'
+  informacion_producto: string | null
+  encargado_actividad: string
+  logotipos: string[]
 }
 
-export interface DetalleFormularioCoberturaEventos {
-  nombre_evento: string
-  lugar: string
-  fecha_inicio: string
-  fecha_fin: string
+export interface DetalleDircom {
+  tipo_material: string
+  fecha_necesaria: string
+  informacion_valor: string
+  necesita_dictamen: boolean
+  logotipos: string[]
 }
 
-export interface DetalleFormularioEdicionFotografica {
-  cantidad_fotos: number
-  estilo_edicion: string
-  enlace_drive: string
+export interface DetalleProtocolo {
+  nombre_actividad: string
+  lugar_propuesto: string
+  cantidad_invitados: number | null
+  fecha: string
+  hora: string
+  elaborar_invitacion: boolean
+  informacion_programa: string | null
+  necesita_maestro_ceremonia: boolean
+  maestro_ceremonia_preferido: string | null
+  equipo_requerido: string | null
+  necesita_edecanes: boolean
+  necesita_pumas: boolean
 }
 
-export interface DetalleFormularioPublicacionRedesSociales {
-  plataformas: string[]
-  texto_copy: string
-  hora_sugerida: string | null
+export interface DetalleGenerico {
+  titulo: string
+  descripcion: string
+  fecha_requerida: string | null
+  informacion_producto: string | null
+  logotipos: string[]
+  observaciones: string | null
 }
 
-export type DetalleFormulario =
-  | DetalleFormularioAfiche
-  | DetalleFormularioComunicado
-  | DetalleFormularioAviso
-  | DetalleFormularioCoberturaEventos
-  | DetalleFormularioEdicionFotografica
-  | DetalleFormularioPublicacionRedesSociales
+export type DetalleFormulario = DetalleArte | DetalleVideo | DetalleDircom | DetalleProtocolo | DetalleGenerico

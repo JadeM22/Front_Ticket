@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase'
 import type { Json } from '../types/database'
-import type { DetalleFormulario, TipoSolicitudNombre } from '../types/domain'
+import type { DetalleFormulario, FormularioCodigo } from '../types/domain'
 
 export async function crearSolicitud(tipoSolicitudId: number, detalle: DetalleFormulario): Promise<number> {
   const { data, error } = await supabase.schema('Solicitudes').rpc('fnSolicitudCrearEscalar', {
@@ -11,60 +11,49 @@ export async function crearSolicitud(tipoSolicitudId: number, detalle: DetalleFo
   return data as number
 }
 
+export async function obtenerFechaLimiteEstimada(tipoSolicitudId: number): Promise<string> {
+  const { data, error } = await supabase
+    .schema('Solicitudes')
+    .rpc('fnFechaLimiteCalcularEscalar', { p_tipo_solicitud_id: tipoSolicitudId })
+  if (error) throw error
+  return data as string
+}
+
 export async function obtenerDetalleFormulario(
   formularioId: number,
-  tipoSolicitud: TipoSolicitudNombre,
+  formulario: FormularioCodigo,
 ): Promise<DetalleFormulario | null> {
   const sb = supabase.schema('Solicitudes')
 
-  switch (tipoSolicitud) {
-    case 'Afiche': {
-      const { data, error } = await sb.from('FormularioAfiche').select('*').eq('formulario_id', formularioId).maybeSingle()
+  switch (formulario) {
+    case 'ARTE': {
+      const { data, error } = await sb.from('FormularioArte').select('*').eq('formulario_id', formularioId).maybeSingle()
       if (error) throw error
       return data
     }
-    case 'Comunicado': {
+    case 'VIDEO': {
+      const { data, error } = await sb.from('FormularioVideo').select('*').eq('formulario_id', formularioId).maybeSingle()
+      if (error) throw error
+      return data
+    }
+    case 'DIRCOM': {
+      const { data, error } = await sb.from('FormularioDircom').select('*').eq('formulario_id', formularioId).maybeSingle()
+      if (error) throw error
+      return data
+    }
+    case 'PROTOCOLO': {
       const { data, error } = await sb
-        .from('FormularioComunicado')
+        .from('FormularioProtocolo')
         .select('*')
         .eq('formulario_id', formularioId)
         .maybeSingle()
       if (error) throw error
       return data
     }
-    case 'Aviso': {
-      const { data, error } = await sb.from('FormularioAviso').select('*').eq('formulario_id', formularioId).maybeSingle()
+    case 'GENERICO': {
+      const { data, error } = await sb.from('FormularioGenerico').select('*').eq('formulario_id', formularioId).maybeSingle()
       if (error) throw error
       return data
     }
-    case 'Cobertura de eventos': {
-      const { data, error } = await sb
-        .from('FormularioCoberturaEventos')
-        .select('*')
-        .eq('formulario_id', formularioId)
-        .maybeSingle()
-      if (error) throw error
-      return data
-    }
-    case 'Edición fotográfica': {
-      const { data, error } = await sb
-        .from('FormularioEdicionFotografica')
-        .select('*')
-        .eq('formulario_id', formularioId)
-        .maybeSingle()
-      if (error) throw error
-      return data
-    }
-    case 'Publicación en redes sociales': {
-      const { data, error } = await sb
-        .from('FormularioPublicacionRedesSociales')
-        .select('*')
-        .eq('formulario_id', formularioId)
-        .maybeSingle()
-      if (error) throw error
-      return data
-    }
-    default:
-      return null
   }
 }

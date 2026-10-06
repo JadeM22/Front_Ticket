@@ -8,6 +8,7 @@ export interface EntradaBitacora {
   rol_nombre: string | null
   accion: string
   fecha_registro: string
+  usuario_registro: number | null
 }
 
 interface FilaBitacora {
@@ -16,15 +17,19 @@ interface FilaBitacora {
   rol_id: number
   accion: string
   fecha_registro: string
+  usuario_registro: number | null
   Usuarios: { nombre: string } | null
   Roles: { nombre: string } | null
 }
 
 export async function listarBitacora(): Promise<EntradaBitacora[]> {
+  // Hay dos relaciones de esta tabla hacia Usuarios (usuario_id y usuario_registro); se
+  // desambigua el embed con el nombre exacto de la FK. usuario_registro se resuelve en la UI
+  // con el mapa de fnUsuariosNombresTabla, igual que en el resto de la app.
   const { data, error } = await supabase
     .schema('Seguridad')
     .from('UsuariosRolesLog')
-    .select('id, usuario_id, rol_id, accion, fecha_registro, Usuarios(nombre), Roles(nombre)')
+    .select('id, usuario_id, rol_id, accion, fecha_registro, usuario_registro, Usuarios!fkUsuarioRolLog_Usuario(nombre), Roles(nombre)')
     .order('fecha_registro', { ascending: false })
     .limit(200)
 
@@ -38,5 +43,6 @@ export async function listarBitacora(): Promise<EntradaBitacora[]> {
     rol_nombre: fila.Roles?.nombre ?? null,
     accion: fila.accion,
     fecha_registro: fila.fecha_registro,
+    usuario_registro: fila.usuario_registro,
   }))
 }

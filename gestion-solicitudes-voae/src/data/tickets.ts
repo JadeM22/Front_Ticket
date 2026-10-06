@@ -1,10 +1,11 @@
 import { supabase } from '../lib/supabase'
 import type { Tables } from '../types/database'
-import type { DetalleFormulario, TicketEstadoReal, TipoSolicitudNombre } from '../types/domain'
-import { obtenerIdEstadoPorNombre } from './catalogos'
+import type { DetalleFormulario, FormularioCodigo, TicketEstadoReal } from '../types/domain'
+import { obtenerIdEstadoPorNombre, obtenerTipoSolicitud, type TipoSolicitud } from './catalogos'
 import { obtenerDetalleFormulario } from './formularios'
 import { listarEntregablesPorTicket, type Entregable } from './entregables'
 import { listarDictamenesPorTicket, type DictamenJefe } from './dictamenes'
+import { listarAdjuntosPorTicket, type Adjunto } from './adjuntos'
 
 export type TicketBase = Tables<{ schema: 'Solicitudes' }, 'Ticket'>
 export type TicketLog = Tables<{ schema: 'Solicitudes' }, 'TicketLog'>
@@ -12,10 +13,12 @@ export type TicketLog = Tables<{ schema: 'Solicitudes' }, 'TicketLog'>
 export interface TicketCompleto {
   estadoReal: TicketEstadoReal
   base: TicketBase
+  tipoSolicitud: TipoSolicitud | null
   detalleFormulario: DetalleFormulario | null
   log: TicketLog[]
   entregables: Entregable[]
   dictamenes: DictamenJefe[]
+  adjuntos: Adjunto[]
 }
 
 export async function listarTicketsEstadoReal(): Promise<TicketEstadoReal[]> {
@@ -68,14 +71,17 @@ export async function obtenerTicketCompleto(ticketId: number): Promise<TicketCom
   const base = await obtenerTicketBase(ticketId)
   if (!base) return null
 
-  const [detalleFormulario, log, entregables, dictamenes] = await Promise.all([
-    obtenerDetalleFormulario(base.formulario_id, estadoReal.tipo_solicitud as TipoSolicitudNombre),
+  const tipoSolicitud = await obtenerTipoSolicitud(base.tipo_solicitud_id)
+
+  const [detalleFormulario, log, entregables, dictamenes, adjuntos] = await Promise.all([
+    tipoSolicitud ? obtenerDetalleFormulario(base.formulario_id, tipoSolicitud.formulario as FormularioCodigo) : null,
     listarTicketLog(ticketId),
     listarEntregablesPorTicket(ticketId),
     listarDictamenesPorTicket(ticketId),
+    listarAdjuntosPorTicket(ticketId),
   ])
 
-  return { estadoReal, base, detalleFormulario, log, entregables, dictamenes }
+  return { estadoReal, base, tipoSolicitud, detalleFormulario, log, entregables, dictamenes, adjuntos }
 }
 
 /**

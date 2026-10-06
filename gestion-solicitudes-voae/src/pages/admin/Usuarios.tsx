@@ -106,6 +106,11 @@ export function AdminUsuariosPage() {
                 </td>
                 <td className="px-4 py-2">
                   <div className="flex flex-wrap gap-1">
+                    {usuario.roles.length === 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-coral-bruma px-2 py-0.5 text-xs text-coral">
+                        Sin rol
+                      </span>
+                    )}
                     {usuario.roles.map((rol) => (
                       <span
                         key={rol.id}

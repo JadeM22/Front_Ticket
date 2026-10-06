@@ -1,9 +1,10 @@
 import { supabase } from '../lib/supabase'
-import type { Tables, TablesUpdate } from '../types/database'
+import type { Tables, TablesInsert, TablesUpdate } from '../types/database'
 
 export type Area = Tables<{ schema: 'Seguridad' }, 'Areas'>
 export type TipoSolicitud = Tables<{ schema: 'Solicitudes' }, 'TipoSolicitud'>
 export type Estado = Tables<{ schema: 'Solicitudes' }, 'Estado'>
+export type Feriado = Tables<{ schema: 'Solicitudes' }, 'Feriados'>
 
 export async function listarAreas(): Promise<Area[]> {
   const { data, error } = await supabase.schema('Seguridad').from('Areas').select('*').order('nombre')
@@ -46,5 +47,38 @@ export async function actualizarTipoSolicitud(
   cambios: TablesUpdate<{ schema: 'Solicitudes' }, 'TipoSolicitud'>,
 ) {
   const { error } = await supabase.schema('Solicitudes').from('TipoSolicitud').update(cambios).eq('id', id)
+  if (error) throw error
+}
+
+export async function obtenerTipoSolicitud(id: number): Promise<TipoSolicitud | null> {
+  const { data, error } = await supabase.schema('Solicitudes').from('TipoSolicitud').select('*').eq('id', id).maybeSingle()
+  if (error) throw error
+  return data ?? null
+}
+
+/** No envía usuario_registro ni fecha_registro: la base los pone. */
+export async function crearTipoSolicitud(
+  payload: Omit<TablesInsert<{ schema: 'Solicitudes' }, 'TipoSolicitud'>, 'usuario_registro' | 'fecha_registro'>,
+) {
+  const { error } = await supabase.schema('Solicitudes').from('TipoSolicitud').insert(payload)
+  if (error) throw error
+}
+
+export async function listarFeriados(): Promise<Feriado[]> {
+  const { data, error } = await supabase.schema('Solicitudes').from('Feriados').select('*').order('fecha_inicio')
+  if (error) throw error
+  return data ?? []
+}
+
+/** No envía usuario_registro ni fecha_registro: la base los pone. */
+export async function crearFeriado(
+  payload: Omit<TablesInsert<{ schema: 'Solicitudes' }, 'Feriados'>, 'usuario_registro' | 'fecha_registro'>,
+) {
+  const { error } = await supabase.schema('Solicitudes').from('Feriados').insert(payload)
+  if (error) throw error
+}
+
+export async function actualizarFeriado(id: number, cambios: TablesUpdate<{ schema: 'Solicitudes' }, 'Feriados'>) {
+  const { error } = await supabase.schema('Solicitudes').from('Feriados').update(cambios).eq('id', id)
   if (error) throw error
 }

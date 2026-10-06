@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { listarBitacora } from '../../data/bitacora'
 import { formatFechaHora } from '../../lib/date'
+import { useNombresUsuarios } from '../../hooks/useNombresUsuarios'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 import { EmptyState } from '../../components/ui/EmptyState'
 
 export function AdminBitacoraPage() {
   const { data: entradas = [], isLoading } = useQuery({ queryKey: ['admin', 'bitacora'], queryFn: listarBitacora })
+  const { nombreDe } = useNombresUsuarios()
 
   if (isLoading) return <SkeletonLista filas={6} />
 
@@ -26,6 +28,7 @@ export function AdminBitacoraPage() {
                 <th className="px-4 py-2">Usuario</th>
                 <th className="px-4 py-2">Rol</th>
                 <th className="px-4 py-2">Acción</th>
+                <th className="px-4 py-2">Realizado por</th>
                 <th className="px-4 py-2">Fecha</th>
               </tr>
             </thead>
@@ -43,6 +46,7 @@ export function AdminBitacoraPage() {
                       {entrada.accion}
                     </span>
                   </td>
+                  <td className="px-4 py-2 text-tinta-suave">{nombreDe(entrada.usuario_registro)}</td>
                   <td className="px-4 py-2 font-mono text-xs text-tinta-suave">{formatFechaHora(entrada.fecha_registro)}</td>
                 </tr>
               ))}

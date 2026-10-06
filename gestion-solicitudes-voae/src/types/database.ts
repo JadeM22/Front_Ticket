@@ -131,6 +131,7 @@ export type Database = {
           id: number
           rol_id: number
           usuario_id: number
+          usuario_registro: number | null
         }
         Insert: {
           accion: string
@@ -138,6 +139,7 @@ export type Database = {
           id?: number
           rol_id: number
           usuario_id: number
+          usuario_registro?: number | null
         }
         Update: {
           accion?: string
@@ -145,6 +147,7 @@ export type Database = {
           id?: number
           rol_id?: number
           usuario_id?: number
+          usuario_registro?: number | null
         }
         Relationships: [
           {
@@ -156,6 +159,13 @@ export type Database = {
           },
           {
             foreignKeyName: "fkUsuarioRolLog_Usuario"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "Usuarios"
+            referencedColumns: null
+          },
+          {
+            foreignKeyName: "fkUsuarioRolLog_UsuarioRegistro"
             columns: null
             isOneToOne: false
             referencedRelation: "Usuarios"
@@ -174,6 +184,17 @@ export type Database = {
         Args: { p_rol: string }
         Returns: boolean
       }
+      fnUsuarioAplicarConfiguracionInicial: {
+        Args: { p_auth_id: string; p_meta: Json }
+        Returns: undefined
+      }
+      fnUsuariosNombresTabla: {
+        Args: never
+        Returns: {
+          id: number
+          nombre: string
+        }[]
+      }
       fnUsuarioTieneRolEscalar: {
         Args: { p_rol: string; p_usuario_id: number }
         Returns: boolean
@@ -188,6 +209,53 @@ export type Database = {
   }
   Solicitudes: {
     Tables: {
+      Adjuntos: {
+        Row: {
+          descripcion: string | null
+          fecha_registro: string
+          id: number
+          nombre_archivo: string
+          ruta_o_url: string
+          tamano_bytes: number | null
+          ticket_id: number
+          tipo: string
+          tipo_mime: string | null
+          usuario_registro: number
+        }
+        Insert: {
+          descripcion?: string | null
+          fecha_registro?: string
+          id?: never
+          nombre_archivo: string
+          ruta_o_url: string
+          tamano_bytes?: number | null
+          ticket_id: number
+          tipo?: string
+          tipo_mime?: string | null
+          usuario_registro: number
+        }
+        Update: {
+          descripcion?: string | null
+          fecha_registro?: string
+          id?: never
+          nombre_archivo?: string
+          ruta_o_url?: string
+          tamano_bytes?: number | null
+          ticket_id?: number
+          tipo?: string
+          tipo_mime?: string | null
+          usuario_registro?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fkAdjunto_Ticket"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "Ticket"
+            referencedColumns: null
+          },
+        ]
+      }
       DictamenJefe: {
         Row: {
           comentario: string | null
@@ -289,118 +357,82 @@ export type Database = {
         }
         Relationships: []
       }
-      FormularioAfiche: {
+      Feriados: {
         Row: {
-          dimensiones: string
-          formulario_id: number
-          orientacion: string
-          texto_principal: string
-        }
-        Insert: {
-          dimensiones: string
-          formulario_id: number
-          orientacion: string
-          texto_principal: string
-        }
-        Update: {
-          dimensiones?: string
-          formulario_id?: number
-          orientacion?: string
-          texto_principal?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fkFormularioAfiche_Formulario"
-            columns: null
-            isOneToOne: false
-            referencedRelation: "Formularios"
-            referencedColumns: null
-          },
-        ]
-      }
-      FormularioAviso: {
-        Row: {
-          formulario_id: number
-          medio_difusion: string
-          titulo_aviso: string
-          urgencia: string
-        }
-        Insert: {
-          formulario_id: number
-          medio_difusion: string
-          titulo_aviso: string
-          urgencia?: string
-        }
-        Update: {
-          formulario_id?: number
-          medio_difusion?: string
-          titulo_aviso?: string
-          urgencia?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fkFormularioAviso_Formulario"
-            columns: null
-            isOneToOne: false
-            referencedRelation: "Formularios"
-            referencedColumns: null
-          },
-        ]
-      }
-      FormularioCoberturaEventos: {
-        Row: {
+          estado: boolean
           fecha_fin: string
           fecha_inicio: string
-          formulario_id: number
-          lugar: string
-          nombre_evento: string
+          fecha_registro: string
+          id: number
+          nombre: string
+          usuario_registro: number | null
         }
         Insert: {
+          estado?: boolean
           fecha_fin: string
           fecha_inicio: string
-          formulario_id: number
-          lugar: string
-          nombre_evento: string
+          fecha_registro?: string
+          id?: never
+          nombre: string
+          usuario_registro?: number | null
         }
         Update: {
+          estado?: boolean
           fecha_fin?: string
           fecha_inicio?: string
-          formulario_id?: number
-          lugar?: string
-          nombre_evento?: string
+          fecha_registro?: string
+          id?: never
+          nombre?: string
+          usuario_registro?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fkFormularioCoberturaEventos_Formulario"
-            columns: null
-            isOneToOne: false
-            referencedRelation: "Formularios"
-            referencedColumns: null
-          },
-        ]
+        Relationships: []
       }
-      FormularioComunicado: {
+      FormularioArte: {
         Row: {
-          contenido_comunicado: string
-          dirigido_a: string
+          alcance: string | null
+          aplica_articulo_140: boolean
+          enlace_qr: string | null
+          fecha: string | null
           formulario_id: number
+          hora_fin: string | null
+          hora_inicio: string | null
+          informacion_adicional: string | null
+          logotipos: string[]
+          lugar: string | null
+          modalidad: string | null
           titulo: string
         }
         Insert: {
-          contenido_comunicado: string
-          dirigido_a: string
+          alcance?: string | null
+          aplica_articulo_140?: boolean
+          enlace_qr?: string | null
+          fecha?: string | null
           formulario_id: number
+          hora_fin?: string | null
+          hora_inicio?: string | null
+          informacion_adicional?: string | null
+          logotipos?: string[]
+          lugar?: string | null
+          modalidad?: string | null
           titulo: string
         }
         Update: {
-          contenido_comunicado?: string
-          dirigido_a?: string
+          alcance?: string | null
+          aplica_articulo_140?: boolean
+          enlace_qr?: string | null
+          fecha?: string | null
           formulario_id?: number
+          hora_fin?: string | null
+          hora_inicio?: string | null
+          informacion_adicional?: string | null
+          logotipos?: string[]
+          lugar?: string | null
+          modalidad?: string | null
           titulo?: string
         }
         Relationships: [
           {
-            foreignKeyName: "fkFormularioComunicado_Formulario"
+            foreignKeyName: "fkFormularioArte_Formulario"
             columns: null
             isOneToOne: false
             referencedRelation: "Formularios"
@@ -408,28 +440,34 @@ export type Database = {
           },
         ]
       }
-      FormularioEdicionFotografica: {
+      FormularioDircom: {
         Row: {
-          cantidad_fotos: number
-          enlace_drive: string
-          estilo_edicion: string
+          fecha_necesaria: string
           formulario_id: number
+          informacion_valor: string
+          logotipos: string[]
+          necesita_dictamen: boolean
+          tipo_material: string
         }
         Insert: {
-          cantidad_fotos: number
-          enlace_drive: string
-          estilo_edicion: string
+          fecha_necesaria: string
           formulario_id: number
+          informacion_valor: string
+          logotipos?: string[]
+          necesita_dictamen?: boolean
+          tipo_material: string
         }
         Update: {
-          cantidad_fotos?: number
-          enlace_drive?: string
-          estilo_edicion?: string
+          fecha_necesaria?: string
           formulario_id?: number
+          informacion_valor?: string
+          logotipos?: string[]
+          necesita_dictamen?: boolean
+          tipo_material?: string
         }
         Relationships: [
           {
-            foreignKeyName: "fkFormularioEdicionFotografica_Formulario"
+            foreignKeyName: "fkFormularioDircom_Formulario"
             columns: null
             isOneToOne: false
             referencedRelation: "Formularios"
@@ -437,28 +475,93 @@ export type Database = {
           },
         ]
       }
-      FormularioPublicacionRedesSociales: {
+      FormularioGenerico: {
         Row: {
+          descripcion: string
+          fecha_requerida: string | null
           formulario_id: number
-          hora_sugerida: string | null
-          plataformas: string[]
-          texto_copy: string
+          informacion_producto: string | null
+          logotipos: string[]
+          observaciones: string | null
+          titulo: string
         }
         Insert: {
+          descripcion: string
+          fecha_requerida?: string | null
           formulario_id: number
-          hora_sugerida?: string | null
-          plataformas: string[]
-          texto_copy: string
+          informacion_producto?: string | null
+          logotipos?: string[]
+          observaciones?: string | null
+          titulo: string
         }
         Update: {
+          descripcion?: string
+          fecha_requerida?: string | null
           formulario_id?: number
-          hora_sugerida?: string | null
-          plataformas?: string[]
-          texto_copy?: string
+          informacion_producto?: string | null
+          logotipos?: string[]
+          observaciones?: string | null
+          titulo?: string
         }
         Relationships: [
           {
-            foreignKeyName: "fkFormularioPublicacionRedesSociales_Formulario"
+            foreignKeyName: "fkFormularioGenerico_Formulario"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "Formularios"
+            referencedColumns: null
+          },
+        ]
+      }
+      FormularioProtocolo: {
+        Row: {
+          cantidad_invitados: number | null
+          elaborar_invitacion: boolean
+          equipo_requerido: string | null
+          fecha: string
+          formulario_id: number
+          hora: string
+          informacion_programa: string | null
+          lugar_propuesto: string
+          maestro_ceremonia_preferido: string | null
+          necesita_edecanes: boolean
+          necesita_maestro_ceremonia: boolean
+          necesita_pumas: boolean
+          nombre_actividad: string
+        }
+        Insert: {
+          cantidad_invitados?: number | null
+          elaborar_invitacion?: boolean
+          equipo_requerido?: string | null
+          fecha: string
+          formulario_id: number
+          hora: string
+          informacion_programa?: string | null
+          lugar_propuesto: string
+          maestro_ceremonia_preferido?: string | null
+          necesita_edecanes?: boolean
+          necesita_maestro_ceremonia?: boolean
+          necesita_pumas?: boolean
+          nombre_actividad: string
+        }
+        Update: {
+          cantidad_invitados?: number | null
+          elaborar_invitacion?: boolean
+          equipo_requerido?: string | null
+          fecha?: string
+          formulario_id?: number
+          hora?: string
+          informacion_programa?: string | null
+          lugar_propuesto?: string
+          maestro_ceremonia_preferido?: string | null
+          necesita_edecanes?: boolean
+          necesita_maestro_ceremonia?: boolean
+          necesita_pumas?: boolean
+          nombre_actividad?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fkFormularioProtocolo_Formulario"
             columns: null
             isOneToOne: false
             referencedRelation: "Formularios"
@@ -488,6 +591,44 @@ export type Database = {
             columns: null
             isOneToOne: false
             referencedRelation: "TipoSolicitud"
+            referencedColumns: null
+          },
+        ]
+      }
+      FormularioVideo: {
+        Row: {
+          encargado_actividad: string
+          fecha_entrega_publicacion: string
+          formulario_id: number
+          informacion_producto: string | null
+          logotipos: string[]
+          objetivo: string
+          participacion_estudiantes: string
+        }
+        Insert: {
+          encargado_actividad: string
+          fecha_entrega_publicacion: string
+          formulario_id: number
+          informacion_producto?: string | null
+          logotipos?: string[]
+          objetivo: string
+          participacion_estudiantes?: string
+        }
+        Update: {
+          encargado_actividad?: string
+          fecha_entrega_publicacion?: string
+          formulario_id?: number
+          informacion_producto?: string | null
+          logotipos?: string[]
+          objetivo?: string
+          participacion_estudiantes?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fkFormularioVideo_Formulario"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "Formularios"
             referencedColumns: null
           },
         ]
@@ -598,6 +739,7 @@ export type Database = {
           id: number
           numero_version: number
           ticket_id: number
+          usuario_registro: number | null
         }
         Insert: {
           descripcion_cambio: string
@@ -605,6 +747,7 @@ export type Database = {
           id?: number
           numero_version: number
           ticket_id: number
+          usuario_registro?: number | null
         }
         Update: {
           descripcion_cambio?: string
@@ -612,6 +755,7 @@ export type Database = {
           id?: number
           numero_version?: number
           ticket_id?: number
+          usuario_registro?: number | null
         }
         Relationships: [
           {
@@ -625,22 +769,37 @@ export type Database = {
       }
       TipoSolicitud: {
         Row: {
+          descripcion: string | null
           dias_estimados: number
+          dias_habiles: boolean
           estado: boolean
+          fecha_registro: string
+          formulario: string
           id: number
           nombre: string
+          usuario_registro: number | null
         }
         Insert: {
+          descripcion?: string | null
           dias_estimados?: number
+          dias_habiles?: boolean
           estado?: boolean
+          fecha_registro?: string
+          formulario?: string
           id?: number
           nombre: string
+          usuario_registro?: number | null
         }
         Update: {
+          descripcion?: string | null
           dias_estimados?: number
+          dias_habiles?: boolean
           estado?: boolean
+          fecha_registro?: string
+          formulario?: string
           id?: number
           nombre?: string
+          usuario_registro?: number | null
         }
         Relationships: []
       }
@@ -671,10 +830,41 @@ export type Database = {
     }
     Functions: {
       fnAprobarTicketsAutomaticamente: { Args: never; Returns: number }
+      fnEsDiaHabilEscalar: { Args: { p_dia: string }; Returns: boolean }
+      fnEstadisticasTicketsTabla: {
+        Args: {
+          p_area_id?: number
+          p_desde?: string
+          p_hasta?: string
+          p_tipo_solicitud_id?: number
+        }
+        Returns: {
+          aprobado_automatico: boolean
+          area: string
+          correcciones_usadas: number
+          dias_resolucion: number
+          disenador: string
+          entregado_a_tiempo: boolean
+          estado_real: string
+          fecha_entrega_diseno: string
+          fecha_limite: string
+          fecha_registro: string
+          ticket_id: number
+          tipo_solicitud: string
+        }[]
+      }
+      fnFechaLimiteCalcularEscalar: {
+        Args: { p_tipo_solicitud_id: number }
+        Returns: string
+      }
       fnObtenerEstadoIdEscalar: { Args: { p_nombre: string }; Returns: number }
       fnSolicitudCrearEscalar: {
         Args: { p_detalle: Json; p_tipo_solicitud_id: number }
         Returns: number
+      }
+      fnSumarDiasHabilesEscalar: {
+        Args: { p_desde: string; p_dias: number }
+        Returns: string
       }
       fnTicketIdDesdeRutaEscalar: { Args: { p_ruta: string }; Returns: number }
       fnVentanaAprobacionVencidaEscalar: {
