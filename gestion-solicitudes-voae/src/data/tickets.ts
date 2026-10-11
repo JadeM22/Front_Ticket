@@ -64,7 +64,11 @@ export async function listarTicketLog(ticketId: number): Promise<TicketLog[]> {
   return data ?? []
 }
 
-export async function obtenerTicketCompleto(ticketId: number): Promise<TicketCompleto | null> {
+/**
+ * `incluirHistorial` decide si se consulta `TicketLog`: solo Analista y Administrador ven el
+ * historial, así que para el resto ni siquiera se pide (queda `log: []`).
+ */
+export async function obtenerTicketCompleto(ticketId: number, incluirHistorial: boolean): Promise<TicketCompleto | null> {
   const estadoReal = await obtenerTicketEstadoReal(ticketId)
   if (!estadoReal) return null
 
@@ -75,7 +79,7 @@ export async function obtenerTicketCompleto(ticketId: number): Promise<TicketCom
 
   const [detalleFormulario, log, entregables, dictamenes, adjuntos] = await Promise.all([
     tipoSolicitud ? obtenerDetalleFormulario(base.formulario_id, tipoSolicitud.formulario as FormularioCodigo) : null,
-    listarTicketLog(ticketId),
+    incluirHistorial ? listarTicketLog(ticketId) : [],
     listarEntregablesPorTicket(ticketId),
     listarDictamenesPorTicket(ticketId),
     listarAdjuntosPorTicket(ticketId),

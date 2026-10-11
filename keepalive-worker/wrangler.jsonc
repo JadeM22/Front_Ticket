@@ -1,0 +1,8 @@
+{
+  // Worker independiente de la app: solo mantiene activo el proyecto de Supabase.
+  "name": "voae-supabase-keepalive",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  // Cada 2 días a las 06:00 UTC (medianoche en Honduras). Supabase pausa a los ~7 días sin actividad.
+  "triggers": { "crons": ["0 6 */2 * *"] }
+}

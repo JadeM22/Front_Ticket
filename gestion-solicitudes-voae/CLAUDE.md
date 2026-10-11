@@ -73,7 +73,9 @@ call a `data/` function through a TanStack Query hook. The only exceptions are `
 derived from the generated types as `Tables<{ schema: 'Solicitudes' }, 'Ticket'>` and re-exported from the
 matching `data/` file rather than redeclared by hand. **Ticket lists are never filtered by the current
 user in query code** — RLS already scopes what each role can see; the frontend only groups/labels what
-comes back.
+comes back. The one exception is the "Mis solicitudes" pages (`pages/empleado/Dashboard.tsx`,
+`Solicitudes.tsx`), which filter client-side by `usuario_registro === perfil.id` because a user who is also
+Analista/Diseñador/Jefe/Administrador gets other people's tickets back from the same view.
 
 **Query cache**: `src/lib/queryClient.ts` sets `staleTime: 30s`, `retry: 1`, and no refetch on window
 focus, so a mutation only shows up if it invalidates explicitly. Keys are hierarchical arrays —
@@ -158,9 +160,9 @@ instead of the hand-rolled `BarraSimple`. Data comes from one RPC, `fnEstadistic
 `estado`/`disenador` filtered client-side over the result (the RPC doesn't take those). All filters —
 including the date-range shortcut — round-trip through the URL query string via `useSearchParams` so the
 view is shareable; `calcularRango()` derives `desde`/`hasta` from the shortcut key every render rather than
-storing computed dates, so changing "hoy" never needs an invalidation. The ticket id in the detail table is
-only a link when `tieneRol('Administrador')` — an Analista can see aggregate stats but not another user's
-ticket content.
+storing computed dates, so changing "hoy" never needs an invalidation. The ticket id in the detail table links
+to `/tickets/:id` for both roles; whether an Analista actually gets the ticket back depends on the `Ticket`
+SELECT policy in Supabase (`docs/cambios/analista_ver_tickets.sql` is the policy that grants it).
 
 **Entregables (deliverables)**: uploads go through the private `entregables` Storage bucket. Helpers in
 `src/lib/entregables.ts` build the required path shape (`${ticketId}/${uuid}-${cleanName}`) and infer

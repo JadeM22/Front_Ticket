@@ -17,9 +17,18 @@ interface CrearUsuarioModalProps {
   roles: Rol[]
 }
 
+/** `Usuarios.nombre` es una sola columna VARCHAR(100): las tres partes se envían unidas. */
+const LARGO_MAXIMO_NOMBRE = 100
+
+function limpiarEspacios(texto: string): string {
+  return texto.trim().replace(/\s+/g, ' ')
+}
+
 export function CrearUsuarioModal({ abierto, onCerrar, onCreado, areas, roles }: CrearUsuarioModalProps) {
   const [correo, setCorreo] = useState('')
-  const [nombre, setNombre] = useState('')
+  const [nombres, setNombres] = useState('')
+  const [primerApellido, setPrimerApellido] = useState('')
+  const [segundoApellido, setSegundoApellido] = useState('')
   const [areaId, setAreaId] = useState<number | ''>('')
   const [rolId, setRolId] = useState<number | ''>('')
   const [enviando, setEnviando] = useState(false)
@@ -28,7 +37,9 @@ export function CrearUsuarioModal({ abierto, onCerrar, onCreado, areas, roles }:
 
   function cerrarYLimpiar() {
     setCorreo('')
-    setNombre('')
+    setNombres('')
+    setPrimerApellido('')
+    setSegundoApellido('')
     setAreaId('')
     setRolId('')
     setResultado(null)
@@ -37,8 +48,21 @@ export function CrearUsuarioModal({ abierto, onCerrar, onCreado, areas, roles }:
   }
 
   async function manejarEnviar() {
-    if (!nombre.trim() || !correo.trim()) {
-      toast.error('Completa el nombre y el correo.')
+    if (!nombres.trim()) {
+      toast.error('Escribe los nombres del usuario.')
+      return
+    }
+    if (!primerApellido.trim()) {
+      toast.error('Escribe el primer apellido del usuario.')
+      return
+    }
+    const nombre = [nombres, primerApellido, segundoApellido].map(limpiarEspacios).filter(Boolean).join(' ')
+    if (nombre.length > LARGO_MAXIMO_NOMBRE) {
+      toast.error(`El nombre completo no puede pasar de ${LARGO_MAXIMO_NOMBRE} caracteres.`)
+      return
+    }
+    if (!correo.trim()) {
+      toast.error('Escribe el correo institucional.')
       return
     }
     if (!areaId || !rolId) {
@@ -47,7 +71,7 @@ export function CrearUsuarioModal({ abierto, onCerrar, onCreado, areas, roles }:
     }
     setEnviando(true)
     try {
-      const resultadoCreacion = await crearUsuario({ correo: correo.trim(), nombre: nombre.trim(), area_id: areaId, rol_id: rolId })
+      const resultadoCreacion = await crearUsuario({ correo: correo.trim(), nombre, area_id: areaId, rol_id: rolId })
       setResultado(resultadoCreacion)
       onCreado()
     } catch (error) {
@@ -84,9 +108,22 @@ export function CrearUsuarioModal({ abierto, onCerrar, onCreado, areas, roles }:
         </div>
       ) : (
         <div className="space-y-4">
-          <Campo etiqueta="Nombre completo">
-            <input className={CLASE_INPUT} required value={nombre} onChange={(e) => setNombre(e.target.value)} />
+          <Campo etiqueta="Nombres">
+            <input className={CLASE_INPUT} required value={nombres} onChange={(e) => setNombres(e.target.value)} />
           </Campo>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Campo etiqueta="Primer apellido">
+              <input
+                className={CLASE_INPUT}
+                required
+                value={primerApellido}
+                onChange={(e) => setPrimerApellido(e.target.value)}
+              />
+            </Campo>
+            <Campo etiqueta="Segundo apellido (opcional)">
+              <input className={CLASE_INPUT} value={segundoApellido} onChange={(e) => setSegundoApellido(e.target.value)} />
+            </Campo>
+          </div>
           <Campo etiqueta="Correo institucional">
             <input
               type="email"

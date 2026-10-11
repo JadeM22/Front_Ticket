@@ -16,6 +16,8 @@ import { SkeletonLista } from '../components/ui/Skeleton'
 import { EmptyState } from '../components/ui/EmptyState'
 import { EstadoChip } from '../components/EstadoChip'
 import { Timeline } from '../components/ui/Timeline'
+import { Stepper } from '../components/ui/Stepper'
+import { pasosProgresoTicket } from '../lib/progresoTicket'
 import { ProgressRing } from '../components/ui/ProgressRing'
 import { ListaEntregables } from '../components/ListaEntregables'
 import { ListaAdjuntos } from '../components/ListaAdjuntos'
@@ -36,10 +38,13 @@ export function TicketDetailPage() {
   const [modalDictamen, setModalDictamen] = useState(false)
   const [tomando, setTomando] = useState(false)
 
-  const clave = ['ticket-detalle', ticketId]
+  // El historial de cambios es solo para Analista y Administrador; el resto ve la barra de progreso.
+  const puedeVerHistorial = tieneRol('Analista') || tieneRol('Administrador')
+
+  const clave = ['ticket-detalle', ticketId, puedeVerHistorial]
   const { data: ticket, isLoading } = useQuery({
     queryKey: clave,
-    queryFn: () => obtenerTicketCompleto(ticketId),
+    queryFn: () => obtenerTicketCompleto(ticketId, puedeVerHistorial),
     enabled: Number.isFinite(ticketId),
   })
 
@@ -201,10 +206,17 @@ export function TicketDetailPage() {
         </Card>
       )}
 
-      <Card>
-        <h2 className="mb-3 font-semibold text-azul-noche">Historial</h2>
-        <Timeline eventos={eventosTimeline} />
-      </Card>
+      {puedeVerHistorial ? (
+        <Card>
+          <h2 className="mb-3 font-semibold text-azul-noche">Historial</h2>
+          <Timeline eventos={eventosTimeline} />
+        </Card>
+      ) : (
+        <Card>
+          <h2 className="mb-4 font-semibold text-azul-noche">Progreso de la solicitud</h2>
+          <Stepper pasos={pasosProgresoTicket(estadoReal)} />
+        </Card>
+      )}
 
       {perfil && (
         <SubirEntregableModal

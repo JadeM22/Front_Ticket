@@ -21,7 +21,6 @@ import {
 } from 'recharts'
 import { obtenerEstadisticas, type FilaEstadistica } from '../../data/estadisticas'
 import { listarAreas, listarTiposSolicitud } from '../../data/catalogos'
-import { useAuth } from '../../auth/useAuth'
 import { formatFecha, hoyTegucigalpaISO, mesTegucigalpa } from '../../lib/date'
 import { descargarCsv } from '../../lib/csv'
 import { Card } from '../../components/ui/Card'
@@ -83,7 +82,6 @@ function calcularRango(atajo: string): { desde: string; hasta: string } {
 const FILAS_POR_PAGINA = 20
 
 export function AnalistaDashboard() {
-  const { tieneRol } = useAuth()
   const [params, setParams] = useSearchParams()
   const [pagina, setPagina] = useState(1)
   const [orden, setOrden] = useState<{ columna: keyof FilaEstadistica; asc: boolean }>({ columna: 'ticket_id', asc: false })
@@ -518,13 +516,9 @@ export function AnalistaDashboard() {
                       {filasPagina.map((fila) => (
                         <tr key={fila.ticket_id}>
                           <td className="px-3 py-2 font-mono">
-                            {tieneRol('Administrador') ? (
-                              <Link to={`/tickets/${fila.ticket_id}`} className="text-azul-institucional hover:underline">
-                                #{fila.ticket_id}
-                              </Link>
-                            ) : (
-                              <>#{fila.ticket_id}</>
-                            )}
+                            <Link to={`/tickets/${fila.ticket_id}`} className="text-azul-institucional hover:underline">
+                              #{fila.ticket_id}
+                            </Link>
                           </td>
                           <td className="px-3 py-2">{fila.tipo_solicitud}</td>
                           <td className="px-3 py-2">{fila.area}</td>

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
+import { useAuth } from '../../auth/useAuth'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { SkeletonLista } from '../../components/ui/Skeleton'
@@ -9,7 +10,11 @@ import { TicketCard } from '../../components/TicketCard'
 import { EstadoChip } from '../../components/EstadoChip'
 
 export function EmpleadoDashboard() {
-  const { data: tickets = [], isLoading } = useTicketsEstadoReal()
+  const { data: todos = [], isLoading } = useTicketsEstadoReal()
+  const { perfil } = useAuth()
+  // "Mis solicitudes" = las que registró este usuario. RLS deja ver más tickets a quien además es
+  // Analista, Diseñador, Jefe o Administrador, así que aquí sí se filtra por autor.
+  const tickets = todos.filter((t) => t.usuario_registro === perfil?.id)
 
   const conteos = tickets.reduce<Record<string, number>>((acumulado, ticket) => {
     const estado = ticket.estado_real ?? 'Sin estado'

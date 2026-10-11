@@ -29,6 +29,13 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Edge trae su propio "ojito" y una X en los campos de contraseña; se ocultan porque
+   PasswordInput ya pone el suyo, siempre visible. */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

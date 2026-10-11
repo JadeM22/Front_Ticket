@@ -1,12 +1,17 @@
 import { useMemo, useState } from 'react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
+import { useAuth } from '../../auth/useAuth'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { TicketCard } from '../../components/TicketCard'
 import { CLASE_INPUT } from '../../components/ui/Campo'
 
 export function EmpleadoSolicitudesPage() {
-  const { data: tickets = [], isLoading } = useTicketsEstadoReal()
+  const { data: todos, isLoading } = useTicketsEstadoReal()
+  const { perfil } = useAuth()
+  // "Mis solicitudes" = las que registró este usuario. RLS deja ver más tickets a quien además es
+  // Analista, Diseñador, Jefe o Administrador, así que aquí sí se filtra por autor.
+  const tickets = useMemo(() => (todos ?? []).filter((t) => t.usuario_registro === perfil?.id), [todos, perfil?.id])
   const [estado, setEstado] = useState('')
   const [tipo, setTipo] = useState('')
 

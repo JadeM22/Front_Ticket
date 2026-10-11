@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
 import { mensajeError } from '../lib/errors'
 import { Button } from '../components/ui/Button'
+import { PasswordInput } from '../components/ui/PasswordInput'
 
 /** Página a la que llega el enlace de "¿Olvidaste tu contraseña?"; Supabase ya crea la sesión de recuperación desde la URL. */
 export function RestablecerPasswordPage() {
@@ -50,13 +51,11 @@ export function RestablecerPasswordPage() {
             <label className="mb-1 block text-sm font-medium text-tinta" htmlFor="nueva">
               Contraseña nueva
             </label>
-            <input
+            <PasswordInput
               id="nueva"
-              type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-azul-niebla px-3 py-2 text-sm outline-none focus:border-azul-institucional"
             />
           </div>
 
@@ -64,13 +63,11 @@ export function RestablecerPasswordPage() {
             <label className="mb-1 block text-sm font-medium text-tinta" htmlFor="confirmar">
               Confirmar contraseña
             </label>
-            <input
+            <PasswordInput
               id="confirmar"
-              type="password"
               required
               value={confirmar}
               onChange={(e) => setConfirmar(e.target.value)}
-              className="w-full rounded-lg border border-azul-niebla px-3 py-2 text-sm outline-none focus:border-azul-institucional"
             />
           </div>
 

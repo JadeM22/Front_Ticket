@@ -6,6 +6,7 @@ import { ShieldCheck } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { mensajeError } from '../lib/errors'
 import { Button } from '../components/ui/Button'
+import { PasswordInput } from '../components/ui/PasswordInput'
 import { useAuth } from './useAuth'
 
 export function LoginPage() {
@@ -98,13 +99,11 @@ export function LoginPage() {
                 <label className="mb-1 block text-sm font-medium text-tinta" htmlFor="password">
                   Contraseña
                 </label>
-                <input
+                <PasswordInput
                   id="password"
-                  type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-azul-niebla px-3 py-2 text-sm outline-none focus:border-azul-institucional"
                 />
               </div>
             )}
