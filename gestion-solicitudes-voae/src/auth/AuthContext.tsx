@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
 import { obtenerPerfilActual } from '../data/perfil'
 import type { Perfil, RolNombre } from '../types/domain'
 import { AuthContext } from './contexto'
+import { MINUTOS_INACTIVIDAD, useCierrePorInactividad } from './useCierrePorInactividad'
 
 export interface AuthContextValor {
   session: Session | null
@@ -76,6 +78,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const cerrarSesion = useCallback(async () => {
     await supabase.auth.signOut()
   }, [])
+
+  // Solo se cierra la sesión de este navegador (`local`): la misma cuenta abierta en otro equipo
+  // lleva su propio conteo de inactividad.
+  const cerrarPorInactividad = useCallback(async () => {
+    const { error } = await supabase.auth.signOut({ scope: 'local' })
+    if (!error) toast.info(`Tu sesión se cerró tras ${MINUTOS_INACTIVIDAD} minutos sin actividad.`)
+  }, [])
+
+  useCierrePorInactividad(session ? 'activa' : cargando ? 'pendiente' : 'sin-sesion', cerrarPorInactividad)
 
   const tieneRol = useCallback((rol: RolNombre) => perfil?.roles.includes(rol) ?? false, [perfil])
 

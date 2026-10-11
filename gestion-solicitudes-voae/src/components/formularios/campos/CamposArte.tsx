@@ -1,4 +1,6 @@
 import { Campo, CLASE_INPUT } from '../../ui/Campo'
+import { FechaInput } from '../../ui/FechaInput'
+import { HoraInput } from '../../ui/HoraInput'
 import { EtiquetasInput } from '../EtiquetasInput'
 import { hoyTegucigalpaISO } from '../../../lib/date'
 import type { DetalleArte } from '../../../types/domain'
@@ -22,28 +24,22 @@ export function CamposArte({ valor, onCambiar }: Props) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Campo etiqueta="Fecha (opcional)">
-          <input
-            type="date"
+          <FechaInput
             min={hoyTegucigalpaISO()}
-            className={CLASE_INPUT}
-            value={valor.fecha ?? ''}
-            onChange={(e) => onCambiar({ ...valor, fecha: e.target.value || null })}
+            valor={valor.fecha ?? ''}
+            onCambiar={(fecha) => onCambiar({ ...valor, fecha: fecha || null })}
           />
         </Campo>
         <Campo etiqueta="Hora de inicio">
-          <input
-            type="time"
-            className={CLASE_INPUT}
-            value={valor.hora_inicio ?? ''}
-            onChange={(e) => onCambiar({ ...valor, hora_inicio: e.target.value || null })}
+          <HoraInput
+            valor={valor.hora_inicio ?? ''}
+            onCambiar={(hora) => onCambiar({ ...valor, hora_inicio: hora || null })}
           />
         </Campo>
         <Campo etiqueta="Hora de fin">
-          <input
-            type="time"
-            className={CLASE_INPUT}
-            value={valor.hora_fin ?? ''}
-            onChange={(e) => onCambiar({ ...valor, hora_fin: e.target.value || null })}
+          <HoraInput
+            valor={valor.hora_fin ?? ''}
+            onCambiar={(hora) => onCambiar({ ...valor, hora_fin: hora || null })}
           />
         </Campo>
       </div>

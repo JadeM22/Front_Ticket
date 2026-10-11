@@ -26,6 +26,7 @@ import { descargarCsv } from '../../lib/csv'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { CLASE_INPUT } from '../../components/ui/Campo'
+import { FechaInput } from '../../components/ui/FechaInput'
 import { EstadoChip } from '../../components/EstadoChip'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { SkeletonLista } from '../../components/ui/Skeleton'
@@ -295,21 +296,11 @@ export function AnalistaDashboard() {
           <>
             <label className="text-xs text-tinta-suave">
               Desde
-              <input
-                type="date"
-                className={`${CLASE_INPUT} mt-1 w-auto`}
-                value={desde}
-                onChange={(e) => actualizarFiltro('desde', e.target.value)}
-              />
+              <FechaInput className="mt-1 w-40" valor={desde} onCambiar={(fecha) => actualizarFiltro('desde', fecha)} />
             </label>
             <label className="text-xs text-tinta-suave">
               Hasta
-              <input
-                type="date"
-                className={`${CLASE_INPUT} mt-1 w-auto`}
-                value={hasta}
-                onChange={(e) => actualizarFiltro('hasta', e.target.value)}
-              />
+              <FechaInput className="mt-1 w-40" valor={hasta} onCambiar={(fecha) => actualizarFiltro('hasta', fecha)} />
             </label>
           </>
         )}

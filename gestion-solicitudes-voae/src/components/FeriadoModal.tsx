@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { Campo, CLASE_INPUT } from './ui/Campo'
+import { FechaInput } from './ui/FechaInput'
 import { crearFeriado, actualizarFeriado, type Feriado } from '../data/catalogos'
 import { mensajeError } from '../lib/errors'
 
@@ -72,10 +73,10 @@ function FormularioFeriado({
 
       <div className="grid grid-cols-2 gap-4">
         <Campo etiqueta="Desde">
-          <input type="date" className={CLASE_INPUT} value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
+          <FechaInput required valor={fechaInicio} onCambiar={setFechaInicio} />
         </Campo>
         <Campo etiqueta="Hasta">
-          <input type="date" className={CLASE_INPUT} value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
+          <FechaInput required min={fechaInicio || undefined} valor={fechaFin} onCambiar={setFechaFin} />
         </Campo>
       </div>
 

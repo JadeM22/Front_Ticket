@@ -1,4 +1,5 @@
 import { Campo, CLASE_INPUT } from '../../ui/Campo'
+import { FechaInput } from '../../ui/FechaInput'
 import { EtiquetasInput } from '../EtiquetasInput'
 import { Aviso } from '../Aviso'
 import { hoyTegucigalpaISO } from '../../../lib/date'
@@ -25,13 +26,11 @@ export function CamposDircom({ valor, onCambiar }: Props) {
       </Campo>
 
       <Campo etiqueta="Fecha en que lo necesitas">
-        <input
-          type="date"
+        <FechaInput
           min={hoyTegucigalpaISO()}
-          className={CLASE_INPUT}
           required
-          value={valor.fecha_necesaria}
-          onChange={(e) => onCambiar({ ...valor, fecha_necesaria: e.target.value })}
+          valor={valor.fecha_necesaria}
+          onCambiar={(fecha_necesaria) => onCambiar({ ...valor, fecha_necesaria })}
         />
       </Campo>
       <Aviso>Depende de la cantidad de trabajo y disposición del equipo de diseño en DIRCOM.</Aviso>

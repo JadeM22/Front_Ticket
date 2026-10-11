@@ -1,4 +1,6 @@
 import { Campo, CLASE_INPUT } from '../../ui/Campo'
+import { FechaInput } from '../../ui/FechaInput'
+import { HoraInput } from '../../ui/HoraInput'
 import { Aviso } from '../Aviso'
 import { hoyTegucigalpaISO } from '../../../lib/date'
 import type { DetalleProtocolo } from '../../../types/domain'
@@ -41,23 +43,15 @@ export function CamposProtocolo({ valor, onCambiar }: Props) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Campo etiqueta="Fecha">
-          <input
-            type="date"
+          <FechaInput
             min={hoyTegucigalpaISO()}
-            className={CLASE_INPUT}
             required
-            value={valor.fecha}
-            onChange={(e) => onCambiar({ ...valor, fecha: e.target.value })}
+            valor={valor.fecha}
+            onCambiar={(fecha) => onCambiar({ ...valor, fecha })}
           />
         </Campo>
         <Campo etiqueta="Hora">
-          <input
-            type="time"
-            className={CLASE_INPUT}
-            required
-            value={valor.hora}
-            onChange={(e) => onCambiar({ ...valor, hora: e.target.value })}
-          />
+          <HoraInput required valor={valor.hora} onCambiar={(hora) => onCambiar({ ...valor, hora })} />
         </Campo>
       </div>
 

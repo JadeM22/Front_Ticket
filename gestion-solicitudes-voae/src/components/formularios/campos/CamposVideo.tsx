@@ -1,4 +1,5 @@
 import { Campo, CLASE_INPUT } from '../../ui/Campo'
+import { FechaInput } from '../../ui/FechaInput'
 import { EtiquetasInput } from '../EtiquetasInput'
 import { Aviso } from '../Aviso'
 import { hoyTegucigalpaISO } from '../../../lib/date'
@@ -23,13 +24,11 @@ export function CamposVideo({ valor, onCambiar }: Props) {
       </Campo>
 
       <Campo etiqueta="Fecha de entrega/publicación">
-        <input
-          type="date"
+        <FechaInput
           min={hoyTegucigalpaISO()}
-          className={CLASE_INPUT}
           required
-          value={valor.fecha_entrega_publicacion}
-          onChange={(e) => onCambiar({ ...valor, fecha_entrega_publicacion: e.target.value })}
+          valor={valor.fecha_entrega_publicacion}
+          onCambiar={(fecha_entrega_publicacion) => onCambiar({ ...valor, fecha_entrega_publicacion })}
         />
       </Campo>
 

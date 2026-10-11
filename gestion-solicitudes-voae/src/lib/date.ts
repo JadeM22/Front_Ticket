@@ -39,7 +39,7 @@ const formateadorFechaLarga = new Intl.DateTimeFormat('es-HN', {
   month: 'long',
 })
 
-/** "Hoy" en Honduras como YYYY-MM-DD, para el `min` de los <input type="date"> y validaciones. */
+/** "Hoy" en Honduras como YYYY-MM-DD, para el `min` de los `FechaInput` y validaciones. */
 export function hoyTegucigalpaISO(): string {
   return formateadorIso.format(new Date())
 }

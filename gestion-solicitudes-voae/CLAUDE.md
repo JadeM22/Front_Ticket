@@ -119,6 +119,14 @@ Unlike the pre-migration schema, these forms use plain `date`/`time` columns (no
 no timezone-offset conversion needed when submitting — only `hoyTegucigalpaISO()` (`lib/date.ts`) as the
 `min` on every date input and for the "not in the past" client-side check.
 
+**Date fields**: every date input in the app is `components/ui/FechaInput.tsx` — never a raw
+`<input type="date">`. It takes/emits the same `'YYYY-MM-DD'`-or-`''` string a native date input would
+(`valor`/`onCambiar`), shows it as typed `DD/MM/AAAA` with an auto-inserted mask, and opens a synced calendar
+popover on focus. It only emits a real, complete date (or `''` when cleared/abandoned half-typed); parsing
+and masking live in `src/lib/fechaInput.ts`. Time fields follow the same contract through
+`components/ui/HoraInput.tsx` (`'HH:MM'` 24h in and out, typed as 12h `hh:mm` + an a. m./p. m. toggle, 30-min
+dropdown list; helpers in `src/lib/horaInput.ts`) — never a raw `<input type="time">`.
+
 **Plazos en días hábiles + feriados**: `TipoSolicitud.dias_habiles` decides whether `fecha_limite` is
 business-days-only (skipping weekends and active `Feriados` ranges) or calendar days — computed server-side
 by `fnSumarDiasHabilesEscalar`/`fnTicketCalcularFechaLimiteTrigger`. The wizard previews this via
