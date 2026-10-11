@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useCallback, useState } from 'react'
+import { useBeforeUnload, useBlocker, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Link as LinkIcon, Loader2, XCircle } from 'lucide-react'
@@ -25,6 +25,7 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { CLASE_INPUT } from '../../components/ui/Campo'
 import { EmptyState } from '../../components/ui/EmptyState'
+import { Modal } from '../../components/ui/Modal'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 import type {
   DetalleArte,
@@ -64,6 +65,34 @@ export function NuevaSolicitudPage() {
   const [urlEnlace, setUrlEnlace] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [progreso, setProgreso] = useState<ProgresoAdjunto[]>([])
+  const [solicitudCreada, setSolicitudCreada] = useState(false)
+
+  // Elegir un tipo sin llenar nada no cuenta como cambio; una vez creada la solicitud ya no hay nada que perder.
+  const detalleModificado =
+    tipoSeleccionado !== null &&
+    detalle !== null &&
+    JSON.stringify(detalle) !== JSON.stringify(detalleInicial(tipoSeleccionado.formulario as FormularioCodigo))
+  const hayCambiosSinEnviar =
+    !solicitudCreada &&
+    (detalleModificado || archivos.length > 0 || enlaces.length > 0 || tituloEnlace.trim() !== '' || urlEnlace.trim() !== '')
+
+  const bloqueador = useBlocker(
+    useCallback(
+      ({ currentLocation, nextLocation }: { currentLocation: { pathname: string }; nextLocation: { pathname: string } }) =>
+        hayCambiosSinEnviar && currentLocation.pathname !== nextLocation.pathname,
+      [hayCambiosSinEnviar],
+    ),
+  )
+
+  // Cerrar o recargar la pestaña: el navegador muestra su propio aviso genérico.
+  useBeforeUnload(
+    useCallback(
+      (evento: BeforeUnloadEvent) => {
+        if (hayCambiosSinEnviar) evento.preventDefault()
+      },
+      [hayCambiosSinEnviar],
+    ),
+  )
 
   const totalAdjuntos = archivos.length + enlaces.length
   const espacioDisponible = MAXIMO_ADJUNTOS_POR_TICKET - totalAdjuntos
@@ -130,6 +159,7 @@ export function NuevaSolicitudPage() {
       return
     }
 
+    setSolicitudCreada(true)
     toast.success(`Solicitud #${ticketId} creada.`)
 
     const items: ProgresoAdjunto[] = [
@@ -354,6 +384,21 @@ export function NuevaSolicitudPage() {
           </div>
         </Card>
       )}
+
+      <Modal abierto={bloqueador.state === 'blocked'} onCerrar={() => bloqueador.reset?.()} titulo="¿Salir sin enviar la solicitud?">
+        <p className="text-sm text-tinta-suave">
+          Tienes cambios sin enviar. Si sales de esta página se perderá todo lo que llenaste, incluidos los
+          adjuntos.
+        </p>
+        <div className="mt-6 flex justify-end gap-2">
+          <Button variante="secundario" onClick={() => bloqueador.reset?.()}>
+            Seguir editando
+          </Button>
+          <Button variante="peligro" onClick={() => bloqueador.proceed?.()}>
+            Salir y descartar
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }

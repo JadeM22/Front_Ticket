@@ -5,7 +5,7 @@ import { PantallaCarga } from '../components/ui/PantallaCarga'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Button } from '../components/ui/Button'
 
-/** Redirige al dashboard de mayor jerarquía: Administrador > Jefe de Área > Diseñador > Empleado. */
+/** Redirige al dashboard de mayor jerarquía: Administrador > Jefe de Área > Diseñador > Analista > Empleado. */
 export function InicioRedirect() {
   const { perfil, cargando, cerrarSesion } = useAuth()
 

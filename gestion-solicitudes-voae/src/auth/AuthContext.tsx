@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
@@ -29,22 +29,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPerfil(nuevoPerfil)
   }, [])
 
+  // `undefined` = sin sesión; `null` = todavía no se ha resuelto la primera sesión.
+  const authIdCargado = useRef<string | undefined | null>(null)
+
   useEffect(() => {
     let activo = true
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!activo) return
-      setSession(data.session)
-      await cargarPerfil(data.session?.user.id)
-      if (activo) setCargando(false)
-    })
-
-    const { data: suscripcion } = supabase.auth.onAuthStateChange(async (_evento, nuevaSession) => {
+    /**
+     * Supabase emite eventos de sesión cada vez que la pestaña vuelve a estar visible o se renueva
+     * el token. Solo se muestra la pantalla de carga (que desmonta la página y borraría cualquier
+     * formulario a medio llenar) cuando de verdad cambia el usuario; si es el mismo, la sesión se
+     * actualiza en silencio.
+     */
+    async function sincronizar(nuevaSession: Session | null) {
       if (!activo) return
       setSession(nuevaSession)
+
+      const authId = nuevaSession?.user.id
+      if (authIdCargado.current === authId) return
+      authIdCargado.current = authId
+
       setCargando(true)
-      await cargarPerfil(nuevaSession?.user.id)
-      if (activo) setCargando(false)
+      try {
+        await cargarPerfil(authId)
+      } finally {
+        if (activo && authIdCargado.current === authId) setCargando(false)
+      }
+    }
+
+    supabase.auth.getSession().then(({ data }) => sincronizar(data.session))
+
+    const { data: suscripcion } = supabase.auth.onAuthStateChange((_evento, nuevaSession) => {
+      void sincronizar(nuevaSession)
     })
 
     return () => {

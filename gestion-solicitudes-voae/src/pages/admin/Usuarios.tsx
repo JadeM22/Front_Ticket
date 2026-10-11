@@ -2,17 +2,25 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Plus, X } from 'lucide-react'
-import { listarUsuarios, listarRoles, actualizarUsuario, asignarRol, revocarRol } from '../../data/usuarios'
+import { listarUsuarios, listarRoles, actualizarUsuario, asignarRol, revocarRol, type UsuarioAdmin } from '../../data/usuarios'
 import { listarAreas } from '../../data/catalogos'
 import { mensajeError } from '../../lib/errors'
 import { CrearUsuarioModal } from '../../components/CrearUsuarioModal'
 import { Button } from '../../components/ui/Button'
 import { CLASE_INPUT } from '../../components/ui/Campo'
+import { Modal } from '../../components/ui/Modal'
 import { SkeletonLista } from '../../components/ui/Skeleton'
+
+/** Acción destructiva que espera a que el administrador la confirme en el diálogo. */
+type Confirmacion =
+  | { tipo: 'inhabilitar'; usuario: UsuarioAdmin }
+  | { tipo: 'quitar-rol'; usuario: UsuarioAdmin; rol: { id: number; nombre: string } }
 
 export function AdminUsuariosPage() {
   const queryClient = useQueryClient()
   const [modalAbierto, setModalAbierto] = useState(false)
+  const [confirmacion, setConfirmacion] = useState<Confirmacion | null>(null)
+  const [confirmando, setConfirmando] = useState(false)
 
   const { data: usuarios = [], isLoading } = useQuery({ queryKey: ['admin', 'usuarios'], queryFn: listarUsuarios })
   const { data: areas = [] } = useQuery({ queryKey: ['catalogos', 'areas'], queryFn: listarAreas })
@@ -56,6 +64,22 @@ export function AdminUsuariosPage() {
     } catch (error) {
       toast.error(await mensajeError(error, 'No se pudo revocar el rol.'))
     }
+  }
+
+  async function manejarConfirmar() {
+    if (!confirmacion) return
+    setConfirmando(true)
+    if (confirmacion.tipo === 'inhabilitar') {
+      await manejarEstado(confirmacion.usuario.id, false)
+    } else {
+      await manejarRevocarRol(confirmacion.usuario.id, confirmacion.rol.id)
+    }
+    setConfirmando(false)
+    setConfirmacion(null)
+  }
+
+  function cerrarConfirmacion() {
+    if (!confirmando) setConfirmacion(null)
   }
 
   if (isLoading) return <SkeletonLista filas={5} />
@@ -119,7 +143,7 @@ export function AdminUsuariosPage() {
                         {rol.nombre}
                         <button
                           type="button"
-                          onClick={() => manejarRevocarRol(usuario.id, rol.id)}
+                          onClick={() => setConfirmacion({ tipo: 'quitar-rol', usuario, rol })}
                           aria-label={`Revocar ${rol.nombre}`}
                         >
                           <X size={12} />
@@ -145,7 +169,7 @@ export function AdminUsuariosPage() {
                 <td className="px-4 py-2">
                   <button
                     type="button"
-                    onClick={() => manejarEstado(usuario.id, !usuario.estado)}
+                    onClick={() => (usuario.estado ? setConfirmacion({ tipo: 'inhabilitar', usuario }) : manejarEstado(usuario.id, true))}
                     className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                       usuario.estado ? 'bg-menta-bruma text-menta-profundo' : 'bg-coral-bruma text-coral'
                     }`}
@@ -158,6 +182,34 @@ export function AdminUsuariosPage() {
           </tbody>
         </table>
       </div>
+
+      <Modal
+        abierto={confirmacion !== null}
+        onCerrar={cerrarConfirmacion}
+        titulo={confirmacion?.tipo === 'quitar-rol' ? 'Quitar rol' : 'Inhabilitar usuario'}
+      >
+        {confirmacion?.tipo === 'inhabilitar' && (
+          <p className="text-sm text-tinta-suave">
+            ¿Estás seguro de que deseas inhabilitar a <strong className="text-tinta">{confirmacion.usuario.nombre}</strong>?
+            Su cuenta quedará inactiva hasta que la vuelvas a activar.
+          </p>
+        )}
+        {confirmacion?.tipo === 'quitar-rol' && (
+          <p className="text-sm text-tinta-suave">
+            ¿Estás seguro de que deseas quitar el rol <strong className="text-tinta">{confirmacion.rol.nombre}</strong> a{' '}
+            <strong className="text-tinta">{confirmacion.usuario.nombre}</strong>? Su cuenta seguirá activa, pero perderá
+            el acceso que le da ese rol.
+          </p>
+        )}
+        <div className="mt-6 flex justify-end gap-2">
+          <Button variante="secundario" onClick={cerrarConfirmacion} disabled={confirmando}>
+            Cancelar
+          </Button>
+          <Button variante="peligro" cargando={confirmando} onClick={() => void manejarConfirmar()}>
+            {confirmacion?.tipo === 'quitar-rol' ? 'Quitar rol' : 'Inhabilitar'}
+          </Button>
+        </div>
+      </Modal>
 
       <CrearUsuarioModal
         abierto={modalAbierto}

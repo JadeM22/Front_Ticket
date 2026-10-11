@@ -47,6 +47,13 @@ export function DisenadorDashboard() {
 
   if (isLoading) return <SkeletonLista filas={5} />
 
+  // FIFO: en cada columna va primero la solicitud más antigua (la consulta compartida las trae al revés).
+  const ticketsFifo = [...tickets].sort(
+    (a, b) =>
+      new Date(a.fecha_registro ?? 0).getTime() - new Date(b.fecha_registro ?? 0).getTime() ||
+      (a.ticket_id ?? 0) - (b.ticket_id ?? 0),
+  )
+
   return (
     <div className="space-y-4">
       <div>
@@ -56,7 +63,7 @@ export function DisenadorDashboard() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
         {COLUMNAS.map((columna) => {
-          const ticketsColumna = tickets.filter(columna.filtro)
+          const ticketsColumna = ticketsFifo.filter(columna.filtro)
           return (
             <div key={columna.titulo} className="rounded-xl bg-azul-niebla/40 p-3">
               <p className="mb-3 flex items-center justify-between text-sm font-semibold text-azul-noche">

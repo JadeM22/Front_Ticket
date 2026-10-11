@@ -17,6 +17,9 @@ surfaced from Postgres triggers (shown verbatim in toasts).
 
 ## Commands
 
+The git root is one level up (`Front_Ticket/`) and holds only a stub `README.md`; the whole app lives in
+`gestion-solicitudes-voae/`. Run every command below from that directory.
+
 - `npm run dev` — Vite dev server with HMR.
 - `npm run build` — `tsc -b` (project references: `tsconfig.json` → `tsconfig.app.json` /
   `tsconfig.node.json`) then `vite build`. Must pass with zero errors before considering a change done.
@@ -25,13 +28,19 @@ surfaced from Postgres triggers (shown verbatim in toasts).
 - `npm run preview` — serve the production build locally.
 
 There is no test runner configured. There is no dev-time way to exercise the Supabase-dependent flows
-without a real `.env.local` (see below) — verification here means `build` + `lint` passing, not running
+without real Supabase env vars (see below) — verification here means `build` + `lint` passing, not running
 the app.
+
+`tsconfig.app.json` is stricter than the Vite default and `tsc -b` fails on any of these:
+`erasableSyntaxOnly` (no `enum`, no constructor parameter properties — use string-literal unions like the
+ones in `src/types/domain.ts`), `verbatimModuleSyntax` (type-only imports must be `import type`), and
+`noUnusedLocals`/`noUnusedParameters`.
 
 ## Environment
 
-`src/lib/supabase.ts` reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from `.env.local` (gitignored
-via the `*.local` pattern). Only the **publishable/anon** key ever goes here — it ends up in the client JS
+`src/lib/supabase.ts` reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from Vite env files. Put them
+in `.env.local` — `.gitignore` only covers `*.local`, so a plain `.env` is **not** ignored and will show up
+as untracked. Only the **publishable/anon** key ever goes here — it ends up in the client JS
 bundle shipped to every visitor. The secret/`service_role` key must never be used in this project.
 
 The database schema, RLS policies, Storage buckets, and the `crear-usuario` Edge Function live entirely in
@@ -41,7 +50,11 @@ the v2 migration on top of it (días hábiles/feriados, `Adjuntos`, autoría, ro
 below). Both are kept here for reference only — `src/types/database.ts` is the authoritative, generated API
 surface and is already regenerated against the live schema. Do not hand-edit `database.ts`; regenerate it
 if the remote schema changes again, and when it does, grep for whatever old table/column names disappeared
-to find every call site that needs updating (that's exactly how the v2 migration was done).
+to find every call site that needs updating (that's exactly how the v2 migration was done). The `supabase`
+CLI is a devDependency and the project is already linked (`supabase/.temp/`), so regenerating is
+`npx supabase gen types typescript --linked --schema Seguridad --schema Solicitudes`, written over
+`src/types/database.ts`. There is no local Supabase stack (`supabase/` has no `config.toml`, migrations, or
+functions) — the CLI is only used against the remote project.
 
 ## Architecture
 
@@ -55,9 +68,22 @@ the Analista dashboard's charts only (everywhere else uses the hand-rolled `Barr
 snake_case, matching the DB exactly. All Supabase calls are centralized in `src/data/*.ts` (one file per
 domain: `perfil`, `tickets`, `formularios`, `entregables`, `adjuntos`, `dictamenes`, `notificaciones`,
 `usuarios`, `catalogos`, `bitacora`, `estadisticas`); pages/components never call `supabase` directly, they
-call a `data/` function through a TanStack Query hook. **Ticket lists are never filtered by the current
+call a `data/` function through a TanStack Query hook. The only exceptions are `supabase.auth.*` calls in
+`src/auth/*` and the `fnUsuariosNombresTabla` RPC inside `hooks/useNombresUsuarios.ts`. Row types are
+derived from the generated types as `Tables<{ schema: 'Solicitudes' }, 'Ticket'>` and re-exported from the
+matching `data/` file rather than redeclared by hand. **Ticket lists are never filtered by the current
 user in query code** — RLS already scopes what each role can see; the frontend only groups/labels what
 comes back.
+
+**Query cache**: `src/lib/queryClient.ts` sets `staleTime: 30s`, `retry: 1`, and no refetch on window
+focus, so a mutation only shows up if it invalidates explicitly. Keys are hierarchical arrays —
+`['tickets', 'estado-real']` (list; `[..., ticketId]` for one), `['catalogos', 'areas'|'tipos-solicitud'|
+'feriados']`, `['admin', 'usuarios'|'roles'|'bitacora']`, `['estadisticas', ...filters]`,
+`['nombres-usuarios']`. Anything that changes a ticket must invalidate `['tickets', 'estado-real']` (prefix
+match covers lists and dashboards) in addition to its own detail key, as `TicketDetail.tsx` does. The one
+push-based piece is notifications: `data/notificaciones.ts#suscribirNotificaciones` opens a Supabase
+Realtime channel on `Solicitudes.Notificaciones` inserts for the current user and `NotificationBell.tsx`
+invalidates on each event.
 
 **Status source of truth**: `Solicitudes.vw_TicketsEstadoReal` (typed as `TicketEstadoReal` in
 `src/types/domain.ts`) is what every list, card, and dashboard queries — it has the live-computed
@@ -145,7 +171,7 @@ role, so it must already be present when the trigger runs.
 
 **Routing structure**: `src/app/router.tsx` is the single place route trees, guards, and layout nesting are
 defined — check it first when adding a page or changing who can see what. Pages are grouped by role under
-`src/pages/{empleado,disenador,jefe,admin}/`; `src/pages/TicketDetail.tsx` is shared across all roles
+`src/pages/{empleado,disenador,jefe,admin,analista}/`; `src/pages/TicketDetail.tsx` is shared across all roles
 (visibility is RLS's job, not a route guard's — if the query returns nothing, the page just shows an empty
 state).
 
@@ -157,6 +183,6 @@ if a new status is ever added instead of duplicating the color logic elsewhere.
 
 ## Deployment
 
-Static SPA deploy to Cloudflare via `wrangler.jsonc` at the repo root (`assets.directory: "./dist"`,
+Static SPA deploy to Cloudflare via `wrangler.jsonc` in `gestion-solicitudes-voae/` (not the git root) (`assets.directory: "./dist"`,
 `not_found_handling: "single-page-application"`). No server-side code; the build output is pure static
 assets plus client-side calls to Supabase.
