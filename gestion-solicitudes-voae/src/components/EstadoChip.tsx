@@ -10,6 +10,7 @@ const ESTILOS: Record<EstadoReal, string> = {
   Aprobado: 'bg-menta-bruma text-menta-profundo',
   'Aprobado (Automático)': 'bg-menta-bruma text-menta-profundo',
   Retrasado: 'bg-coral-bruma text-coral',
+  Rechazado: 'bg-tinta-suave/20 text-tinta-suave',
 }
 
 export function EstadoChip({ estado }: { estado: string }) {

@@ -151,7 +151,11 @@ whenever a screen needs to show who did something (ticket history, bitácora, "c
 **Auth/profile**: `src/auth/AuthContext.tsx` + `useAuth.ts` (the hook lives in its own file, split out
 from the context purely to satisfy `react-refresh/only-export-components`) tracks the Supabase session and
 loads the app-level `Perfil` (`src/data/perfil.ts`, joining `Usuarios` → `Areas` + `UsuariosRoles` →
-`Roles`). Route guards compose in this order (see `src/app/router.tsx`): `RequireAuth` (has a session) →
+`Roles`). `AuthContext` also wires up `src/auth/useCierrePorInactividad.ts`, which signs the user out after
+`MINUTOS_INACTIVIDAD` (20) minutes with no pointer/key/scroll/touch activity; the last-activity timestamp
+lives in `localStorage` (not component state) specifically so every open tab shares one clock and the
+countdown keeps running even with the tab closed, surviving a sleeping laptop or an overnight idle session.
+Route guards compose in this order (see `src/app/router.tsx`): `RequireAuth` (has a session) →
 `RequirePasswordOk` (if `debe_cambiar_password`, the DB treats the user as roleless/ticketless, so this must
 be resolved before anything else) → `RequireRole` (per-route role check). `InicioRedirect` sends `/` to the
 dashboard of the user's highest-ranked role (`JERARQUIA_ROLES` in `domain.ts`: Administrador > Jefe de Área
@@ -170,7 +174,15 @@ including the date-range shortcut — round-trip through the URL query string vi
 view is shareable; `calcularRango()` derives `desde`/`hasta` from the shortcut key every render rather than
 storing computed dates, so changing "hoy" never needs an invalidation. The ticket id in the detail table links
 to `/tickets/:id` for both roles; whether an Analista actually gets the ticket back depends on the `Ticket`
-SELECT policy in Supabase (`docs/cambios/analista_ver_tickets.sql` is the policy that grants it).
+SELECT policy in Supabase (`docs/cambios/analista_ver_tickets.sql` is the policy that grants it). Exporting
+the filtered table goes through the shared `src/lib/csv.ts#descargarCsv()` helper (BOM-prefixed UTF-8 so
+Excel renders tildes correctly) — reuse it rather than building another CSV writer if another screen needs
+one.
+
+**Ticket history visibility**: on `TicketDetail.tsx`, only Analista and Administrador see the full
+`TicketLog` audit trail (rendered via `Timeline`); every other role sees just the simplified `Stepper`
+progress bar (`lib/progresoTicket.ts#pasosProgresoTicket`) for the same ticket. Both read from the same
+`obtenerTicketCompleto()` data — this is a display-only split, not a different query or RLS rule.
 
 **Entregables (deliverables)**: uploads go through the private `entregables` Storage bucket. Helpers in
 `src/lib/entregables.ts` build the required path shape (`${ticketId}/${uuid}-${cleanName}`) and infer

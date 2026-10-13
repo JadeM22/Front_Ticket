@@ -72,6 +72,7 @@ export function NotificationBell() {
                 <li key={notificacion.id}>
                   <Link
                     to={notificacion.ticket_id ? `/tickets/${notificacion.ticket_id}` : '#'}
+                    state={{ desdeNotificacion: true }}
                     onClick={() => {
                       setAbierto(false)
                       if (!notificacion.visto) void marcarVista(notificacion.id)

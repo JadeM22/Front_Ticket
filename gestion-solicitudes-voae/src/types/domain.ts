@@ -1,10 +1,11 @@
 import type { Tables } from './database'
 
-export type RolNombre = 'Administrador' | 'Jefe de Área' | 'Diseñador' | 'Analista' | 'Empleado'
+export type RolNombre = 'Administrador' | 'Jefe de Área' | 'Asignador' | 'Diseñador' | 'Analista' | 'Empleado'
 
 export const JERARQUIA_ROLES: RolNombre[] = [
   'Administrador',
   'Jefe de Área',
+  'Asignador',
   'Diseñador',
   'Analista',
   'Empleado',
@@ -13,6 +14,7 @@ export const JERARQUIA_ROLES: RolNombre[] = [
 export const RUTA_POR_ROL: Record<RolNombre, string> = {
   Administrador: '/admin',
   'Jefe de Área': '/jefe',
+  Asignador: '/asignador',
   Diseñador: '/disenador',
   Analista: '/analista',
   Empleado: '/empleado',
@@ -20,6 +22,7 @@ export const RUTA_POR_ROL: Record<RolNombre, string> = {
 
 export interface Perfil {
   id: number
+  /** Nombre completo (`Usuarios.nombre_completo`, calculado por la base). */
   nombre: string
   correo: string
   area_id: number | null
@@ -39,8 +42,11 @@ export type EstadoRegistrado =
   | 'Corrección'
   | 'Aprobado'
   | 'Retrasado'
+  | 'Rechazado'
 
 export type EstadoReal = EstadoRegistrado | 'Aprobado (Automático)'
+
+export type EstadoExcepcional = 'PENDIENTE' | 'ACEPTADA' | 'RECHAZADA'
 
 export type TicketEstadoReal = Tables<{ schema: 'Solicitudes' }, 'vw_TicketsEstadoReal'>
 
@@ -52,7 +58,6 @@ export type DecisionJefe = 'APROBADO' | 'CORRECCION'
 
 export interface DetalleArte {
   titulo: string
-  fecha: string | null
   hora_inicio: string | null
   hora_fin: string | null
   lugar: string | null
@@ -85,7 +90,6 @@ export interface DetalleProtocolo {
   nombre_actividad: string
   lugar_propuesto: string
   cantidad_invitados: number | null
-  fecha: string
   hora: string
   elaborar_invitacion: boolean
   informacion_programa: string | null
@@ -99,7 +103,6 @@ export interface DetalleProtocolo {
 export interface DetalleGenerico {
   titulo: string
   descripcion: string
-  fecha_requerida: string | null
   informacion_producto: string | null
   logotipos: string[]
   observaciones: string | null

@@ -5,7 +5,9 @@ import { toast } from 'sonner'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { crearDictamen } from '../../data/dictamenes'
 import { mensajeError } from '../../lib/errors'
-import { formatFecha } from '../../lib/date'
+import { formatFecha, formatoHorasHabiles } from '../../lib/date'
+import { useAuth } from '../../auth/useAuth'
+import { useHorarioHabil } from '../../hooks/useHorarioHabil'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { SkeletonLista } from '../../components/ui/Skeleton'
@@ -17,6 +19,9 @@ import type { DecisionJefe, TicketEstadoReal } from '../../types/domain'
 
 export function JefeDashboard() {
   const { data: tickets = [], isLoading } = useTicketsEstadoReal()
+  const { tieneRol } = useAuth()
+  const horarioHabil = useHorarioHabil()
+  const esAdmin = tieneRol('Administrador')
   const queryClient = useQueryClient()
   const [ticketDictamen, setTicketDictamen] = useState<TicketEstadoReal | null>(null)
 
@@ -41,27 +46,41 @@ export function JefeDashboard() {
     <div className="space-y-8">
       <div>
         <h1 className="text-xl font-bold text-azul-noche">Por dictaminar</h1>
-        <p className="text-sm text-tinta-suave">Tienes 24 horas desde la entrega para aprobar o pedir corrección.</p>
+        <p className="text-sm text-tinta-suave">Tienes 24 horas hábiles desde la entrega para aprobar o pedir corrección.</p>
       </div>
 
       {porDictaminar.length === 0 ? (
         <EmptyState titulo="No hay tickets esperando dictamen" />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {porDictaminar.map((ticket) => (
-            <Card key={ticket.ticket_id} className="flex items-center gap-4">
-              <ProgressRing horasRestantes={ticket.horas_restantes_dictamen ?? 0} />
-              <div className="flex-1">
-                <Link to={`/tickets/${ticket.ticket_id}`} className="font-semibold text-azul-noche hover:underline">
-                  #{ticket.ticket_id} · {ticket.tipo_solicitud}
-                </Link>
-                <p className="text-xs text-tinta-suave">{ticket.disenador ?? 'Sin diseñador'}</p>
-                <Button variante="secundario" className="mt-2" onClick={() => setTicketDictamen(ticket)}>
-                  Dictaminar
-                </Button>
-              </div>
-            </Card>
-          ))}
+          {porDictaminar.map((ticket) => {
+            const minutosRestantes = ticket.minutos_habiles_restantes_dictamen ?? 0
+            const bloqueadoPorHorario = !ticket.es_excepcional && !esAdmin && horarioHabil === false
+            return (
+              <Card key={ticket.ticket_id} className="flex items-center gap-4">
+                <ProgressRing horasRestantes={minutosRestantes / 60} />
+                <div className="flex-1">
+                  <Link to={`/tickets/${ticket.ticket_id}`} className="font-semibold text-azul-noche hover:underline">
+                    {ticket.codigo} · {ticket.tipo_solicitud}
+                  </Link>
+                  <p className="text-xs text-tinta-suave">{ticket.disenador ?? 'Sin diseñador'}</p>
+                  <p className="text-xs text-tinta-suave">
+                    Correcciones {ticket.correcciones_usadas ?? 0}/{ticket.correcciones_maximas ?? 5}
+                  </p>
+                  <p className="text-xs font-medium text-ambar">Quedan {formatoHorasHabiles(minutosRestantes)} hábiles</p>
+                  <Button
+                    variante="secundario"
+                    className="mt-2"
+                    disabled={bloqueadoPorHorario}
+                    title={bloqueadoPorHorario ? 'Los dictámenes solo se hacen en horario hábil.' : undefined}
+                    onClick={() => setTicketDictamen(ticket)}
+                  >
+                    Dictaminar
+                  </Button>
+                </div>
+              </Card>
+            )
+          })}
         </div>
       )}
 
@@ -85,7 +104,7 @@ export function JefeDashboard() {
                   <tr key={ticket.ticket_id}>
                     <td className="px-4 py-2">
                       <Link to={`/tickets/${ticket.ticket_id}`} className="font-mono text-azul-institucional hover:underline">
-                        #{ticket.ticket_id}
+                        {ticket.codigo}
                       </Link>
                     </td>
                     <td className="px-4 py-2">{ticket.tipo_solicitud}</td>
@@ -104,7 +123,8 @@ export function JefeDashboard() {
       {ticketDictamen && (
         <DictamenModal
           abierto
-          ticketId={ticketDictamen.ticket_id!}
+          codigo={ticketDictamen.codigo ?? ''}
+          correccionesUsadas={ticketDictamen.correcciones_usadas ?? 0}
           onCerrar={() => setTicketDictamen(null)}
           onConfirmar={manejarConfirmar}
         />

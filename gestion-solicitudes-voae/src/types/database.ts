@@ -20,18 +20,24 @@ export type Database = {
           estado: boolean
           id: number
           nombre: string
+          prefijo: string | null
+          ultimo_consecutivo: number
         }
         Insert: {
           descripcion?: string | null
           estado?: boolean
           id?: number
           nombre: string
+          prefijo?: string | null
+          ultimo_consecutivo?: number
         }
         Update: {
           descripcion?: string | null
           estado?: boolean
           id?: number
           nombre?: string
+          prefijo?: string | null
+          ultimo_consecutivo?: number
         }
         Relationships: []
       }
@@ -65,6 +71,9 @@ export type Database = {
           estado: boolean
           id: number
           nombre: string
+          nombre_completo: string | null
+          primer_apellido: string | null
+          segundo_apellido: string | null
         }
         Insert: {
           area_id?: number | null
@@ -74,6 +83,9 @@ export type Database = {
           estado?: boolean
           id?: number
           nombre: string
+          nombre_completo?: string | null
+          primer_apellido?: string | null
+          segundo_apellido?: string | null
         }
         Update: {
           area_id?: number | null
@@ -83,6 +95,9 @@ export type Database = {
           estado?: boolean
           id?: number
           nombre?: string
+          nombre_completo?: string | null
+          primer_apellido?: string | null
+          segundo_apellido?: string | null
         }
         Relationships: [
           {
@@ -178,6 +193,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      fnDisenadoresTabla: {
+        Args: never
+        Returns: {
+          es_asignador: boolean
+          id: number
+          nombre: string
+        }[]
+      }
       fnUsuarioActualAreaEscalar: { Args: never; Returns: number }
       fnUsuarioActualIdEscalar: { Args: never; Returns: number }
       fnUsuarioActualTieneRolEscalar: {
@@ -392,7 +415,6 @@ export type Database = {
           alcance: string | null
           aplica_articulo_140: boolean
           enlace_qr: string | null
-          fecha: string | null
           formulario_id: number
           hora_fin: string | null
           hora_inicio: string | null
@@ -406,7 +428,6 @@ export type Database = {
           alcance?: string | null
           aplica_articulo_140?: boolean
           enlace_qr?: string | null
-          fecha?: string | null
           formulario_id: number
           hora_fin?: string | null
           hora_inicio?: string | null
@@ -420,7 +441,6 @@ export type Database = {
           alcance?: string | null
           aplica_articulo_140?: boolean
           enlace_qr?: string | null
-          fecha?: string | null
           formulario_id?: number
           hora_fin?: string | null
           hora_inicio?: string | null
@@ -478,7 +498,6 @@ export type Database = {
       FormularioGenerico: {
         Row: {
           descripcion: string
-          fecha_requerida: string | null
           formulario_id: number
           informacion_producto: string | null
           logotipos: string[]
@@ -487,7 +506,6 @@ export type Database = {
         }
         Insert: {
           descripcion: string
-          fecha_requerida?: string | null
           formulario_id: number
           informacion_producto?: string | null
           logotipos?: string[]
@@ -496,7 +514,6 @@ export type Database = {
         }
         Update: {
           descripcion?: string
-          fecha_requerida?: string | null
           formulario_id?: number
           informacion_producto?: string | null
           logotipos?: string[]
@@ -518,7 +535,6 @@ export type Database = {
           cantidad_invitados: number | null
           elaborar_invitacion: boolean
           equipo_requerido: string | null
-          fecha: string
           formulario_id: number
           hora: string
           informacion_programa: string | null
@@ -533,7 +549,6 @@ export type Database = {
           cantidad_invitados?: number | null
           elaborar_invitacion?: boolean
           equipo_requerido?: string | null
-          fecha: string
           formulario_id: number
           hora: string
           informacion_programa?: string | null
@@ -548,7 +563,6 @@ export type Database = {
           cantidad_invitados?: number | null
           elaborar_invitacion?: boolean
           equipo_requerido?: string | null
-          fecha?: string
           formulario_id?: number
           hora?: string
           informacion_programa?: string | null
@@ -572,16 +586,19 @@ export type Database = {
       Formularios: {
         Row: {
           fecha_creacion: string
+          fecha_evento: string
           id: number
           tipo_solicitud_id: number
         }
         Insert: {
           fecha_creacion?: string
+          fecha_evento: string
           id?: number
           tipo_solicitud_id: number
         }
         Update: {
           fecha_creacion?: string
+          fecha_evento?: string
           id?: number
           tipo_solicitud_id?: number
         }
@@ -672,8 +689,14 @@ export type Database = {
         Row: {
           aprobado_automatico: boolean
           area_id: number
+          codigo: string
           disenador_id: number | null
+          es_excepcional: boolean
           estado_id: number
+          excepcional_estado: string | null
+          excepcional_fecha_respuesta: string | null
+          excepcional_motivo_rechazo: string | null
+          excepcional_respondido_por: number | null
           fecha_entrega_diseno: string | null
           fecha_limite: string
           fecha_registro: string
@@ -685,8 +708,14 @@ export type Database = {
         Insert: {
           aprobado_automatico?: boolean
           area_id: number
+          codigo: string
           disenador_id?: number | null
+          es_excepcional?: boolean
           estado_id: number
+          excepcional_estado?: string | null
+          excepcional_fecha_respuesta?: string | null
+          excepcional_motivo_rechazo?: string | null
+          excepcional_respondido_por?: number | null
           fecha_entrega_diseno?: string | null
           fecha_limite: string
           fecha_registro?: string
@@ -698,8 +727,14 @@ export type Database = {
         Update: {
           aprobado_automatico?: boolean
           area_id?: number
+          codigo?: string
           disenador_id?: number | null
+          es_excepcional?: boolean
           estado_id?: number
+          excepcional_estado?: string | null
+          excepcional_fecha_respuesta?: string | null
+          excepcional_motivo_rechazo?: string | null
+          excepcional_respondido_por?: number | null
           fecha_entrega_diseno?: string | null
           fecha_limite?: string
           fecha_registro?: string
@@ -809,28 +844,49 @@ export type Database = {
         Row: {
           aprobado_automatico: boolean | null
           area: string | null
+          area_id: number | null
+          codigo: string | null
+          correcciones_maximas: number | null
           correcciones_usadas: number | null
           disenador: string | null
           disenador_id: number | null
+          es_excepcional: boolean | null
           estado_real: string | null
           estado_registrado: string | null
+          excepcional_estado: string | null
+          excepcional_motivo_rechazo: string | null
           fecha_aprobacion_automatica: string | null
           fecha_entrega_diseno: string | null
+          fecha_evento: string | null
           fecha_limite: string | null
           fecha_registro: string | null
+          formulario: string | null
           fuera_de_plazo: boolean | null
-          horas_restantes_dictamen: number | null
+          minutos_habiles_restantes_dictamen: number | null
           solicitante: string | null
           ticket_id: number | null
           tipo_solicitud: string | null
+          tipo_solicitud_id: number | null
           usuario_registro: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fkTicket_TipoSolicitud"
+            columns: ["tipo_solicitud_id"]
+            isOneToOne: false
+            referencedRelation: "TipoSolicitud"
+            referencedColumns: null
+          },
+        ]
       }
     }
     Functions: {
       fnAprobarTicketsAutomaticamente: { Args: never; Returns: number }
       fnEsDiaHabilEscalar: { Args: { p_dia: string }; Returns: boolean }
+      fnEsHorarioHabilEscalar: {
+        Args: { p_momento?: string }
+        Returns: boolean
+      }
       fnEstadisticasTicketsTabla: {
         Args: {
           p_area_id?: number
@@ -841,29 +897,58 @@ export type Database = {
         Returns: {
           aprobado_automatico: boolean
           area: string
+          codigo: string
           correcciones_usadas: number
           dias_resolucion: number
           disenador: string
           entregado_a_tiempo: boolean
+          es_excepcional: boolean
           estado_real: string
           fecha_entrega_diseno: string
+          fecha_evento: string
           fecha_limite: string
           fecha_registro: string
           ticket_id: number
           tipo_solicitud: string
         }[]
       }
+      fnFechaEventoMinimaEscalar: {
+        Args: { p_excepcional?: boolean; p_tipo_solicitud_id: number }
+        Returns: string
+      }
       fnFechaLimiteCalcularEscalar: {
         Args: { p_tipo_solicitud_id: number }
         Returns: string
       }
-      fnObtenerEstadoIdEscalar: { Args: { p_nombre: string }; Returns: number }
-      fnSolicitudCrearEscalar: {
-        Args: { p_detalle: Json; p_tipo_solicitud_id: number }
+      fnMinutosHabilesEntreEscalar: {
+        Args: { p_desde: string; p_hasta: string }
         Returns: number
+      }
+      fnObtenerEstadoIdEscalar: { Args: { p_nombre: string }; Returns: number }
+      fnRechazarExcepcionalesVencidas: { Args: never; Returns: number }
+      fnSolicitudCrearEscalar: {
+        Args: {
+          p_detalle: Json
+          p_excepcional?: boolean
+          p_tipo_solicitud_id: number
+        }
+        Returns: number
+      }
+      fnSolicitudExcepcionalResponderEscalar: {
+        Args: {
+          p_aceptar: boolean
+          p_disenador_id?: number
+          p_motivo?: string
+          p_ticket_id: number
+        }
+        Returns: undefined
       }
       fnSumarDiasHabilesEscalar: {
         Args: { p_desde: string; p_dias: number }
+        Returns: string
+      }
+      fnSumarHorasHabilesEscalar: {
+        Args: { p_desde: string; p_horas: number }
         Returns: string
       }
       fnTicketIdDesdeRutaEscalar: { Args: { p_ruta: string }; Returns: number }

@@ -1,9 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Download } from 'lucide-react'
+import { ChevronDown, Download, FileDown, Search, X } from 'lucide-react'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import {
   Bar,
   BarChart,
@@ -21,7 +23,7 @@ import {
 } from 'recharts'
 import { obtenerEstadisticas, type FilaEstadistica } from '../../data/estadisticas'
 import { listarAreas, listarTiposSolicitud } from '../../data/catalogos'
-import { formatFecha, hoyTegucigalpaISO, mesTegucigalpa } from '../../lib/date'
+import { formatFecha, formatFechaHora, hoyTegucigalpaISO, mesTegucigalpa } from '../../lib/date'
 import { descargarCsv } from '../../lib/csv'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -40,6 +42,7 @@ const COLOR_POR_ESTADO: Record<string, string> = {
   Aprobado: 'var(--color-menta-profundo)',
   'Aprobado (Automático)': 'var(--color-menta-profundo)',
   Retrasado: 'var(--color-coral)',
+  Rechazado: 'var(--color-tinta-suave)',
 }
 
 const ATAJOS = [
@@ -86,6 +89,18 @@ export function AnalistaDashboard() {
   const [params, setParams] = useSearchParams()
   const [pagina, setPagina] = useState(1)
   const [orden, setOrden] = useState<{ columna: keyof FilaEstadistica; asc: boolean }>({ columna: 'ticket_id', asc: false })
+  const [busqueda, setBusqueda] = useState('')
+  const [exportarAbierto, setExportarAbierto] = useState(false)
+  const exportarRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!exportarAbierto) return
+    function alHacerClicFuera(evento: MouseEvent) {
+      if (exportarRef.current && !exportarRef.current.contains(evento.target as Node)) setExportarAbierto(false)
+    }
+    document.addEventListener('mousedown', alHacerClicFuera)
+    return () => document.removeEventListener('mousedown', alHacerClicFuera)
+  }, [exportarAbierto])
 
   const atajo = params.get('atajo') ?? 'este-mes'
   const rangoAtajo = atajo === 'personalizado' ? null : calcularRango(atajo)
@@ -104,8 +119,11 @@ export function AnalistaDashboard() {
     setPagina(1)
   }
 
+  const hayFiltrosActivos = params.size > 0 || busqueda.trim() !== ''
+
   function limpiarFiltros() {
     setParams(new URLSearchParams(), { replace: true })
+    setBusqueda('')
     setPagina(1)
   }
 
@@ -144,6 +162,12 @@ export function AnalistaDashboard() {
     const automaticas = filasFiltradas.filter((f) => f.aprobado_automatico).length
     const conCorreccion = filasFiltradas.filter((f) => (f.correcciones_usadas ?? 0) > 0).length
 
+    const excepcionales = filasFiltradas.filter((f) => f.es_excepcional)
+    const excepcionalesRechazadas = excepcionales.filter((f) => f.estado_real === 'Rechazado').length
+    const excepcionalesPendientes = excepcionales.filter((f) => f.estado_real === 'Enviado').length
+    const excepcionalesResueltas = excepcionales.length - excepcionalesPendientes
+    const excepcionalesAceptadas = excepcionalesResueltas - excepcionalesRechazadas
+
     return {
       total,
       pctATiempo: conEntrega.length > 0 ? Math.round((aTiempo.length / conEntrega.length) * 100) : null,
@@ -156,6 +180,9 @@ export function AnalistaDashboard() {
       aprobadas: aprobadas.length,
       automaticas,
       pctConCorreccion: total > 0 ? Math.round((conCorreccion / total) * 100) : 0,
+      excepcionales: excepcionales.length,
+      pctExcepcionalesAceptadas:
+        excepcionalesResueltas > 0 ? Math.round((excepcionalesAceptadas / excepcionalesResueltas) * 100) : null,
     }
   }, [filasFiltradas])
 
@@ -228,45 +255,123 @@ export function AnalistaDashboard() {
     return copia
   }, [filasFiltradas, orden])
 
-  const totalPaginas = Math.max(1, Math.ceil(filasOrdenadas.length / FILAS_POR_PAGINA))
-  const filasPagina = filasOrdenadas.slice((pagina - 1) * FILAS_POR_PAGINA, pagina * FILAS_POR_PAGINA)
+  const filasDetalle = useMemo(() => {
+    const q = busqueda.trim().toLowerCase()
+    if (!q) return filasOrdenadas
+    return filasOrdenadas.filter((f) => (f.codigo ?? '').toLowerCase().includes(q))
+  }, [filasOrdenadas, busqueda])
+
+  const totalPaginas = Math.max(1, Math.ceil(filasDetalle.length / FILAS_POR_PAGINA))
+  const filasPagina = filasDetalle.slice((pagina - 1) * FILAS_POR_PAGINA, pagina * FILAS_POR_PAGINA)
 
   function alternarOrden(columna: keyof FilaEstadistica) {
     setOrden((prev) => (prev.columna === columna ? { columna, asc: !prev.asc } : { columna, asc: true }))
   }
 
+  function filtrosAplicadosTexto(): string {
+    const partes = [
+      areaId ? `Área: ${areas.find((a) => a.id === areaId)?.nombre ?? areaId}` : null,
+      tipoId ? `Tipo: ${tipos.find((t) => t.id === tipoId)?.nombre ?? tipoId}` : null,
+      estadoFiltro ? `Estado: ${estadoFiltro}` : null,
+      disenadorFiltro ? `Diseñador: ${disenadorFiltro}` : null,
+      busqueda ? `Búsqueda: "${busqueda}"` : null,
+    ].filter(Boolean)
+    return partes.length > 0 ? partes.join(' · ') : 'Sin filtros adicionales'
+  }
+
   function exportarCsv() {
+    setExportarAbierto(false)
     descargarCsv(
-      'estadisticas-voae.csv',
+      `estadisticas_voae_${hoyTegucigalpaISO()}.csv`,
       [
-        'ticket_id',
-        'tipo_solicitud',
-        'area',
-        'estado_real',
-        'disenador',
-        'fecha_registro',
-        'fecha_limite',
-        'fecha_entrega_diseno',
-        'dias_resolucion',
-        'entregado_a_tiempo',
-        'correcciones_usadas',
-        'aprobado_automatico',
+        'Código',
+        'Tipo',
+        'Área',
+        'Estado',
+        'Diseñador',
+        'Registrado',
+        'Límite',
+        'Entrega',
+        'Evento',
+        'Días resolución',
+        'A tiempo',
+        'Correcciones',
+        'Automático',
+        'Excepcional',
       ],
-      filasOrdenadas.map((f) => [
-        f.ticket_id,
+      filasDetalle.map((f) => [
+        f.codigo,
         f.tipo_solicitud,
         f.area,
         f.estado_real,
-        f.disenador,
-        f.fecha_registro,
-        f.fecha_limite,
-        f.fecha_entrega_diseno,
-        f.dias_resolucion,
-        f.entregado_a_tiempo,
-        f.correcciones_usadas,
-        f.aprobado_automatico,
+        f.disenador ?? '—',
+        formatFecha(f.fecha_registro),
+        formatFecha(f.fecha_limite),
+        formatFecha(f.fecha_entrega_diseno),
+        formatFecha(f.fecha_evento),
+        f.dias_resolucion ?? '—',
+        f.entregado_a_tiempo == null ? '—' : f.entregado_a_tiempo ? 'Sí' : 'No',
+        f.correcciones_usadas ?? 0,
+        f.aprobado_automatico ? 'Sí' : 'No',
+        f.es_excepcional ? 'Sí' : 'No',
       ]),
     )
+  }
+
+  function exportarPdf() {
+    setExportarAbierto(false)
+    const doc = new jsPDF({ orientation: 'landscape' })
+    const anchoPagina = doc.internal.pageSize.getWidth()
+
+    doc.setFontSize(16)
+    doc.text('Estadísticas de solicitudes VOAE', 14, 15)
+    doc.setFontSize(9)
+    doc.text(`Rango: ${desde || '—'} a ${hasta || '—'}`, 14, 22)
+    doc.text(`Filtros: ${filtrosAplicadosTexto()}`, 14, 27)
+    doc.text(`Generado: ${formatFechaHora(new Date().toISOString())}`, 14, 32)
+    doc.text(
+      `Total: ${kpis.total}  ·  % a tiempo: ${kpis.pctATiempo ?? '—'}  ·  Promedio días: ${kpis.promedioDias ?? '—'}  ·  ` +
+        `Retrasadas: ${kpis.retrasadas}  ·  En curso: ${kpis.enCurso}  ·  Aprobadas: ${kpis.aprobadas} (${kpis.automaticas} auto.)  ·  ` +
+        `% con corrección: ${kpis.pctConCorreccion}%  ·  Excepcionales: ${kpis.excepcionales} (${kpis.pctExcepcionalesAceptadas ?? '—'}% aceptadas)`,
+      14,
+      39,
+      { maxWidth: anchoPagina - 28 },
+    )
+
+    autoTable(doc, {
+      startY: 48,
+      head: [
+        ['Código', 'Tipo', 'Área', 'Estado', 'Diseñador', 'Registrado', 'Límite', 'Entrega', 'Evento', 'Días', 'A tiempo', 'Correc.', 'Auto.', 'Excep.'],
+      ],
+      body: filasDetalle.map((f) => [
+        f.codigo ?? '',
+        f.tipo_solicitud ?? '',
+        f.area ?? '',
+        f.estado_real ?? '',
+        f.disenador ?? '—',
+        formatFecha(f.fecha_registro),
+        formatFecha(f.fecha_limite),
+        formatFecha(f.fecha_entrega_diseno),
+        formatFecha(f.fecha_evento),
+        f.dias_resolucion ?? '—',
+        f.entregado_a_tiempo == null ? '—' : f.entregado_a_tiempo ? 'Sí' : 'No',
+        f.correcciones_usadas ?? 0,
+        f.aprobado_automatico ? 'Sí' : 'No',
+        f.es_excepcional ? 'Sí' : 'No',
+      ]),
+      styles: { fontSize: 7 },
+      headStyles: { fillColor: [20, 66, 122] },
+    })
+
+    const totalPaginasPdf = doc.getNumberOfPages()
+    const altoPagina = doc.internal.pageSize.getHeight()
+    for (let i = 1; i <= totalPaginasPdf; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.text(`Página ${i} de ${totalPaginasPdf}`, anchoPagina - 32, altoPagina - 6)
+    }
+
+    doc.save(`estadisticas_voae_${hoyTegucigalpaISO()}.pdf`)
   }
 
   return (
@@ -276,7 +381,7 @@ export function AnalistaDashboard() {
         <p className="text-sm text-tinta-suave">Estadísticas de todas las solicitudes, sin ver su contenido.</p>
       </div>
 
-      <Card className="sticky top-0 z-10 flex flex-wrap items-end gap-3">
+      <Card className="sticky top-0 z-20 flex flex-wrap items-end gap-3 border border-azul-niebla shadow-md">
         <label className="text-xs text-tinta-suave">
           Rango
           <select
@@ -369,8 +474,13 @@ export function AnalistaDashboard() {
           </select>
         </label>
 
-        <Button variante="fantasma" onClick={limpiarFiltros}>
-          Limpiar filtros
+        <Button
+          variante="secundario"
+          className="border border-azul-niebla shadow-sm hover:bg-azul-niebla/60"
+          disabled={!hayFiltrosActivos}
+          onClick={limpiarFiltros}
+        >
+          <X size={14} /> Limpiar filtros
         </Button>
       </Card>
 
@@ -386,6 +496,11 @@ export function AnalistaDashboard() {
             <Kpi etiqueta="En curso" valor={kpis.enCurso} color="azul" />
             <Kpi etiqueta="Aprobadas" valor={`${kpis.aprobadas} (${kpis.automaticas} auto.)`} color="menta" />
             <Kpi etiqueta="% con corrección" valor={`${kpis.pctConCorreccion}%`} color="ambar" />
+            <Kpi
+              etiqueta="Excepcionales"
+              valor={`${kpis.excepcionales} (${kpis.pctExcepcionalesAceptadas ?? '—'}% aceptadas)`}
+              color="ambar"
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -471,14 +586,50 @@ export function AnalistaDashboard() {
           </div>
 
           <Card>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-semibold text-azul-noche">Detalle ({filasOrdenadas.length})</h2>
-              <Button variante="secundario" onClick={exportarCsv}>
-                <Download size={14} /> Exportar CSV
-              </Button>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-semibold text-azul-noche">
+                Detalle ({filasDetalle.length} de {filasOrdenadas.length} tickets)
+              </h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative">
+                  <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-tinta-suave" />
+                  <input
+                    className={`${CLASE_INPUT} w-56 pl-8`}
+                    placeholder="Buscar por código (ej. ADH0001)"
+                    value={busqueda}
+                    onChange={(e) => {
+                      setBusqueda(e.target.value)
+                      setPagina(1)
+                    }}
+                  />
+                </div>
+                <div className="relative" ref={exportarRef}>
+                  <Button variante="secundario" onClick={() => setExportarAbierto((v) => !v)}>
+                    <Download size={14} /> Exportar <ChevronDown size={14} />
+                  </Button>
+                  {exportarAbierto && (
+                    <div className="absolute right-0 z-20 mt-1 w-40 rounded-lg border border-azul-niebla bg-white p-1 shadow-xl">
+                      <button
+                        type="button"
+                        onClick={exportarCsv}
+                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-tinta hover:bg-azul-niebla"
+                      >
+                        <Download size={14} /> CSV
+                      </button>
+                      <button
+                        type="button"
+                        onClick={exportarPdf}
+                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-tinta hover:bg-azul-niebla"
+                      >
+                        <FileDown size={14} /> PDF
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {filasOrdenadas.length === 0 ? (
+            {filasDetalle.length === 0 ? (
               <EmptyState titulo="No hay resultados con estos filtros" />
             ) : (
               <>
@@ -488,12 +639,13 @@ export function AnalistaDashboard() {
                       <tr>
                         {(
                           [
-                            ['ticket_id', 'Ticket'],
+                            ['ticket_id', 'Código'],
                             ['tipo_solicitud', 'Tipo'],
                             ['area', 'Área'],
                             ['estado_real', 'Estado'],
                             ['disenador', 'Diseñador'],
                             ['fecha_registro', 'Registrado'],
+                            ['fecha_evento', 'Evento'],
                             ['dias_resolucion', 'Días resolución'],
                           ] as [keyof FilaEstadistica, string][]
                         ).map(([columna, etiqueta]) => (
@@ -508,7 +660,7 @@ export function AnalistaDashboard() {
                         <tr key={fila.ticket_id}>
                           <td className="px-3 py-2 font-mono">
                             <Link to={`/tickets/${fila.ticket_id}`} className="text-azul-institucional hover:underline">
-                              #{fila.ticket_id}
+                              {fila.codigo}
                             </Link>
                           </td>
                           <td className="px-3 py-2">{fila.tipo_solicitud}</td>
@@ -518,6 +670,7 @@ export function AnalistaDashboard() {
                           </td>
                           <td className="px-3 py-2">{fila.disenador ?? '—'}</td>
                           <td className="px-3 py-2">{formatFecha(fila.fecha_registro)}</td>
+                          <td className="px-3 py-2">{formatFecha(fila.fecha_evento)}</td>
                           <td className="px-3 py-2">{fila.dias_resolucion ?? '—'}</td>
                         </tr>
                       ))}

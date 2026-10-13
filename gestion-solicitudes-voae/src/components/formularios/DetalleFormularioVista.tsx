@@ -3,7 +3,6 @@ import type { DetalleFormulario } from '../../types/domain'
 
 const ETIQUETAS: Record<string, string> = {
   titulo: 'Título',
-  fecha: 'Fecha',
   hora_inicio: 'Hora de inicio',
   hora_fin: 'Hora de fin',
   lugar: 'Lugar',
@@ -34,11 +33,10 @@ const ETIQUETAS: Record<string, string> = {
   necesita_edecanes: 'Necesita edecanes',
   necesita_pumas: 'Necesita Pumas',
   descripcion: 'Descripción',
-  fecha_requerida: 'Fecha requerida',
   observaciones: 'Observaciones',
 }
 
-const CAMPOS_FECHA = new Set(['fecha', 'fecha_entrega_publicacion', 'fecha_necesaria', 'fecha_requerida'])
+const CAMPOS_FECHA = new Set(['fecha_entrega_publicacion', 'fecha_necesaria'])
 const CAMPOS_HORA = new Set(['hora_inicio', 'hora_fin', 'hora'])
 
 function renderValor(clave: string, valor: unknown): string {

@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Plus, X } from 'lucide-react'
+import { Plus, TriangleAlert, X } from 'lucide-react'
 import { listarUsuarios, listarRoles, actualizarUsuario, asignarRol, revocarRol, type UsuarioAdmin } from '../../data/usuarios'
 import { listarAreas } from '../../data/catalogos'
 import { mensajeError } from '../../lib/errors'
@@ -21,10 +21,20 @@ export function AdminUsuariosPage() {
   const [modalAbierto, setModalAbierto] = useState(false)
   const [confirmacion, setConfirmacion] = useState<Confirmacion | null>(null)
   const [confirmando, setConfirmando] = useState(false)
+  const [soloIncompletos, setSoloIncompletos] = useState(false)
 
   const { data: usuarios = [], isLoading } = useQuery({ queryKey: ['admin', 'usuarios'], queryFn: listarUsuarios })
   const { data: areas = [] } = useQuery({ queryKey: ['catalogos', 'areas'], queryFn: listarAreas })
   const { data: roles = [] } = useQuery({ queryKey: ['admin', 'roles'], queryFn: listarRoles })
+
+  function datosIncompletos(usuario: UsuarioAdmin): boolean {
+    return !usuario.primer_apellido?.trim() || !usuario.segundo_apellido?.trim()
+  }
+
+  const usuariosFiltrados = useMemo(
+    () => (soloIncompletos ? usuarios.filter(datosIncompletos) : usuarios),
+    [usuarios, soloIncompletos],
+  )
 
   function invalidar() {
     void queryClient.invalidateQueries({ queryKey: ['admin', 'usuarios'] })
@@ -86,21 +96,27 @@ export function AdminUsuariosPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-azul-noche">Usuarios</h1>
           <p className="text-sm text-tinta-suave">Administra áreas, roles y el estado de las cuentas.</p>
         </div>
-        <Button onClick={() => setModalAbierto(true)}>
-          <Plus size={16} /> Crear usuario
-        </Button>
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-1.5 text-sm text-tinta-suave">
+            <input type="checkbox" checked={soloIncompletos} onChange={(e) => setSoloIncompletos(e.target.checked)} />
+            Datos incompletos
+          </label>
+          <Button onClick={() => setModalAbierto(true)}>
+            <Plus size={16} /> Crear usuario
+          </Button>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-azul-niebla bg-white">
         <table className="w-full min-w-[800px] text-left text-sm">
           <thead className="bg-azul-niebla/50 text-xs uppercase text-tinta-suave">
             <tr>
-              <th className="px-4 py-2">Nombre</th>
+              <th className="px-4 py-2">Nombre completo</th>
               <th className="px-4 py-2">Correo</th>
               <th className="px-4 py-2">Área</th>
               <th className="px-4 py-2">Roles</th>
@@ -108,9 +124,18 @@ export function AdminUsuariosPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-azul-niebla/60">
-            {usuarios.map((usuario) => (
+            {usuariosFiltrados.map((usuario) => (
               <tr key={usuario.id}>
-                <td className="px-4 py-2 font-medium text-tinta">{usuario.nombre}</td>
+                <td className="px-4 py-2 font-medium text-tinta">
+                  <div className="flex items-center gap-1.5">
+                    {usuario.nombre_completo}
+                    {datosIncompletos(usuario) && (
+                      <span title="Faltan apellidos">
+                        <TriangleAlert size={14} className="text-ambar" aria-label="Faltan apellidos" />
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-4 py-2 text-tinta-suave">{usuario.correo}</td>
                 <td className="px-4 py-2">
                   <select
@@ -158,11 +183,20 @@ export function AdminUsuariosPage() {
                       <option value="">+ rol</option>
                       {roles
                         .filter((rol) => !usuario.roles.some((r) => r.id === rol.id))
-                        .map((rol) => (
-                          <option key={rol.id} value={rol.id}>
-                            {rol.nombre}
-                          </option>
-                        ))}
+                        .map((rol) => {
+                          const necesitaDisenador = rol.nombre === 'Asignador' && !usuario.roles.some((r) => r.nombre === 'Diseñador')
+                          return (
+                            <option
+                              key={rol.id}
+                              value={rol.id}
+                              disabled={necesitaDisenador}
+                              title={necesitaDisenador ? 'Primero asigna el rol Diseñador' : undefined}
+                            >
+                              {rol.nombre}
+                              {necesitaDisenador ? ' (requiere Diseñador)' : ''}
+                            </option>
+                          )
+                        })}
                     </select>
                   </div>
                 </td>
@@ -190,14 +224,14 @@ export function AdminUsuariosPage() {
       >
         {confirmacion?.tipo === 'inhabilitar' && (
           <p className="text-sm text-tinta-suave">
-            ¿Estás seguro de que deseas inhabilitar a <strong className="text-tinta">{confirmacion.usuario.nombre}</strong>?
+            ¿Estás seguro de que deseas inhabilitar a <strong className="text-tinta">{confirmacion.usuario.nombre_completo}</strong>?
             Su cuenta quedará inactiva hasta que la vuelvas a activar.
           </p>
         )}
         {confirmacion?.tipo === 'quitar-rol' && (
           <p className="text-sm text-tinta-suave">
             ¿Estás seguro de que deseas quitar el rol <strong className="text-tinta">{confirmacion.rol.nombre}</strong> a{' '}
-            <strong className="text-tinta">{confirmacion.usuario.nombre}</strong>? Su cuenta seguirá activa, pero perderá
+            <strong className="text-tinta">{confirmacion.usuario.nombre_completo}</strong>? Su cuenta seguirá activa, pero perderá
             el acceso que le da ese rol.
           </p>
         )}

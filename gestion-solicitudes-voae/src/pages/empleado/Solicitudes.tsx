@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react'
+import { ChevronDown, Filter } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { useAuth } from '../../auth/useAuth'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { TicketCard } from '../../components/TicketCard'
 import { CLASE_INPUT } from '../../components/ui/Campo'
+
+const CLASE_SELECT_FILTRO = `${CLASE_INPUT} w-auto appearance-none pl-9 pr-8 shadow-sm transition-shadow duration-150 hover:shadow-md`
 
 export function EmpleadoSolicitudesPage() {
   const { data: todos, isLoading } = useTicketsEstadoReal()
@@ -30,22 +33,30 @@ export function EmpleadoSolicitudesPage() {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <select className={`${CLASE_INPUT} w-auto`} value={estado} onChange={(e) => setEstado(e.target.value)}>
-          <option value="">Todos los estados</option>
-          {estados.map((e) => (
-            <option key={e} value={e!}>
-              {e}
-            </option>
-          ))}
-        </select>
-        <select className={`${CLASE_INPUT} w-auto`} value={tipo} onChange={(e) => setTipo(e.target.value)}>
-          <option value="">Todos los tipos</option>
-          {tipos.map((t) => (
-            <option key={t} value={t!}>
-              {t}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <Filter size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-tinta-suave" />
+          <select className={CLASE_SELECT_FILTRO} value={estado} onChange={(e) => setEstado(e.target.value)}>
+            <option value="">Todos los estados</option>
+            {estados.map((e) => (
+              <option key={e} value={e!}>
+                {e}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-tinta-suave" />
+        </div>
+        <div className="relative">
+          <Filter size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-tinta-suave" />
+          <select className={CLASE_SELECT_FILTRO} value={tipo} onChange={(e) => setTipo(e.target.value)}>
+            <option value="">Todos los tipos</option>
+            {tipos.map((t) => (
+              <option key={t} value={t!}>
+                {t}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-tinta-suave" />
+        </div>
       </div>
 
       {isLoading ? (

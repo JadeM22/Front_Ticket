@@ -9,6 +9,20 @@ import { formatFechaHora } from './date'
  */
 export function pasosProgresoTicket(ticket: TicketEstadoReal): PasoStepper[] {
   const registrado = ticket.estado_registrado
+
+  // Las solicitudes excepcionales rechazadas (por el Asignador o automáticamente) no siguen el flujo normal.
+  if (registrado === 'Rechazado') {
+    return [
+      { etiqueta: 'Enviada', estado: 'completado' },
+      {
+        etiqueta: 'Rechazada',
+        estado: 'actual',
+        alerta: true,
+        descripcion: ticket.excepcional_motivo_rechazo ?? undefined,
+      },
+    ]
+  }
+
   const aprobado = registrado === 'Aprobado' || (ticket.estado_real ?? '').startsWith('Aprobado')
   const huboCorreccion = (ticket.correcciones_usadas ?? 0) > 0 || registrado === 'Corrección'
   const retrasado = ticket.estado_real === 'Retrasado'
@@ -28,13 +42,13 @@ export function pasosProgresoTicket(ticket: TicketEstadoReal): PasoStepper[] {
     {
       clave: 'dictamen',
       etiqueta: 'Dictamen del jefe',
-      descripcion: 'Si no hay dictamen en 24 h se aprueba sola',
+      descripcion: 'Si no hay dictamen en 24 horas hábiles se aprueba sola',
     },
   )
   if (huboCorreccion) {
     etapas.push(
       { clave: 'correccion', etiqueta: 'Corrección', descripcion: 'El diseñador aplica los cambios pedidos' },
-      { clave: 'dictamen-final', etiqueta: 'Dictamen final', descripcion: 'Si no hay dictamen en 24 h se aprueba sola' },
+      { clave: 'dictamen-final', etiqueta: 'Dictamen final', descripcion: 'Si no hay dictamen en 24 horas hábiles se aprueba sola' },
     )
   }
   etapas.push({

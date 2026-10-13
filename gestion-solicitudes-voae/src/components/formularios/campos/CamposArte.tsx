@@ -1,8 +1,6 @@
 import { Campo, CLASE_INPUT } from '../../ui/Campo'
-import { FechaInput } from '../../ui/FechaInput'
 import { HoraInput } from '../../ui/HoraInput'
 import { EtiquetasInput } from '../EtiquetasInput'
-import { hoyTegucigalpaISO } from '../../../lib/date'
 import type { DetalleArte } from '../../../types/domain'
 
 interface Props {
@@ -22,14 +20,7 @@ export function CamposArte({ valor, onCambiar }: Props) {
         />
       </Campo>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Campo etiqueta="Fecha (opcional)">
-          <FechaInput
-            min={hoyTegucigalpaISO()}
-            valor={valor.fecha ?? ''}
-            onCambiar={(fecha) => onCambiar({ ...valor, fecha: fecha || null })}
-          />
-        </Campo>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Campo etiqueta="Hora de inicio">
           <HoraInput
             valor={valor.hora_inicio ?? ''}
@@ -100,6 +91,7 @@ export function CamposArte({ valor, onCambiar }: Props) {
         <textarea
           className={CLASE_INPUT}
           rows={3}
+          placeholder="Escribe aquí las instrucciones e información completa que deseas incluir..."
           value={valor.informacion_adicional ?? ''}
           onChange={(e) => onCambiar({ ...valor, informacion_adicional: e.target.value || null })}
         />

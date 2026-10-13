@@ -15,7 +15,6 @@ export function detalleInicial(formulario: FormularioCodigo): DetalleFormulario 
     case 'ARTE':
       return {
         titulo: '',
-        fecha: null,
         hora_inicio: null,
         hora_fin: null,
         lugar: null,
@@ -48,7 +47,6 @@ export function detalleInicial(formulario: FormularioCodigo): DetalleFormulario 
         nombre_actividad: '',
         lugar_propuesto: '',
         cantidad_invitados: null,
-        fecha: '',
         hora: '',
         elaborar_invitacion: false,
         informacion_programa: null,
@@ -62,7 +60,6 @@ export function detalleInicial(formulario: FormularioCodigo): DetalleFormulario 
       return {
         titulo: '',
         descripcion: '',
-        fecha_requerida: null,
         informacion_producto: null,
         logotipos: [],
         observaciones: null,
@@ -81,7 +78,6 @@ export function validarDetalle(formulario: FormularioCodigo, detalle: DetalleFor
     case 'ARTE': {
       const d = detalle as DetalleArte
       if (!d.titulo.trim()) return 'Escribe un título.'
-      if (!fechaNoPasada(d.fecha)) return 'La fecha no puede ser anterior a hoy.'
       if (d.hora_inicio && d.hora_fin && d.hora_fin < d.hora_inicio) return 'La hora de fin debe ser posterior a la de inicio.'
       if (d.enlace_qr && !esUrlHttp(d.enlace_qr)) return 'El enlace del QR debe iniciar con http:// o https://.'
       return null
@@ -103,8 +99,7 @@ export function validarDetalle(formulario: FormularioCodigo, detalle: DetalleFor
     case 'PROTOCOLO': {
       const d = detalle as DetalleProtocolo
       if (!d.nombre_actividad.trim() || !d.lugar_propuesto.trim()) return 'Completa el nombre de la actividad y el lugar propuesto.'
-      if (!d.fecha || !d.hora) return 'Indica la fecha y la hora.'
-      if (!fechaNoPasada(d.fecha)) return 'La fecha no puede ser anterior a hoy.'
+      if (!d.hora) return 'Indica la hora.'
       if (d.cantidad_invitados != null && d.cantidad_invitados <= 0) return 'La cantidad de invitados debe ser mayor a 0.'
       if (d.necesita_maestro_ceremonia && !d.maestro_ceremonia_preferido?.trim())
         return 'Indica el maestro de ceremonia preferido, o desmarca la opción.'
@@ -113,7 +108,6 @@ export function validarDetalle(formulario: FormularioCodigo, detalle: DetalleFor
     case 'GENERICO': {
       const d = detalle as DetalleGenerico
       if (!d.titulo.trim() || !d.descripcion.trim()) return 'Completa el título y la descripción.'
-      if (!fechaNoPasada(d.fecha_requerida)) return 'La fecha requerida no puede ser anterior a hoy.'
       return null
     }
   }

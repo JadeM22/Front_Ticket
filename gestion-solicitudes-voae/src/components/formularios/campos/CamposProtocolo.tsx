@@ -1,8 +1,6 @@
 import { Campo, CLASE_INPUT } from '../../ui/Campo'
-import { FechaInput } from '../../ui/FechaInput'
 import { HoraInput } from '../../ui/HoraInput'
 import { Aviso } from '../Aviso'
-import { hoyTegucigalpaISO } from '../../../lib/date'
 import type { DetalleProtocolo } from '../../../types/domain'
 
 interface Props {
@@ -41,19 +39,9 @@ export function CamposProtocolo({ valor, onCambiar }: Props) {
         />
       </Campo>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Campo etiqueta="Fecha">
-          <FechaInput
-            min={hoyTegucigalpaISO()}
-            required
-            valor={valor.fecha}
-            onCambiar={(fecha) => onCambiar({ ...valor, fecha })}
-          />
-        </Campo>
-        <Campo etiqueta="Hora">
-          <HoraInput required valor={valor.hora} onCambiar={(hora) => onCambiar({ ...valor, hora })} />
-        </Campo>
-      </div>
+      <Campo etiqueta="Hora">
+        <HoraInput required valor={valor.hora} onCambiar={(hora) => onCambiar({ ...valor, hora })} />
+      </Campo>
 
       <label className="flex items-center gap-2 text-sm text-tinta">
         <input

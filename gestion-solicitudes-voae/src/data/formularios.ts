@@ -2,10 +2,16 @@ import { supabase } from '../lib/supabase'
 import type { Json } from '../types/database'
 import type { DetalleFormulario, FormularioCodigo } from '../types/domain'
 
-export async function crearSolicitud(tipoSolicitudId: number, detalle: DetalleFormulario): Promise<number> {
+/** `detalle` debe incluir `fecha_evento` (obligatoria en todos los formularios). */
+export async function crearSolicitud(
+  tipoSolicitudId: number,
+  detalle: DetalleFormulario & { fecha_evento: string },
+  excepcional = false,
+): Promise<number> {
   const { data, error } = await supabase.schema('Solicitudes').rpc('fnSolicitudCrearEscalar', {
     p_tipo_solicitud_id: tipoSolicitudId,
     p_detalle: detalle as unknown as Json,
+    p_excepcional: excepcional,
   })
   if (error) throw error
   return data as number
@@ -17,6 +23,22 @@ export async function obtenerFechaLimiteEstimada(tipoSolicitudId: number): Promi
     .rpc('fnFechaLimiteCalcularEscalar', { p_tipo_solicitud_id: tipoSolicitudId })
   if (error) throw error
   return data as string
+}
+
+/** Primer día permitido para la fecha del evento: días hábiles del tipo, o 2 días hábiles si es excepcional. */
+export async function obtenerFechaEventoMinima(tipoSolicitudId: number, excepcional: boolean): Promise<string> {
+  const { data, error } = await supabase.schema('Solicitudes').rpc('fnFechaEventoMinimaEscalar', {
+    p_tipo_solicitud_id: tipoSolicitudId,
+    p_excepcional: excepcional,
+  })
+  if (error) throw error
+  return data as string
+}
+
+export async function esHorarioHabil(): Promise<boolean> {
+  const { data, error } = await supabase.schema('Solicitudes').rpc('fnEsHorarioHabilEscalar')
+  if (error) throw error
+  return data as boolean
 }
 
 export async function obtenerDetalleFormulario(

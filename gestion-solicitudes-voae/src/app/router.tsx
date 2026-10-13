@@ -12,6 +12,8 @@ import { NuevaSolicitudPage } from '../pages/empleado/NuevaSolicitud'
 import { EmpleadoSolicitudesPage } from '../pages/empleado/Solicitudes'
 import { DisenadorDashboard } from '../pages/disenador/Dashboard'
 import { JefeDashboard } from '../pages/jefe/Dashboard'
+import { SolicitudExcepcionalPage } from '../pages/jefe/SolicitudExcepcional'
+import { AsignadorDashboard } from '../pages/asignador/Dashboard'
 import { AdminDashboard } from '../pages/admin/Dashboard'
 import { AdminUsuariosPage } from '../pages/admin/Usuarios'
 import { AdminCatalogosPage } from '../pages/admin/Catalogos'
@@ -41,7 +43,7 @@ export const router = createBrowserRouter([
                 children: [{ path: '/empleado', element: <EmpleadoDashboard /> }],
               },
               {
-                element: <RequireRole roles={['Empleado', 'Analista']} />,
+                element: <RequireRole roles={['Empleado', 'Analista', 'Jefe de Área']} />,
                 children: [
                   { path: '/empleado/nueva', element: <NuevaSolicitudPage /> },
                   { path: '/empleado/solicitudes', element: <EmpleadoSolicitudesPage /> },
@@ -53,7 +55,14 @@ export const router = createBrowserRouter([
               },
               {
                 element: <RequireRole roles={['Jefe de Área']} />,
-                children: [{ path: '/jefe', element: <JefeDashboard /> }],
+                children: [
+                  { path: '/jefe', element: <JefeDashboard /> },
+                  { path: '/jefe/excepcional', element: <SolicitudExcepcionalPage /> },
+                ],
+              },
+              {
+                element: <RequireRole roles={['Asignador', 'Administrador']} />,
+                children: [{ path: '/asignador', element: <AsignadorDashboard /> }],
               },
               {
                 element: <RequireRole roles={['Analista', 'Administrador']} />,

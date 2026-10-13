@@ -41,7 +41,7 @@ function FormularioTipoSolicitud({
   onGuardado: () => void
 }) {
   const [nombre, setNombre] = useState(tipo?.nombre ?? '')
-  const [diasEstimados, setDiasEstimados] = useState(tipo?.dias_estimados ?? 1)
+  const [diasEstimados, setDiasEstimados] = useState(tipo?.dias_estimados ?? 10)
   const [diasHabiles, setDiasHabiles] = useState(tipo?.dias_habiles ?? true)
   const [formulario, setFormulario] = useState<FormularioCodigo>((tipo?.formulario as FormularioCodigo) ?? 'GENERICO')
   const [descripcion, setDescripcion] = useState(tipo?.descripcion ?? '')
@@ -49,8 +49,8 @@ function FormularioTipoSolicitud({
   const [enviando, setEnviando] = useState(false)
 
   async function manejarGuardar() {
-    if (!nombre.trim() || diasEstimados <= 0) {
-      toast.error('Completa el nombre y los días estimados (mayor a 0).')
+    if (!nombre.trim() || diasEstimados < 10) {
+      toast.error('Completa el nombre; los días estimados deben ser al menos 10.')
       return
     }
     setEnviando(true)
@@ -85,10 +85,10 @@ function FormularioTipoSolicitud({
       </Campo>
 
       <div className="grid grid-cols-2 gap-4">
-        <Campo etiqueta="Días estimados">
+        <Campo etiqueta="Días estimados" ayuda="Mínimo 10 días hábiles">
           <input
             type="number"
-            min={1}
+            min={10}
             className={CLASE_INPUT}
             value={diasEstimados}
             onChange={(e) => setDiasEstimados(Number(e.target.value))}

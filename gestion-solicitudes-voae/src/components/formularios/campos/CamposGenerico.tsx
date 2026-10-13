@@ -1,7 +1,5 @@
 import { Campo, CLASE_INPUT } from '../../ui/Campo'
-import { FechaInput } from '../../ui/FechaInput'
 import { EtiquetasInput } from '../EtiquetasInput'
-import { hoyTegucigalpaISO } from '../../../lib/date'
 import type { DetalleGenerico } from '../../../types/domain'
 
 interface Props {
@@ -28,14 +26,6 @@ export function CamposGenerico({ valor, onCambiar }: Props) {
           rows={4}
           value={valor.descripcion}
           onChange={(e) => onCambiar({ ...valor, descripcion: e.target.value })}
-        />
-      </Campo>
-
-      <Campo etiqueta="Fecha requerida (opcional)">
-        <FechaInput
-          min={hoyTegucigalpaISO()}
-          valor={valor.fecha_requerida ?? ''}
-          onCambiar={(fecha) => onCambiar({ ...valor, fecha_requerida: fecha || null })}
         />
       </Campo>
 

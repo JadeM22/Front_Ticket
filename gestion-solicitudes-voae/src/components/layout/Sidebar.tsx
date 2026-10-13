@@ -1,27 +1,62 @@
 import { NavLink } from 'react-router-dom'
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { NAV_POR_ROL } from './navegacion'
 import { JERARQUIA_ROLES } from '../../types/domain'
 import type { Perfil } from '../../types/domain'
+import { useTicketsEstadoReal } from '../../hooks/useTickets'
 
-export function Sidebar({ perfil, onNavegar }: { perfil: Perfil; onNavegar?: () => void }) {
+interface SidebarProps {
+  perfil: Perfil
+  onNavegar?: () => void
+  /** Solo aplica en escritorio: en móvil el sidebar siempre es el drawer completo. */
+  plegado?: boolean
+  onTogglePlegado?: () => void
+}
+
+export function Sidebar({ perfil, onNavegar, plegado = false, onTogglePlegado }: SidebarProps) {
   const rolesOrdenados = JERARQUIA_ROLES.filter((rol) => perfil.roles.includes(rol))
+
+  // Comparte la caché de `['tickets', 'estado-real']` con el resto de la app: no dispara una
+  // consulta aparte. Solo importa el conteo para quien puede aceptar/rechazar excepcionales.
+  const puedeAsignar = perfil.roles.includes('Asignador') || perfil.roles.includes('Administrador')
+  const { data: tickets } = useTicketsEstadoReal()
+  const excepcionalesPendientes = puedeAsignar
+    ? (tickets ?? []).filter((t) => t.es_excepcional && t.excepcional_estado === 'PENDIENTE').length
+    : 0
 
   return (
     <nav
-      className="relative flex h-full w-64 flex-none flex-col overflow-y-auto bg-[linear-gradient(180deg,#0b1f3a,#102d52)] px-4 py-6 text-white"
+      className={`relative flex h-full flex-none flex-col overflow-y-auto bg-[linear-gradient(180deg,#0b1f3a,#102d52)] py-6 text-white transition-[width] duration-200 ${
+        plegado ? 'w-16 px-2' : 'w-64 px-4'
+      }`}
       style={{
         backgroundImage:
           'linear-gradient(180deg,#0b1f3a,#102d52), repeating-linear-gradient(135deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 24px)',
       }}
     >
-      <div className="mb-8 px-2">
-        <p className="font-mono text-xs uppercase tracking-widest text-menta">VOAE</p>
-        <p className="text-sm font-semibold text-white/90">Gestión de Solicitudes</p>
+      <div className={`mb-8 flex items-center gap-2 ${plegado ? 'justify-center px-0' : 'justify-between px-2'}`}>
+        {!plegado && (
+          <div>
+            <p className="font-mono text-xs uppercase tracking-widest text-menta">VOAE</p>
+            <p className="text-sm font-semibold text-white/90">Gestión de Solicitudes</p>
+          </div>
+        )}
+        {onTogglePlegado && (
+          <button
+            type="button"
+            onClick={onTogglePlegado}
+            className="rounded-full p-1.5 text-white/60 transition-colors duration-150 hover:bg-white/10 hover:text-white"
+            aria-label={plegado ? 'Desplegar menú' : 'Plegar menú'}
+            title={plegado ? 'Desplegar menú' : 'Plegar menú'}
+          >
+            {plegado ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
+        )}
       </div>
 
       {rolesOrdenados.map((rol) => (
         <div key={rol} className="mb-6">
-          <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-white/40">{rol}</p>
+          {!plegado && <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-white/40">{rol}</p>}
           <ul className="space-y-1">
             {NAV_POR_ROL[rol].map((item) => (
               <li key={item.ruta}>
@@ -29,17 +64,27 @@ export function Sidebar({ perfil, onNavegar }: { perfil: Perfil; onNavegar?: () 
                   to={item.ruta}
                   end
                   onClick={onNavegar}
+                  title={plegado ? item.etiqueta : undefined}
                   className={({ isActive }) =>
                     `relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
-                      isActive ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white'
-                    }`
+                      plegado ? 'justify-center' : ''
+                    } ${isActive ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white'}`
                   }
                 >
                   {({ isActive }) => (
                     <>
                       {isActive && <span className="absolute left-0 h-5 w-1 rounded-full bg-menta" />}
                       <item.icono size={16} />
-                      {item.etiqueta}
+                      {!plegado && item.etiqueta}
+                      {item.ruta === '/asignador' && excepcionalesPendientes > 0 && (
+                        <span
+                          className={`flex h-5 min-w-5 items-center justify-center rounded-full bg-ambar px-1 text-[10px] font-bold text-azul-noche ${
+                            plegado ? 'absolute -right-1 -top-1' : 'ml-auto'
+                          }`}
+                        >
+                          {excepcionalesPendientes}
+                        </span>
+                      )}
                     </>
                   )}
                 </NavLink>

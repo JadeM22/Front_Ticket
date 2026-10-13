@@ -4,6 +4,7 @@ import type { Perfil, RolNombre } from '../types/domain'
 interface FilaPerfil {
   id: number
   nombre: string
+  nombre_completo: string | null
   correo: string
   area_id: number | null
   debe_cambiar_password: boolean
@@ -15,7 +16,7 @@ export async function obtenerPerfilActual(authId: string): Promise<Perfil | null
   const { data, error } = await supabase
     .schema('Seguridad')
     .from('Usuarios')
-    .select('id, nombre, correo, area_id, debe_cambiar_password, Areas(nombre), UsuariosRoles(Roles(nombre))')
+    .select('id, nombre, nombre_completo, correo, area_id, debe_cambiar_password, Areas(nombre), UsuariosRoles(Roles(nombre))')
     .eq('auth_id', authId)
     .maybeSingle()
 
@@ -29,7 +30,7 @@ export async function obtenerPerfilActual(authId: string): Promise<Perfil | null
 
   return {
     id: fila.id,
-    nombre: fila.nombre,
+    nombre: fila.nombre_completo ?? fila.nombre,
     correo: fila.correo,
     area_id: fila.area_id,
     area_nombre: fila.Areas?.nombre ?? null,

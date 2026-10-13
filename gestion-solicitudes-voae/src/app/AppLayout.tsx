@@ -5,16 +5,39 @@ import { Topbar } from '../components/layout/Topbar'
 import { useAuth } from '../auth/useAuth'
 import { PantallaCarga } from '../components/ui/PantallaCarga'
 
+const CLAVE_SIDEBAR_PLEGADO = 'voae.sidebar.plegado'
+
+function leerPreferenciaPlegado(): boolean {
+  try {
+    return localStorage.getItem(CLAVE_SIDEBAR_PLEGADO) === '1'
+  } catch {
+    return false
+  }
+}
+
 export function AppLayout() {
   const { perfil } = useAuth()
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const [plegado, setPlegado] = useState(leerPreferenciaPlegado)
 
   if (!perfil) return <PantallaCarga />
+
+  function alternarPlegado() {
+    setPlegado((prev) => {
+      const siguiente = !prev
+      try {
+        localStorage.setItem(CLAVE_SIDEBAR_PLEGADO, siguiente ? '1' : '0')
+      } catch {
+        // Sin localStorage (modo privado estricto) el plegado solo dura esta sesión de pestaña.
+      }
+      return siguiente
+    })
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-fondo">
       <div className="hidden lg:flex">
-        <Sidebar perfil={perfil} />
+        <Sidebar perfil={perfil} plegado={plegado} onTogglePlegado={alternarPlegado} />
       </div>
 
       {menuAbierto && (

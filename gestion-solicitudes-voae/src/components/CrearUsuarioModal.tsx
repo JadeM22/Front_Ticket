@@ -17,8 +17,9 @@ interface CrearUsuarioModalProps {
   roles: Rol[]
 }
 
-/** `Usuarios.nombre` es una sola columna VARCHAR(100): las tres partes se envían unidas. */
+/** `Usuarios.nombre` es varchar(100); `primer_apellido`/`segundo_apellido` son varchar(60). */
 const LARGO_MAXIMO_NOMBRE = 100
+const LARGO_MAXIMO_APELLIDO = 60
 
 function limpiarEspacios(texto: string): string {
   return texto.trim().replace(/\s+/g, ' ')
@@ -48,17 +49,24 @@ export function CrearUsuarioModal({ abierto, onCerrar, onCreado, areas, roles }:
   }
 
   async function manejarEnviar() {
-    if (!nombres.trim()) {
+    const nombre = limpiarEspacios(nombres)
+    const primerApellidoLimpio = limpiarEspacios(primerApellido)
+    const segundoApellidoLimpio = limpiarEspacios(segundoApellido)
+
+    if (!nombre) {
       toast.error('Escribe los nombres del usuario.')
       return
     }
-    if (!primerApellido.trim()) {
-      toast.error('Escribe el primer apellido del usuario.')
+    if (!primerApellidoLimpio || !segundoApellidoLimpio) {
+      toast.error('Escribe el primer y el segundo apellido del usuario.')
       return
     }
-    const nombre = [nombres, primerApellido, segundoApellido].map(limpiarEspacios).filter(Boolean).join(' ')
     if (nombre.length > LARGO_MAXIMO_NOMBRE) {
-      toast.error(`El nombre completo no puede pasar de ${LARGO_MAXIMO_NOMBRE} caracteres.`)
+      toast.error(`Los nombres no pueden pasar de ${LARGO_MAXIMO_NOMBRE} caracteres.`)
+      return
+    }
+    if (primerApellidoLimpio.length > LARGO_MAXIMO_APELLIDO || segundoApellidoLimpio.length > LARGO_MAXIMO_APELLIDO) {
+      toast.error(`Cada apellido no puede pasar de ${LARGO_MAXIMO_APELLIDO} caracteres.`)
       return
     }
     if (!correo.trim()) {
@@ -71,7 +79,14 @@ export function CrearUsuarioModal({ abierto, onCerrar, onCreado, areas, roles }:
     }
     setEnviando(true)
     try {
-      const resultadoCreacion = await crearUsuario({ correo: correo.trim(), nombre, area_id: areaId, rol_id: rolId })
+      const resultadoCreacion = await crearUsuario({
+        correo: correo.trim(),
+        nombre,
+        primer_apellido: primerApellidoLimpio,
+        segundo_apellido: segundoApellidoLimpio,
+        area_id: areaId,
+        rol_id: rolId,
+      })
       setResultado(resultadoCreacion)
       onCreado()
     } catch (error) {
@@ -120,8 +135,13 @@ export function CrearUsuarioModal({ abierto, onCerrar, onCreado, areas, roles }:
                 onChange={(e) => setPrimerApellido(e.target.value)}
               />
             </Campo>
-            <Campo etiqueta="Segundo apellido (opcional)">
-              <input className={CLASE_INPUT} value={segundoApellido} onChange={(e) => setSegundoApellido(e.target.value)} />
+            <Campo etiqueta="Segundo apellido">
+              <input
+                className={CLASE_INPUT}
+                required
+                value={segundoApellido}
+                onChange={(e) => setSegundoApellido(e.target.value)}
+              />
             </Campo>
           </div>
           <Campo etiqueta="Correo institucional">
@@ -154,11 +174,13 @@ export function CrearUsuarioModal({ abierto, onCerrar, onCreado, areas, roles }:
               onChange={(e) => setRolId(e.target.value ? Number(e.target.value) : '')}
             >
               <option value="">Selecciona un rol</option>
-              {roles.map((rol) => (
-                <option key={rol.id} value={rol.id}>
-                  {rol.nombre}
-                </option>
-              ))}
+              {roles
+                .filter((rol) => rol.nombre !== 'Asignador')
+                .map((rol) => (
+                  <option key={rol.id} value={rol.id}>
+                    {rol.nombre}
+                  </option>
+                ))}
             </select>
           </Campo>
           <Button className="w-full" cargando={enviando} onClick={manejarEnviar}>
