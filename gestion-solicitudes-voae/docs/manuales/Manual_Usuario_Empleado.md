@@ -24,6 +24,8 @@ pantallas grandes) y el formulario de inicio de sesión a la derecha:
 1. Escribe tu **correo** y tu **contraseña**.
 2. Pulsa **Ingresar**.
 
+![Pantalla de inicio de sesión: el boleto iTickets a la izquierda y el formulario a la derecha](capturas/empleado/19_inicio_sesion.jpg)
+
 > Importante: usa el correo y la contraseña que te asignó el Administrador. Si olvidaste tu
 > contraseña, usa el enlace **¿Olvidaste tu contraseña?**.
 
@@ -39,6 +41,8 @@ Una vez dentro verás:
 
 - A la izquierda, el **menú lateral** con tus tres secciones: **Resumen**, **Nueva solicitud** y
   **Mis solicitudes**. Puedes plegarlo con el ícono de la esquina superior para ganar espacio.
+
+  ![Menú lateral desplegado, con la opción activa resaltada](capturas/empleado/20_sidebar_desplegado.jpg)
 
   ![Menú lateral plegado, solo con íconos](capturas/empleado/17_sidebar_plegado.jpg)
 
@@ -103,8 +107,13 @@ Pulsa **Enviar solicitud**. Verás un aviso con el **código** de tu nuevo ticke
 
 ![Aviso "Solicitud ADH-0037 enviada."](capturas/empleado/07_toast_codigo.jpg)
 
-> Importante: fuera del horario hábil (lunes a viernes, 8:00 a. m. a 4:00 p. m., hora de Honduras)
-> el sistema no te deja enviar una solicitud nueva; te lo avisa en pantalla.
+Fuera del horario hábil (lunes a viernes, 8:00 a. m. a 4:00 p. m., hora de Honduras) verás un
+aviso al llenar el formulario. Puedes llenarlo igual, pero el botón para enviar se habilitará solo
+en horario hábil.
+
+![Aviso de fuera de horario: puedes llenar el formulario, pero el envío se habilitará en horario hábil](capturas/empleado/22_fuera_horario.jpg)
+
+> Importante: fuera del horario hábil no se puede enviar una solicitud nueva.
 
 # 4. Ver tus solicitudes
 
@@ -129,6 +138,8 @@ Aquí ves **todas** tus solicitudes, con filtros y búsqueda.
 
 - **Filtros:** "Todos los estados" y "Todos los tipos" te dejan ver solo lo que te interesa.
 - El contador "N de M solicitudes" te dice cuántas estás viendo del total.
+
+![Filtro de tipo "Diploma" aplicado: el contador muestra "1 de 5 solicitudes"](capturas/empleado/21_filtros_mis_solicitudes.jpg)
 
 ## 4.3 Detalle del ticket
 
