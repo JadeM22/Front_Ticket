@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Plus, TriangleAlert, X } from 'lucide-react'
 import { listarUsuarios, listarRoles, actualizarUsuario, asignarRol, revocarRol, type UsuarioAdmin } from '../../data/usuarios'
 import { listarAreas } from '../../data/catalogos'
+import { listarTicketsActivosDeDisenador, type TicketActivoResumen } from '../../data/tickets'
 import { mensajeError } from '../../lib/errors'
 import { CrearUsuarioModal } from '../../components/CrearUsuarioModal'
 import { Button } from '../../components/ui/Button'
@@ -13,13 +14,15 @@ import { SkeletonLista } from '../../components/ui/Skeleton'
 
 /** Acción destructiva que espera a que el administrador la confirme en el diálogo. */
 type Confirmacion =
-  | { tipo: 'inhabilitar'; usuario: UsuarioAdmin }
-  | { tipo: 'quitar-rol'; usuario: UsuarioAdmin; rol: { id: number; nombre: string } }
+  | { tipo: 'inhabilitar'; usuario: UsuarioAdmin; ticketsActivos: TicketActivoResumen[] }
+  | { tipo: 'reactivar'; usuario: UsuarioAdmin }
+  | { tipo: 'quitar-rol'; usuario: UsuarioAdmin; rol: { id: number; nombre: string }; ticketsActivos: TicketActivoResumen[] }
 
 export function AdminUsuariosPage() {
   const queryClient = useQueryClient()
   const [modalAbierto, setModalAbierto] = useState(false)
   const [confirmacion, setConfirmacion] = useState<Confirmacion | null>(null)
+  const [cargandoConfirmacion, setCargandoConfirmacion] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
   const [soloIncompletos, setSoloIncompletos] = useState(false)
 
@@ -36,8 +39,13 @@ export function AdminUsuariosPage() {
     [usuarios, soloIncompletos],
   )
 
-  function invalidar() {
+  /** Cualquier cambio que pueda liberar tickets de un diseñador (Parte 25) también afecta las listas de tickets. */
+  function invalidar(afectaTickets = false) {
     void queryClient.invalidateQueries({ queryKey: ['admin', 'usuarios'] })
+    if (afectaTickets) {
+      void queryClient.invalidateQueries({ queryKey: ['tickets', 'estado-real'] })
+      void queryClient.invalidateQueries({ queryKey: ['tickets', 'sin-asignar-count'] })
+    }
   }
 
   async function manejarCambiarArea(usuarioId: number, areaId: number) {
@@ -46,15 +54,6 @@ export function AdminUsuariosPage() {
       invalidar()
     } catch (error) {
       toast.error(await mensajeError(error, 'No se pudo cambiar el área.'))
-    }
-  }
-
-  async function manejarEstado(usuarioId: number, estado: boolean) {
-    try {
-      await actualizarUsuario(usuarioId, { estado })
-      invalidar()
-    } catch (error) {
-      toast.error(await mensajeError(error, 'No se pudo actualizar el estado.'))
     }
   }
 
@@ -67,22 +66,54 @@ export function AdminUsuariosPage() {
     }
   }
 
-  async function manejarRevocarRol(usuarioId: number, rolId: number) {
+  async function abrirConfirmacionInhabilitar(usuario: UsuarioAdmin) {
+    setCargandoConfirmacion(true)
     try {
-      await revocarRol(usuarioId, rolId)
-      invalidar()
+      const esDisenador = usuario.roles.some((r) => r.nombre === 'Diseñador')
+      const ticketsActivos = esDisenador ? await listarTicketsActivosDeDisenador(usuario.id) : []
+      setConfirmacion({ tipo: 'inhabilitar', usuario, ticketsActivos })
     } catch (error) {
-      toast.error(await mensajeError(error, 'No se pudo revocar el rol.'))
+      toast.error(await mensajeError(error, 'No se pudieron consultar sus tickets.'))
+    } finally {
+      setCargandoConfirmacion(false)
+    }
+  }
+
+  async function abrirConfirmacionQuitarRol(usuario: UsuarioAdmin, rol: { id: number; nombre: string }) {
+    setCargandoConfirmacion(true)
+    try {
+      const ticketsActivos = rol.nombre === 'Diseñador' ? await listarTicketsActivosDeDisenador(usuario.id) : []
+      setConfirmacion({ tipo: 'quitar-rol', usuario, rol, ticketsActivos })
+    } catch (error) {
+      toast.error(await mensajeError(error, 'No se pudieron consultar sus tickets.'))
+    } finally {
+      setCargandoConfirmacion(false)
     }
   }
 
   async function manejarConfirmar() {
     if (!confirmacion) return
     setConfirmando(true)
-    if (confirmacion.tipo === 'inhabilitar') {
-      await manejarEstado(confirmacion.usuario.id, false)
-    } else {
-      await manejarRevocarRol(confirmacion.usuario.id, confirmacion.rol.id)
+    try {
+      if (confirmacion.tipo === 'inhabilitar') {
+        await actualizarUsuario(confirmacion.usuario.id, { estado: false })
+        invalidar(confirmacion.ticketsActivos.length > 0)
+        const n = confirmacion.ticketsActivos.length
+        toast.success(
+          n > 0
+            ? `${confirmacion.usuario.nombre_completo} desactivado · ${n} ticket${n === 1 ? '' : 's'} volvieron a Sin asignar`
+            : `${confirmacion.usuario.nombre_completo} desactivado`,
+        )
+      } else if (confirmacion.tipo === 'reactivar') {
+        await actualizarUsuario(confirmacion.usuario.id, { estado: true })
+        invalidar()
+        toast.success(`${confirmacion.usuario.nombre_completo} reactivado`)
+      } else {
+        await revocarRol(confirmacion.usuario.id, confirmacion.rol.id)
+        invalidar(confirmacion.ticketsActivos.length > 0)
+      }
+    } catch (error) {
+      toast.error(await mensajeError(error, 'No se pudo completar la acción.'))
     }
     setConfirmando(false)
     setConfirmacion(null)
@@ -168,7 +199,8 @@ export function AdminUsuariosPage() {
                         {rol.nombre}
                         <button
                           type="button"
-                          onClick={() => setConfirmacion({ tipo: 'quitar-rol', usuario, rol })}
+                          onClick={() => void abrirConfirmacionQuitarRol(usuario, rol)}
+                          disabled={cargandoConfirmacion}
                           aria-label={`Revocar ${rol.nombre}`}
                         >
                           <X size={12} />
@@ -203,7 +235,10 @@ export function AdminUsuariosPage() {
                 <td className="px-4 py-2">
                   <button
                     type="button"
-                    onClick={() => (usuario.estado ? setConfirmacion({ tipo: 'inhabilitar', usuario }) : manejarEstado(usuario.id, true))}
+                    onClick={() =>
+                      usuario.estado ? void abrirConfirmacionInhabilitar(usuario) : setConfirmacion({ tipo: 'reactivar', usuario })
+                    }
+                    disabled={cargandoConfirmacion}
                     className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                       usuario.estado ? 'bg-menta-bruma text-menta-profundo' : 'bg-coral-bruma text-coral'
                     }`}
@@ -220,27 +255,69 @@ export function AdminUsuariosPage() {
       <Modal
         abierto={confirmacion !== null}
         onCerrar={cerrarConfirmacion}
-        titulo={confirmacion?.tipo === 'quitar-rol' ? 'Quitar rol' : 'Inhabilitar usuario'}
+        titulo={
+          confirmacion?.tipo === 'quitar-rol'
+            ? 'Quitar rol'
+            : confirmacion?.tipo === 'reactivar'
+              ? 'Reactivar usuario'
+              : 'Inhabilitar usuario'
+        }
       >
-        {confirmacion?.tipo === 'inhabilitar' && (
+        {confirmacion?.tipo === 'inhabilitar' &&
+          (confirmacion.ticketsActivos.length > 0 ? (
+            <p className="text-sm text-tinta-suave">
+              <strong className="text-tinta">{confirmacion.usuario.nombre_completo}</strong> tiene{' '}
+              {confirmacion.ticketsActivos.length} ticket{confirmacion.ticketsActivos.length === 1 ? '' : 's'} activo
+              {confirmacion.ticketsActivos.length === 1 ? '' : 's'} (
+              {confirmacion.ticketsActivos.map((t) => t.codigo).join(', ')}). Al desactivar esta cuenta, esos tickets volverán a{' '}
+              <strong className="text-tinta">Sin asignar</strong> y se avisará a los Asignadores y a los solicitantes. Sus tickets
+              finalizados esperando dictamen se quedan con ella.
+            </p>
+          ) : (
+            <p className="text-sm text-tinta-suave">
+              ¿Estás seguro de que deseas inhabilitar a <strong className="text-tinta">{confirmacion.usuario.nombre_completo}</strong>?
+              Su cuenta quedará inactiva hasta que la vuelvas a activar.
+            </p>
+          ))}
+        {confirmacion?.tipo === 'reactivar' && (
           <p className="text-sm text-tinta-suave">
-            ¿Estás seguro de que deseas inhabilitar a <strong className="text-tinta">{confirmacion.usuario.nombre_completo}</strong>?
-            Su cuenta quedará inactiva hasta que la vuelvas a activar.
+            ¿Reactivar a <strong className="text-tinta">{confirmacion.usuario.nombre_completo}</strong>? Los tickets que tenía no
+            se le devuelven automáticamente; el Asignador puede asignárselos.
           </p>
         )}
-        {confirmacion?.tipo === 'quitar-rol' && (
-          <p className="text-sm text-tinta-suave">
-            ¿Estás seguro de que deseas quitar el rol <strong className="text-tinta">{confirmacion.rol.nombre}</strong> a{' '}
-            <strong className="text-tinta">{confirmacion.usuario.nombre_completo}</strong>? Su cuenta seguirá activa, pero perderá
-            el acceso que le da ese rol.
-          </p>
-        )}
+        {confirmacion?.tipo === 'quitar-rol' &&
+          (confirmacion.ticketsActivos.length > 0 ? (
+            <p className="text-sm text-tinta-suave">
+              <strong className="text-tinta">{confirmacion.usuario.nombre_completo}</strong> tiene{' '}
+              {confirmacion.ticketsActivos.length} ticket{confirmacion.ticketsActivos.length === 1 ? '' : 's'} activo
+              {confirmacion.ticketsActivos.length === 1 ? '' : 's'} (
+              {confirmacion.ticketsActivos.map((t) => t.codigo).join(', ')}). Al quitarle el rol{' '}
+              <strong className="text-tinta">Diseñador</strong>, esos tickets volverán a <strong className="text-tinta">Sin asignar</strong>{' '}
+              y se avisará a los Asignadores y a los solicitantes.
+            </p>
+          ) : (
+            <p className="text-sm text-tinta-suave">
+              ¿Estás seguro de que deseas quitar el rol <strong className="text-tinta">{confirmacion.rol.nombre}</strong> a{' '}
+              <strong className="text-tinta">{confirmacion.usuario.nombre_completo}</strong>? Su cuenta seguirá activa, pero perderá
+              el acceso que le da ese rol.
+            </p>
+          ))}
         <div className="mt-6 flex justify-end gap-2">
           <Button variante="secundario" onClick={cerrarConfirmacion} disabled={confirmando}>
             Cancelar
           </Button>
-          <Button variante="peligro" cargando={confirmando} onClick={() => void manejarConfirmar()}>
-            {confirmacion?.tipo === 'quitar-rol' ? 'Quitar rol' : 'Inhabilitar'}
+          <Button
+            variante={confirmacion?.tipo === 'reactivar' ? 'primario' : 'peligro'}
+            cargando={confirmando}
+            onClick={() => void manejarConfirmar()}
+          >
+            {confirmacion?.tipo === 'quitar-rol'
+              ? 'Quitar rol'
+              : confirmacion?.tipo === 'reactivar'
+                ? 'Reactivar'
+                : confirmacion?.tipo === 'inhabilitar' && confirmacion.ticketsActivos.length > 0
+                  ? 'Desactivar y liberar tickets'
+                  : 'Inhabilitar'}
           </Button>
         </div>
       </Modal>

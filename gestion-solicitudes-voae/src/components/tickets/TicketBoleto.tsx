@@ -43,24 +43,39 @@ export function TicketBoleto({ ticket, onClick, mostrarDisenador = true }: Ticke
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">Ticket</p>
           <p className="font-mono text-lg font-bold tracking-wider">{ticket.codigo}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           <EstadoChip estado={ticket.estado_real ?? ''} sobreOscuro />
           {ticket.es_excepcional && <TagExcepcional compacto />}
+          {ticket.asignado_por_asignador && (
+            <TagAsignado por={ticket.asignado_por_nombre} fecha={ticket.fecha_asignacion} />
+          )}
         </div>
-        {/* Muescas: usan el color de fondo real de la página para parecer recortadas */}
-        <span aria-hidden className="absolute -bottom-3 -right-3 hidden h-6 w-6 rounded-full bg-fondo sm:block" />
-        <span aria-hidden className="absolute -right-3 -top-3 hidden h-6 w-6 rounded-full bg-fondo sm:block" />
+
+        {/* Muescas: semicírculos dentro de la franja azul (arriba y abajo), recortados por el
+           overflow-hidden del <article>. Usan el color de fondo real de la página. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-3 left-1/2 hidden h-6 w-6 -translate-x-1/2 rounded-full bg-fondo sm:block"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -bottom-3 left-1/2 hidden h-6 w-6 -translate-x-1/2 rounded-full bg-fondo sm:block"
+        />
+
+        {/* Troquelado: línea punteada en el límite entre la franja azul y el cuerpo blanco */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 hidden border-r-2 border-dashed border-white/70 sm:block"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 border-b-2 border-dashed border-white/70 sm:hidden"
+        />
       </div>
 
-      {/* Perforación */}
-      <div aria-hidden className="my-3 hidden border-l-2 border-dashed border-azul-niebla sm:block" />
-
       <div className="flex-1">
-        {(ticket.es_excepcional || ticket.asignado_por_asignador || muestraCorrecciones) && (
+        {(muestraCorrecciones || (ticket.es_excepcional && ticket.excepcional_estado === 'PENDIENTE')) && (
           <div className="flex flex-wrap items-center gap-1.5 px-5 pt-3 sm:pt-4">
-            {ticket.asignado_por_asignador && (
-              <TagAsignado por={ticket.asignado_por_nombre} fecha={ticket.fecha_asignacion} />
-            )}
             {muestraCorrecciones && (
               <span
                 className={`rounded-full px-2 py-0.5 text-xs font-semibold ${

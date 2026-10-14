@@ -1,4 +1,4 @@
-import { UserCheck, Zap } from 'lucide-react'
+import { Undo2, UserCheck, Zap } from 'lucide-react'
 import { formatFechaHora } from '../../lib/date'
 
 interface TagExcepcionalProps {
@@ -27,6 +27,18 @@ export function TagAsignado({ por, fecha }: TagAsignadoProps) {
       className="inline-flex items-center gap-1 rounded-full bg-indigo-bruma px-2 py-0.5 text-xs font-semibold text-indigo-suave"
     >
       <UserCheck size={12} /> Asignado
+    </span>
+  )
+}
+
+/** Ticket que volvió a "Sin asignar" porque a su diseñador se le desactivó la cuenta o el rol. */
+export function TagLiberado() {
+  return (
+    <span
+      title="Volvió a Sin asignar porque su diseñador fue desactivado"
+      className="inline-flex items-center gap-1 rounded-full bg-tinta-suave/15 px-2 py-0.5 text-xs font-semibold text-tinta-suave"
+    >
+      <Undo2 size={12} /> Liberado
     </span>
   )
 }

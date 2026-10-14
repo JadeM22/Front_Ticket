@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Hand } from 'lucide-react'
+import { ChevronDown, ChevronUp, Hand } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { tomarTicket, reasignarTicket } from '../../data/tickets'
 import { listarDisenadoresAsignables, type DisenadorAsignable } from '../../data/usuarios'
@@ -41,7 +41,6 @@ export function AsignadorDashboard() {
   const [respuesta, setRespuesta] = useState<{ ticket: TicketEstadoReal; modo: 'aceptar' | 'rechazar' } | null>(null)
   const [reasignacionPendiente, setReasignacionPendiente] = useState<{ ticket: TicketEstadoReal; disenador: DisenadorAsignable } | null>(null)
   const [tomando, setTomando] = useState<number | null>(null)
-  const galeriaRef = useRef<HTMLDivElement>(null)
 
   const { data: disenadores = [] } = useQuery({ queryKey: ['admin', 'disenadores-asignables'], queryFn: listarDisenadoresAsignables })
 
@@ -91,10 +90,6 @@ export function AsignadorDashboard() {
     }
   }
 
-  function desplazarGaleria(delta: number) {
-    galeriaRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
-  }
-
   if (isLoading || !perfil) return <SkeletonLista filas={5} />
 
   // FIFO estricto: el más antiguo primero (la consulta compartida las trae al revés).
@@ -105,7 +100,14 @@ export function AsignadorDashboard() {
   )
 
   const excepcionalesPendientes = ticketsFifo.filter((t) => t.es_excepcional && t.excepcional_estado === 'PENDIENTE')
-  const sinAsignar = ticketsFifo.filter((t) => !t.disenador_id && !t.es_excepcional && ESTADOS_ACTIVOS.includes(t.estado_real ?? ''))
+  // Las excepcionales ya aceptadas sí entran aquí si quedaron liberadas (su diseñador se desactivó):
+  // solo las pendientes de aceptación quedan fuera, porque esas las gestiona la sección de arriba.
+  const sinAsignar = ticketsFifo.filter(
+    (t) =>
+      !t.disenador_id &&
+      !(t.es_excepcional && t.excepcional_estado === 'PENDIENTE') &&
+      ESTADOS_ACTIVOS.includes(t.estado_real ?? ''),
+  )
 
   const PESTANAS = [
     { clave: 'sin-asignar', etiqueta: `Sin asignar (${sinAsignar.length})` },
@@ -167,36 +169,14 @@ export function AsignadorDashboard() {
         (sinAsignar.length === 0 ? (
           <EmptyState titulo="No hay tickets sin asignar" />
         ) : (
-          <div className="relative">
-            <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-fondo to-transparent sm:block hidden" />
-            <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-fondo to-transparent sm:block hidden" />
-
-            <div className="mb-2 hidden justify-end gap-2 sm:flex">
-              <button
-                type="button"
-                onClick={() => desplazarGaleria(-300)}
-                className="rounded-full border border-azul-niebla p-1.5 text-tinta-suave transition-colors duration-150 hover:bg-azul-niebla"
-                aria-label="Desplazar a la izquierda"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                type="button"
-                onClick={() => desplazarGaleria(300)}
-                className="rounded-full border border-azul-niebla p-1.5 text-tinta-suave transition-colors duration-150 hover:bg-azul-niebla"
-                aria-label="Desplazar a la derecha"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-
-            <div ref={galeriaRef} className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3">
-              {sinAsignar.map((ticket, indice) => (
-                <div key={ticket.ticket_id} className="w-72 shrink-0 snap-start">
-                  <div className="mb-1 flex items-center justify-between text-xs text-tinta-suave">
-                    <span className="font-mono font-semibold text-azul-institucional">#{indice + 1}</span>
-                    <span>En cola desde {formatRelativo(ticket.fecha_registro)}</span>
-                  </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            {sinAsignar.map((ticket, indice) => (
+              <div key={ticket.ticket_id} className="flex flex-col">
+                <div className="mb-1 flex flex-none items-center justify-between text-xs text-tinta-suave">
+                  <span className="font-mono font-semibold text-azul-institucional">#{indice + 1}</span>
+                  <span>En cola desde {formatRelativo(ticket.fecha_registro)}</span>
+                </div>
+                <div className="flex-1">
                   <TicketCard
                     ticket={ticket}
                     onClick={() => navigate(`/tickets/${ticket.ticket_id}`)}
@@ -226,8 +206,8 @@ export function AsignadorDashboard() {
                     }
                   />
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         ))}
 

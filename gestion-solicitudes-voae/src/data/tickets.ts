@@ -151,6 +151,27 @@ export async function contarTicketsSinAsignar(): Promise<number> {
   return count ?? 0
 }
 
+export interface TicketActivoResumen {
+  codigo: string
+  estado_registrado: string | null
+}
+
+/**
+ * Tickets de un diseñador que quedarían liberados (`disenador_id = null`) si se le desactiva la
+ * cuenta o se le quita el rol Diseñador (Parte 25). Los "Finalizado" no entran: esos se quedan con
+ * él hasta que el jefe pida corrección. La usa `admin/Usuarios.tsx` para avisar antes de confirmar.
+ */
+export async function listarTicketsActivosDeDisenador(disenadorId: number): Promise<TicketActivoResumen[]> {
+  const { data, error } = await supabase
+    .schema('Solicitudes')
+    .from('vw_TicketsEstadoReal')
+    .select('codigo, estado_registrado')
+    .eq('disenador_id', disenadorId)
+    .in('estado_registrado', ['En revisión', 'En proceso', 'Corrección', 'Retrasado'])
+  if (error) throw error
+  return (data ?? []).filter((t): t is TicketActivoResumen => Boolean(t.codigo))
+}
+
 /** Solo el Asignador acepta o rechaza una solicitud excepcional pendiente. */
 export async function responderExcepcional(
   ticketId: number,
