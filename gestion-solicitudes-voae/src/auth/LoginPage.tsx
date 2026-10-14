@@ -2,11 +2,12 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
-import { ShieldCheck } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { mensajeError } from '../lib/errors'
 import { Button } from '../components/ui/Button'
 import { PasswordInput } from '../components/ui/PasswordInput'
+import { MarcaITickets } from '../components/MarcaITickets'
+import { LoginBannerTicket } from './LoginBannerTicket'
 import { useAuth } from './useAuth'
 
 export function LoginPage() {
@@ -47,29 +48,17 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
-      <div className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-azul-noche p-10 text-white lg:flex">
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 20% 20%, #3dd9b3 0, transparent 35%), radial-gradient(circle at 80% 70%, #2f6fb5 0, transparent 40%)',
-          }}
-        />
-        <div className="relative z-10 flex items-center gap-2 font-mono text-sm uppercase tracking-widest text-menta">
-          <ShieldCheck size={18} /> VOAE
-        </div>
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold leading-tight">Sistema de Gestión de Solicitudes</h1>
-          <p className="mt-3 max-w-md text-white/70">
-            Vicerrectoría de Orientación y Asuntos Estudiantiles. Solicita, diseña y aprueba piezas de
-            comunicación en un solo lugar.
-          </p>
-        </div>
-        <p className="relative z-10 text-xs text-white/40">© {new Date().getFullYear()} VOAE</p>
-      </div>
+      <LoginBannerTicket />
 
       <div className="flex flex-1 items-center justify-center bg-white p-6 sm:p-10">
         <div className="w-full max-w-sm">
+          {/* En móvil el banner está oculto, así que la marca y el motivo del sistema van aquí arriba. */}
+          <div className="mb-6 lg:hidden">
+            <MarcaITickets tamano="grande" className="text-azul-noche" />
+            <p className="mt-1 text-sm text-tinta-suave">Gestión de solicitudes de diseño · VOAE</p>
+          </div>
+          <MarcaITickets className="mb-3 hidden text-azul-noche lg:block" />
+
           <h2 className="mb-1 text-2xl font-bold text-azul-noche">
             {modo === 'ingresar' ? 'Inicia sesión' : 'Recuperar contraseña'}
           </h2>

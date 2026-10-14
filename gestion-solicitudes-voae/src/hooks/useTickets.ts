@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { listarTicketsEstadoReal, obtenerTicketEstadoReal } from '../data/tickets'
+import { listarTicketsEstadoReal, obtenerTicketEstadoReal, contarTicketsSinAsignar } from '../data/tickets'
+
+export const CLAVE_CONTEO_SIN_ASIGNAR = ['tickets', 'sin-asignar-count']
 
 /**
  * `refetchInterval` de 60 s: fuera de horario hábil el cronómetro del dictamen se detiene y lo
@@ -14,5 +16,19 @@ export function useTicketEstadoReal(ticketId: number) {
   return useQuery({
     queryKey: ['tickets', 'estado-real', ticketId],
     queryFn: () => obtenerTicketEstadoReal(ticketId),
+  })
+}
+
+/**
+ * Compartido entre el badge de "Mi tablero" (sidebar) y la pestaña "Tickets sin asignación": una
+ * sola consulta liviana (`count`, sin filas) para que ambos muestren siempre el mismo número. Se
+ * refresca cada 60 s; `tomarTicket` y las notificaciones nuevas la invalidan además explícitamente.
+ */
+export function useConteoSinAsignar(habilitado = true) {
+  return useQuery({
+    queryKey: CLAVE_CONTEO_SIN_ASIGNAR,
+    queryFn: contarTicketsSinAsignar,
+    refetchInterval: 60_000,
+    enabled: habilitado,
   })
 }

@@ -110,16 +110,45 @@ export async function obtenerTicketCompleto(
  * "Tomar" un ticket asigna el diseñador. Solo fuerza la transición a "En proceso" cuando el
  * ticket viene de "Enviado"/"En revisión": si ya está "Retrasado" la única transición válida
  * es a "Finalizado" (la pone el entregable), así que aquí solo se actualiza el diseñador.
+ *
+ * El `update` lleva `.is('disenador_id', null)`: así se detecta si otro diseñador se adelantó entre
+ * que se cargó la lista y que se hizo clic en "Tomar" — si la condición ya no se cumple, Supabase
+ * actualiza cero filas (`data` vacío) en vez de lanzar un error. Devuelve `true` solo si de verdad
+ * quedó asignado a `disenadorId`.
  */
-export async function tomarTicket(ticket: TicketEstadoReal, disenadorId: number): Promise<void> {
+export async function tomarTicket(ticket: TicketEstadoReal, disenadorId: number): Promise<boolean> {
   const payload: { disenador_id: number; estado_id?: number } = { disenador_id: disenadorId }
 
   if (ticket.estado_registrado === 'Enviado' || ticket.estado_registrado === 'En revisión') {
     payload.estado_id = await obtenerIdEstadoPorNombre('En proceso')
   }
 
-  const { error } = await supabase.schema('Solicitudes').from('Ticket').update(payload).eq('id', ticket.ticket_id!)
+  const { data, error } = await supabase
+    .schema('Solicitudes')
+    .from('Ticket')
+    .update(payload)
+    .eq('id', ticket.ticket_id!)
+    .is('disenador_id', null)
+    .select('id')
   if (error) throw error
+  return (data?.length ?? 0) > 0
+}
+
+/**
+ * Cuenta ligera (sin traer filas) de los tickets que un diseñador puede tomar: sin asignar, no
+ * excepcionales y en un estado no final. La usan el badge de "Mi tablero" en el sidebar y la pestaña
+ * "Tickets sin asignación" para mostrar el mismo número.
+ */
+export async function contarTicketsSinAsignar(): Promise<number> {
+  const { count, error } = await supabase
+    .schema('Solicitudes')
+    .from('vw_TicketsEstadoReal')
+    .select('ticket_id', { count: 'exact', head: true })
+    .is('disenador_id', null)
+    .eq('es_excepcional', false)
+    .not('estado_registrado', 'in', '("Aprobado","Rechazado","Finalizado")')
+  if (error) throw error
+  return count ?? 0
 }
 
 /** Solo el Asignador acepta o rechaza una solicitud excepcional pendiente. */

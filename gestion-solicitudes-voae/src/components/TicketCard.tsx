@@ -1,7 +1,8 @@
-import { Link } from 'react-router-dom'
+import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import { Calendar, Clock, PartyPopper, User, Zap } from 'lucide-react'
+import { Calendar, Clock, PartyPopper, User } from 'lucide-react'
 import { EstadoChip } from './EstadoChip'
+import { TagAsignado, TagExcepcional } from './tickets/Etiquetas'
 import { CronometroDictamen } from './ui/CronometroDictamen'
 import { formatFecha, formatFechaHora } from '../lib/date'
 import { useAuth } from '../auth/useAuth'
@@ -9,16 +10,27 @@ import type { TicketEstadoReal } from '../types/domain'
 
 const CORRECCIONES_MAXIMAS = 5
 
-export function TicketCard({ ticket }: { ticket: TicketEstadoReal }) {
+interface TicketCardProps {
+  ticket: TicketEstadoReal
+  onClick?: () => void
+  /** Pie de la tarjeta: botones como "Tomar" o el selector "Asignar a…", fuera del área clicable principal. */
+  accion?: ReactNode
+}
+
+export function TicketCard({ ticket, onClick, accion }: TicketCardProps) {
   const { tieneRol } = useAuth()
   const correccionesUsadas = ticket.correcciones_usadas ?? 0
   const muestraCronometro =
     (tieneRol('Jefe de Área') || tieneRol('Diseñador')) && ticket.minutos_habiles_restantes_dictamen != null
-  const muestraInsignias = ticket.es_excepcional || correccionesUsadas > 0
+  const muestraInsignias = ticket.es_excepcional || ticket.asignado_por_asignador || correccionesUsadas > 0
 
   return (
-    <Link
-      to={`/tickets/${ticket.ticket_id}`}
+    <article
+      onClick={onClick}
+      onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
+      tabIndex={onClick ? 0 : undefined}
+      role={onClick ? 'button' : undefined}
+      aria-label={`Ticket ${ticket.codigo}`}
       className="block rounded-xl bg-white p-4 shadow-sm transition-shadow duration-150 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul-institucional"
     >
       <div className="flex items-center justify-between gap-2">
@@ -30,11 +42,8 @@ export function TicketCard({ ticket }: { ticket: TicketEstadoReal }) {
 
       {muestraInsignias && (
         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          {ticket.es_excepcional && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-ambar-bruma px-2 py-0.5 text-xs font-semibold text-ambar">
-              <Zap size={12} /> Excepcional
-            </span>
-          )}
+          {ticket.es_excepcional && <TagExcepcional />}
+          {ticket.asignado_por_asignador && <TagAsignado por={ticket.asignado_por_nombre} fecha={ticket.fecha_asignacion} />}
           {correccionesUsadas > 0 && (
             <span
               className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
@@ -81,7 +90,13 @@ export function TicketCard({ ticket }: { ticket: TicketEstadoReal }) {
           />
         </div>
       )}
-    </Link>
+
+      {accion && (
+        <div className="mt-3 border-t border-azul-niebla/60 pt-3" onClick={(e) => e.stopPropagation()}>
+          {accion}
+        </div>
+      )}
+    </article>
   )
 }
 

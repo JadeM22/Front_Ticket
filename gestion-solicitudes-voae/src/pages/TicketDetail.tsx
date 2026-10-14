@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Plus, Zap } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { obtenerTicketCompleto, tomarTicket } from '../data/tickets'
 import { crearDictamen } from '../data/dictamenes'
 import { mensajeError } from '../lib/errors'
 import { formatFecha, formatFechaHora } from '../lib/date'
+import { TagAsignado, TagExcepcional } from '../components/tickets/Etiquetas'
 import { useAuth } from '../auth/useAuth'
 import { useHorarioHabil } from '../hooks/useHorarioHabil'
 import { useNombresUsuarios } from '../hooks/useNombresUsuarios'
@@ -68,8 +69,9 @@ export function TicketDetailPage() {
     if (!ticket || !perfil) return
     setTomando(true)
     try {
-      await tomarTicket(ticket.estadoReal, perfil.id)
-      toast.success('Tomaste el ticket.')
+      const tomado = await tomarTicket(ticket.estadoReal, perfil.id)
+      if (tomado) toast.success('Tomaste el ticket.')
+      else toast.error(`Otro diseñador ya tomó ${ticket.estadoReal.codigo}.`)
       invalidar()
     } catch (error) {
       toast.error(await mensajeError(error, 'No se pudo tomar el ticket.'))
@@ -134,11 +136,12 @@ export function TicketDetailPage() {
           </div>
           <div className="flex flex-col items-end gap-1.5">
             <EstadoChip estado={estadoReal.estado_real ?? ''} />
-            {estadoReal.es_excepcional && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-ambar-bruma px-2 py-0.5 text-xs font-semibold text-ambar">
-                <Zap size={12} /> Excepcional
-              </span>
-            )}
+            <div className="flex flex-wrap justify-end gap-1.5">
+              {estadoReal.es_excepcional && <TagExcepcional />}
+              {estadoReal.asignado_por_asignador && (
+                <TagAsignado por={estadoReal.asignado_por_nombre} fecha={estadoReal.fecha_asignacion} />
+              )}
+            </div>
           </div>
         </div>
 
@@ -173,6 +176,11 @@ export function TicketDetailPage() {
           <div>
             <p className="text-xs text-tinta-suave">Diseñador</p>
             <p>{estadoReal.disenador ?? 'Sin asignar'}</p>
+            {estadoReal.asignado_por_asignador && (
+              <p className="text-xs text-indigo-suave">
+                Asignado por {estadoReal.asignado_por_nombre} el {formatFechaHora(estadoReal.fecha_asignacion)}
+              </p>
+            )}
           </div>
           {puedeVerGestion && (
             <div>

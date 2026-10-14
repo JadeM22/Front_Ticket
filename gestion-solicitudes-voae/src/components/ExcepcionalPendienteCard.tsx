@@ -6,10 +6,10 @@ import type { TicketEstadoReal } from '../types/domain'
 
 interface ExcepcionalPendienteCardProps {
   ticket: TicketEstadoReal
-  /** Solo el Asignador (y el Administrador) ve los botones; un Diseñador normal solo ve la tarjeta. */
+  /** Solo el Asignador (y el Administrador) ve los botones; en cualquier otro tablero solo se ve la tarjeta. */
   puedeResponder: boolean
-  onAceptar: () => void
-  onRechazar: () => void
+  onAceptar?: () => void
+  onRechazar?: () => void
 }
 
 /** Un día después de la fecha del evento, la base rechaza sola la solicitud si nadie respondió. */

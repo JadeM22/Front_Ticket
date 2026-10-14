@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ChevronDown, Filter } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { useAuth } from '../../auth/useAuth'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 import { EmptyState } from '../../components/ui/EmptyState'
-import { TicketCard } from '../../components/TicketCard'
+import { TicketBoleto } from '../../components/tickets/TicketBoleto'
 import { CLASE_INPUT } from '../../components/ui/Campo'
 
 const CLASE_SELECT_FILTRO = `${CLASE_INPUT} w-auto appearance-none pl-9 pr-8 shadow-sm transition-shadow duration-150 hover:shadow-md`
@@ -12,6 +13,7 @@ const CLASE_SELECT_FILTRO = `${CLASE_INPUT} w-auto appearance-none pl-9 pr-8 sha
 export function EmpleadoSolicitudesPage() {
   const { data: todos, isLoading } = useTicketsEstadoReal()
   const { perfil } = useAuth()
+  const navigate = useNavigate()
   // "Mis solicitudes" = las que registró este usuario. RLS deja ver más tickets a quien además es
   // Analista, Diseñador, Jefe o Administrador, así que aquí sí se filtra por autor.
   const tickets = useMemo(() => (todos ?? []).filter((t) => t.usuario_registro === perfil?.id), [todos, perfil?.id])
@@ -66,7 +68,7 @@ export function EmpleadoSolicitudesPage() {
       ) : (
         <div className="space-y-3">
           {filtrados.map((ticket) => (
-            <TicketCard key={ticket.ticket_id} ticket={ticket} />
+            <TicketBoleto key={ticket.ticket_id} ticket={ticket} onClick={() => navigate(`/tickets/${ticket.ticket_id}`)} />
           ))}
         </div>
       )}

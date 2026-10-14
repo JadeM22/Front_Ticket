@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -797,6 +797,7 @@ export type Database = {
         Row: {
           aprobado_automatico: boolean
           area_id: number
+          asignado_por: number | null
           codigo: string
           disenador_id: number | null
           es_excepcional: boolean
@@ -805,6 +806,7 @@ export type Database = {
           excepcional_fecha_respuesta: string | null
           excepcional_motivo_rechazo: string | null
           excepcional_respondido_por: number | null
+          fecha_asignacion: string | null
           fecha_entrega_diseno: string | null
           fecha_limite: string
           fecha_registro: string
@@ -816,6 +818,7 @@ export type Database = {
         Insert: {
           aprobado_automatico?: boolean
           area_id: number
+          asignado_por?: number | null
           codigo: string
           disenador_id?: number | null
           es_excepcional?: boolean
@@ -824,6 +827,7 @@ export type Database = {
           excepcional_fecha_respuesta?: string | null
           excepcional_motivo_rechazo?: string | null
           excepcional_respondido_por?: number | null
+          fecha_asignacion?: string | null
           fecha_entrega_diseno?: string | null
           fecha_limite: string
           fecha_registro?: string
@@ -835,6 +839,7 @@ export type Database = {
         Update: {
           aprobado_automatico?: boolean
           area_id?: number
+          asignado_por?: number | null
           codigo?: string
           disenador_id?: number | null
           es_excepcional?: boolean
@@ -843,6 +848,7 @@ export type Database = {
           excepcional_fecha_respuesta?: string | null
           excepcional_motivo_rechazo?: string | null
           excepcional_respondido_por?: number | null
+          fecha_asignacion?: string | null
           fecha_entrega_diseno?: string | null
           fecha_limite?: string
           fecha_registro?: string
@@ -979,6 +985,9 @@ export type Database = {
           aprobado_automatico: boolean | null
           area: string | null
           area_id: number | null
+          asignado_por: number | null
+          asignado_por_asignador: boolean | null
+          asignado_por_nombre: string | null
           codigo: string | null
           correcciones_maximas: number | null
           correcciones_usadas: number | null
@@ -990,6 +999,7 @@ export type Database = {
           excepcional_estado: string | null
           excepcional_motivo_rechazo: string | null
           fecha_aprobacion_automatica: string | null
+          fecha_asignacion: string | null
           fecha_entrega_diseno: string | null
           fecha_evento: string | null
           fecha_limite: string | null

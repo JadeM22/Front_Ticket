@@ -54,10 +54,7 @@ export function AdminCatalogosPage() {
         <ul className="divide-y divide-azul-niebla/60">
           {areas.map((area) => (
             <li key={area.id} className="flex items-center justify-between py-2">
-              <div>
-                <p className="font-medium text-tinta">{area.nombre}</p>
-                <p className="text-xs text-tinta-suave">{area.descripcion}</p>
-              </div>
+              <p className="font-medium text-tinta">{area.nombre}</p>
               <button
                 type="button"
                 onClick={() => manejarGuardarArea(area.id, !area.estado)}

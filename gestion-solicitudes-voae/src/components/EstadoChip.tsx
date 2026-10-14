@@ -13,8 +13,16 @@ const ESTILOS: Record<EstadoReal, string> = {
   Rechazado: 'bg-tinta-suave/20 text-tinta-suave',
 }
 
-export function EstadoChip({ estado }: { estado: string }) {
-  const estiloEstado = ESTILOS[estado as EstadoReal] ?? 'bg-azul-niebla text-tinta-suave'
+interface EstadoChipProps {
+  estado: string
+  /** Para colocarlo sobre la franja azul oscura del boleto: fondo semitransparente, texto blanco. */
+  sobreOscuro?: boolean
+}
+
+export function EstadoChip({ estado, sobreOscuro = false }: EstadoChipProps) {
+  const estiloEstado = sobreOscuro
+    ? 'bg-white/15 text-white ring-1 ring-inset ring-white/30'
+    : (ESTILOS[estado as EstadoReal] ?? 'bg-azul-niebla text-tinta-suave')
 
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${estiloEstado}`}>

@@ -1,18 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Search } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Hand } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { tomarTicket, reasignarTicket } from '../../data/tickets'
 import { listarDisenadoresAsignables, type DisenadorAsignable } from '../../data/usuarios'
-import { listarAreas, listarTiposSolicitud } from '../../data/catalogos'
 import { mensajeError } from '../../lib/errors'
+import { formatRelativo, hoyTegucigalpaISO } from '../../lib/date'
+import { ESTADOS_FINALES_TICKET } from '../../lib/tableroDisenador'
 import { useAuth } from '../../auth/useAuth'
 import { TicketCard } from '../../components/TicketCard'
 import { ExcepcionalPendienteCard } from '../../components/ExcepcionalPendienteCard'
 import { ResponderExcepcionalModal } from '../../components/ResponderExcepcionalModal'
 import { Button } from '../../components/ui/Button'
-import { Card } from '../../components/ui/Card'
 import { CLASE_INPUT } from '../../components/ui/Campo'
 import { Modal } from '../../components/ui/Modal'
 import { SkeletonLista } from '../../components/ui/Skeleton'
@@ -20,45 +21,63 @@ import { EmptyState } from '../../components/ui/EmptyState'
 import type { TicketEstadoReal } from '../../types/domain'
 
 const ESTADOS_ACTIVOS = ['Enviado', 'En revisión', 'En proceso', 'Corrección', 'Retrasado', 'Finalizado']
+const DIAS_HISTORIAL = 30
+
+const COLUMNAS_DISENADOR = [
+  { titulo: 'En proceso', estado: 'En proceso' },
+  { titulo: 'Corrección', estado: 'Corrección' },
+  { titulo: 'Retrasados', estado: 'Retrasado' },
+  { titulo: 'Finalizados esperando dictamen', estado: 'Finalizado' },
+] as const
 
 export function AsignadorDashboard() {
   const { data: tickets = [], isLoading } = useTicketsEstadoReal()
   const { perfil } = useAuth()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
+  const pestana = params.get('tab') ?? 'sin-asignar'
 
-  const [busqueda, setBusqueda] = useState('')
-  const [tipoId, setTipoId] = useState('')
-  const [areaId, setAreaId] = useState('')
-  const [estadoFiltro, setEstadoFiltro] = useState('')
   const [respuesta, setRespuesta] = useState<{ ticket: TicketEstadoReal; modo: 'aceptar' | 'rechazar' } | null>(null)
   const [reasignacionPendiente, setReasignacionPendiente] = useState<{ ticket: TicketEstadoReal; disenador: DisenadorAsignable } | null>(null)
+  const [tomando, setTomando] = useState<number | null>(null)
+  const galeriaRef = useRef<HTMLDivElement>(null)
 
   const { data: disenadores = [] } = useQuery({ queryKey: ['admin', 'disenadores-asignables'], queryFn: listarDisenadoresAsignables })
-  const { data: tipos = [] } = useQuery({ queryKey: ['catalogos', 'tipos-solicitud'], queryFn: listarTiposSolicitud })
-  const { data: areas = [] } = useQuery({ queryKey: ['catalogos', 'areas'], queryFn: listarAreas })
+
+  function cambiarPestana(clave: string) {
+    const siguiente = new URLSearchParams(params)
+    siguiente.set('tab', clave)
+    setParams(siguiente, { replace: true })
+  }
 
   function invalidar() {
     void queryClient.invalidateQueries({ queryKey: ['tickets', 'estado-real'] })
+    void queryClient.invalidateQueries({ queryKey: ['tickets', 'sin-asignar-count'] })
   }
 
   async function manejarTomar(ticket: TicketEstadoReal) {
     if (!perfil) return
+    setTomando(ticket.ticket_id)
     try {
-      await tomarTicket(ticket, perfil.id)
-      toast.success(`Tomaste el ticket ${ticket.codigo}.`)
+      const tomado = await tomarTicket(ticket, perfil.id)
+      if (tomado) toast.success(`Tomaste ${ticket.codigo}.`)
+      else toast.error(`Otro diseñador ya tomó ${ticket.codigo}.`)
       invalidar()
     } catch (error) {
       toast.error(await mensajeError(error, 'No se pudo tomar el ticket.'))
+    } finally {
+      setTomando(null)
     }
   }
 
-  async function aplicarReasignacion(ticket: TicketEstadoReal, disenador: DisenadorAsignable) {
+  async function aplicarAsignacion(ticket: TicketEstadoReal, disenador: DisenadorAsignable) {
     try {
       await reasignarTicket(ticket, disenador.id)
-      toast.success(`${ticket.codigo} reasignado a ${disenador.nombre}.`)
+      toast.success(`${ticket.codigo} asignado a ${disenador.nombre}.`)
       invalidar()
     } catch (error) {
-      toast.error(await mensajeError(error, 'No se pudo reasignar el ticket.'))
+      toast.error(await mensajeError(error, 'No se pudo asignar el ticket.'))
     }
   }
 
@@ -68,27 +87,35 @@ export function AsignadorDashboard() {
     if (ticket.disenador_id && ticket.disenador_id !== disenadorId) {
       setReasignacionPendiente({ ticket, disenador })
     } else {
-      void aplicarReasignacion(ticket, disenador)
+      void aplicarAsignacion(ticket, disenador)
     }
   }
 
-  const filtrados = useMemo(() => {
-    const busquedaNormalizada = busqueda.trim().toLowerCase()
-    return tickets.filter((t) => {
-      if (busquedaNormalizada && !(t.codigo ?? '').toLowerCase().includes(busquedaNormalizada)) return false
-      if (tipoId && String(t.tipo_solicitud_id) !== tipoId) return false
-      if (areaId && String(t.area_id) !== areaId) return false
-      if (estadoFiltro && t.estado_real !== estadoFiltro) return false
-      return true
-    })
-  }, [tickets, busqueda, tipoId, areaId, estadoFiltro])
-
-  const excepcionalesPendientes = filtrados.filter((t) => t.es_excepcional && t.excepcional_estado === 'PENDIENTE')
-  const sinAsignar = filtrados.filter(
-    (t) => !t.disenador_id && !t.es_excepcional && ESTADOS_ACTIVOS.includes(t.estado_real ?? ''),
-  )
+  function desplazarGaleria(delta: number) {
+    galeriaRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
+  }
 
   if (isLoading || !perfil) return <SkeletonLista filas={5} />
+
+  // FIFO estricto: el más antiguo primero (la consulta compartida las trae al revés).
+  const ticketsFifo = [...tickets].sort(
+    (a, b) =>
+      new Date(a.fecha_registro ?? 0).getTime() - new Date(b.fecha_registro ?? 0).getTime() ||
+      (a.ticket_id ?? 0) - (b.ticket_id ?? 0),
+  )
+
+  const excepcionalesPendientes = ticketsFifo.filter((t) => t.es_excepcional && t.excepcional_estado === 'PENDIENTE')
+  const sinAsignar = ticketsFifo.filter((t) => !t.disenador_id && !t.es_excepcional && ESTADOS_ACTIVOS.includes(t.estado_real ?? ''))
+
+  const PESTANAS = [
+    { clave: 'sin-asignar', etiqueta: `Sin asignar (${sinAsignar.length})` },
+    ...disenadores.map((d) => {
+      const activos = ticketsFifo.filter((t) => t.disenador_id === d.id && ESTADOS_ACTIVOS.includes(t.estado_real ?? '')).length
+      return { clave: `disenador-${d.id}`, etiqueta: `${d.nombre}${d.id === perfil.id ? ' (yo)' : ''} (${activos})` }
+    }),
+  ]
+
+  const disenadorActivo = pestana.startsWith('disenador-') ? disenadores.find((d) => `disenador-${d.id}` === pestana) : null
 
   return (
     <div className="space-y-6">
@@ -117,79 +144,102 @@ export function AsignadorDashboard() {
         </div>
       )}
 
-      <Card className="flex flex-wrap items-end gap-3">
-        <label className="text-xs text-tinta-suave">
-          Buscar
-          <div className="relative mt-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-tinta-suave" />
-            <input
-              className={`${CLASE_INPUT} w-48 pl-8`}
-              placeholder="Buscar por código"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            />
-          </div>
-        </label>
-        <label className="text-xs text-tinta-suave">
-          Tipo
-          <select className={`${CLASE_INPUT} mt-1 w-auto`} value={tipoId} onChange={(e) => setTipoId(e.target.value)}>
-            <option value="">Todos</option>
-            {tipos.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.nombre}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs text-tinta-suave">
-          Área
-          <select className={`${CLASE_INPUT} mt-1 w-auto`} value={areaId} onChange={(e) => setAreaId(e.target.value)}>
-            <option value="">Todas</option>
-            {areas.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.nombre}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs text-tinta-suave">
-          Estado
-          <select className={`${CLASE_INPUT} mt-1 w-auto`} value={estadoFiltro} onChange={(e) => setEstadoFiltro(e.target.value)}>
-            <option value="">Todos</option>
-            {ESTADOS_ACTIVOS.map((e) => (
-              <option key={e} value={e}>
-                {e}
-              </option>
-            ))}
-          </select>
-        </label>
-      </Card>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-        <Carril
-          titulo="Sin asignar"
-          tickets={sinAsignar}
-          disenadores={disenadores}
-          onCambiarDisenador={manejarCambiarDisenador}
-          onTomar={manejarTomar}
-        />
-        {disenadores.map((disenador) => {
-          const ticketsDisenador = filtrados.filter(
-            (t) => t.disenador_id === disenador.id && ESTADOS_ACTIVOS.includes(t.estado_real ?? ''),
-          )
-          return (
-            <Carril
-              key={disenador.id}
-              titulo={disenador.nombre}
-              tickets={ticketsDisenador}
-              disenadores={disenadores}
-              onCambiarDisenador={manejarCambiarDisenador}
-            />
-          )
-        })}
+      <div role="tablist" aria-label="Asignación" className="flex gap-1 overflow-x-auto border-b border-azul-niebla">
+        {PESTANAS.map((p) => (
+          <button
+            key={p.clave}
+            type="button"
+            role="tab"
+            aria-selected={pestana === p.clave}
+            onClick={() => cambiarPestana(p.clave)}
+            className={`flex-none whitespace-nowrap px-4 py-2 text-sm font-semibold transition-colors duration-150 ${
+              pestana === p.clave
+                ? 'border-b-2 border-azul-institucional text-azul-institucional'
+                : 'text-tinta-suave hover:text-tinta'
+            }`}
+          >
+            {p.etiqueta}
+          </button>
+        ))}
       </div>
 
-      {filtrados.length === 0 && <EmptyState titulo="No hay tickets con estos filtros" />}
+      {pestana === 'sin-asignar' &&
+        (sinAsignar.length === 0 ? (
+          <EmptyState titulo="No hay tickets sin asignar" />
+        ) : (
+          <div className="relative">
+            <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-fondo to-transparent sm:block hidden" />
+            <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-fondo to-transparent sm:block hidden" />
+
+            <div className="mb-2 hidden justify-end gap-2 sm:flex">
+              <button
+                type="button"
+                onClick={() => desplazarGaleria(-300)}
+                className="rounded-full border border-azul-niebla p-1.5 text-tinta-suave transition-colors duration-150 hover:bg-azul-niebla"
+                aria-label="Desplazar a la izquierda"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => desplazarGaleria(300)}
+                className="rounded-full border border-azul-niebla p-1.5 text-tinta-suave transition-colors duration-150 hover:bg-azul-niebla"
+                aria-label="Desplazar a la derecha"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+
+            <div ref={galeriaRef} className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3">
+              {sinAsignar.map((ticket, indice) => (
+                <div key={ticket.ticket_id} className="w-72 shrink-0 snap-start">
+                  <div className="mb-1 flex items-center justify-between text-xs text-tinta-suave">
+                    <span className="font-mono font-semibold text-azul-institucional">#{indice + 1}</span>
+                    <span>En cola desde {formatRelativo(ticket.fecha_registro)}</span>
+                  </div>
+                  <TicketCard
+                    ticket={ticket}
+                    onClick={() => navigate(`/tickets/${ticket.ticket_id}`)}
+                    accion={
+                      <div className="space-y-2">
+                        <select
+                          className={`${CLASE_INPUT} text-xs`}
+                          value=""
+                          onChange={(e) => e.target.value && manejarCambiarDisenador(ticket, Number(e.target.value))}
+                        >
+                          <option value="">Asignar a…</option>
+                          {disenadores.map((d) => (
+                            <option key={d.id} value={d.id}>
+                              {d.nombre}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => manejarTomar(ticket)}
+                          disabled={tomando === ticket.ticket_id}
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-menta px-3 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-menta-profundo disabled:opacity-60"
+                        >
+                          <Hand size={16} /> {tomando === ticket.ticket_id ? 'Tomando…' : 'Tomar'}
+                        </button>
+                      </div>
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+      {disenadorActivo && (
+        <PestanaDisenador
+          disenador={disenadorActivo}
+          tickets={ticketsFifo}
+          disenadores={disenadores}
+          onCambiarDisenador={manejarCambiarDisenador}
+          onAbrir={(id) => navigate(`/tickets/${id}`)}
+        />
+      )}
 
       <ResponderExcepcionalModal
         ticket={respuesta?.ticket ?? null}
@@ -199,11 +249,7 @@ export function AsignadorDashboard() {
         onRespondido={invalidar}
       />
 
-      <Modal
-        abierto={reasignacionPendiente !== null}
-        onCerrar={() => setReasignacionPendiente(null)}
-        titulo="Reasignar ticket"
-      >
+      <Modal abierto={reasignacionPendiente !== null} onCerrar={() => setReasignacionPendiente(null)} titulo="Reasignar ticket">
         {reasignacionPendiente && (
           <>
             <p className="text-sm text-tinta-suave">
@@ -216,7 +262,7 @@ export function AsignadorDashboard() {
               </Button>
               <Button
                 onClick={() => {
-                  void aplicarReasignacion(reasignacionPendiente.ticket, reasignacionPendiente.disenador)
+                  void aplicarAsignacion(reasignacionPendiente.ticket, reasignacionPendiente.disenador)
                   setReasignacionPendiente(null)
                 }}
               >
@@ -230,51 +276,91 @@ export function AsignadorDashboard() {
   )
 }
 
-function Carril({
-  titulo,
+function PestanaDisenador({
+  disenador,
   tickets,
   disenadores,
   onCambiarDisenador,
-  onTomar,
+  onAbrir,
 }: {
-  titulo: string
+  disenador: DisenadorAsignable
   tickets: TicketEstadoReal[]
   disenadores: DisenadorAsignable[]
   onCambiarDisenador: (ticket: TicketEstadoReal, disenadorId: number) => void
-  onTomar?: (ticket: TicketEstadoReal) => void
+  onAbrir: (ticketId: number) => void
 }) {
+  const [historialAbierto, setHistorialAbierto] = useState(false)
+  const propios = tickets.filter((t) => t.disenador_id === disenador.id)
+  const activos = propios.filter((t) => ESTADOS_ACTIVOS.includes(t.estado_real ?? ''))
+
+  const limite = hoyTegucigalpaISO()
+  const fechaLimite = new Date(`${limite}T12:00:00Z`)
+  fechaLimite.setUTCDate(fechaLimite.getUTCDate() - DIAS_HISTORIAL)
+  const desdeIso = fechaLimite.toISOString().slice(0, 10)
+  const historial = propios.filter(
+    (t) =>
+      ESTADOS_FINALES_TICKET.includes(t.estado_real ?? '') &&
+      (t.fecha_registro ?? '').slice(0, 10) >= desdeIso,
+  )
+
   return (
-    <div className="rounded-xl bg-azul-niebla/40 p-3">
-      <p className="mb-3 flex items-center justify-between text-sm font-semibold text-azul-noche">
-        {titulo}
-        <span className="rounded-full bg-white px-2 py-0.5 text-xs">{tickets.length}</span>
-      </p>
-      <div className="space-y-2">
-        {tickets.length === 0 && <p className="text-xs text-tinta-suave">Sin tickets.</p>}
-        {tickets.map((ticket) => (
-          <div key={ticket.ticket_id}>
-            <TicketCard ticket={ticket} />
-            <div className="mt-1 flex gap-2">
-              <select
-                className={`${CLASE_INPUT} flex-1 text-xs`}
-                value=""
-                onChange={(e) => e.target.value && onCambiarDisenador(ticket, Number(e.target.value))}
-              >
-                <option value="">Asignar a…</option>
-                {disenadores.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.nombre}
-                  </option>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+        {COLUMNAS_DISENADOR.map((columna) => {
+          const ticketsColumna = activos.filter((t) => t.estado_real === columna.estado)
+          return (
+            <div key={columna.titulo} className="rounded-xl bg-azul-niebla/40 p-3">
+              <p className="mb-3 flex items-center justify-between text-sm font-semibold text-azul-noche">
+                {columna.titulo}
+                <span className="rounded-full bg-white px-2 py-0.5 text-xs">{ticketsColumna.length}</span>
+              </p>
+              <div className="space-y-2">
+                {ticketsColumna.length === 0 && <p className="text-xs text-tinta-suave">Sin tickets.</p>}
+                {ticketsColumna.map((ticket) => (
+                  <div key={ticket.ticket_id}>
+                    <TicketCard ticket={ticket} onClick={() => onAbrir(ticket.ticket_id!)} />
+                    <select
+                      className={`${CLASE_INPUT} mt-1 w-full text-xs`}
+                      value=""
+                      onChange={(e) => e.target.value && onCambiarDisenador(ticket, Number(e.target.value))}
+                    >
+                      <option value="">Reasignar a…</option>
+                      {disenadores
+                        .filter((d) => d.id !== disenador.id)
+                        .map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.nombre}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
                 ))}
-              </select>
-              {onTomar && (
-                <Button variante="secundario" onClick={() => onTomar(ticket)}>
-                  Tomar
-                </Button>
-              )}
+              </div>
             </div>
+          )
+        })}
+      </div>
+
+      {activos.length === 0 && <EmptyState titulo="Sin tickets activos para este diseñador" />}
+
+      <div>
+        <button
+          type="button"
+          onClick={() => setHistorialAbierto((v) => !v)}
+          className="flex items-center gap-1.5 text-sm font-semibold text-tinta-suave hover:text-tinta"
+        >
+          {historialAbierto ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          Aprobados y rechazados (últimos {DIAS_HISTORIAL} días) ({historial.length})
+        </button>
+        {historialAbierto && (
+          <div className="mt-3 space-y-2">
+            {historial.length === 0 ? (
+              <p className="text-sm text-tinta-suave">Sin movimientos en este periodo.</p>
+            ) : (
+              historial.map((ticket) => <TicketCard key={ticket.ticket_id} ticket={ticket} onClick={() => onAbrir(ticket.ticket_id!)} />)
+            )}
           </div>
-        ))}
+        )}
       </div>
     </div>
   )

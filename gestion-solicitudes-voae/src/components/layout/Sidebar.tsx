@@ -3,8 +3,8 @@ import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { NAV_POR_ROL } from './navegacion'
 import { JERARQUIA_ROLES } from '../../types/domain'
 import type { Perfil } from '../../types/domain'
-import { useTicketsEstadoReal } from '../../hooks/useTickets'
-import { contarPendientesDisenador } from '../../lib/tableroDisenador'
+import { useConteoSinAsignar } from '../../hooks/useTickets'
+import { MarcaITickets } from '../MarcaITickets'
 
 interface SidebarProps {
   perfil: Perfil
@@ -17,12 +17,13 @@ interface SidebarProps {
 export function Sidebar({ perfil, onNavegar, plegado = false, onTogglePlegado }: SidebarProps) {
   const rolesOrdenados = JERARQUIA_ROLES.filter((rol) => perfil.roles.includes(rol))
 
-  // Comparte la caché de `['tickets', 'estado-real']` con el resto de la app: no dispara una
-  // consulta aparte. El contador de excepcionales pendientes del Asignador vive dentro de su
-  // propia página (sección "Excepcionales pendientes"), no en el sidebar.
+  // El número junto a "Mi tablero" es solo la cantidad de tickets sin asignar que se pueden tomar
+  // (mismo filtro que la pestaña "Tickets sin asignación"): nada de retrasados ni otros conteos se
+  // le suma. El contador de excepcionales pendientes del Asignador vive dentro de su propia página.
   const esDisenador = perfil.roles.includes('Diseñador')
-  const { data: tickets } = useTicketsEstadoReal()
-  const pendientesDisenador = esDisenador ? contarPendientesDisenador(tickets ?? [], perfil.id) : 0
+  const { data: conteoSinAsignar } = useConteoSinAsignar(esDisenador)
+  const pendientesDisenador = esDisenador ? (conteoSinAsignar ?? 0) : 0
+  const textoPendientes = pendientesDisenador > 99 ? '99+' : String(pendientesDisenador)
 
   return (
     <nav
@@ -37,8 +38,8 @@ export function Sidebar({ perfil, onNavegar, plegado = false, onTogglePlegado }:
       <div className={`mb-8 flex items-center gap-2 ${plegado ? 'justify-center px-0' : 'justify-between px-2'}`}>
         {!plegado && (
           <div>
-            <p className="font-mono text-xs uppercase tracking-widest text-menta">VOAE</p>
-            <p className="text-sm font-semibold text-white/90">Gestión de Solicitudes</p>
+            <MarcaITickets className="text-white" />
+            <p className="text-xs text-white/60">Gestión de solicitudes de diseño · VOAE</p>
           </div>
         )}
         {onTogglePlegado && (
@@ -82,7 +83,7 @@ export function Sidebar({ perfil, onNavegar, plegado = false, onTogglePlegado }:
                             plegado ? 'absolute -right-1 -top-1' : 'ml-auto'
                           }`}
                         >
-                          {pendientesDisenador}
+                          {textoPendientes}
                         </span>
                       )}
                     </>

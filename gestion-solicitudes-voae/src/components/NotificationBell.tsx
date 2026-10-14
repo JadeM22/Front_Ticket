@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { listarNotificaciones, marcarNotificacionVista, suscribirNotificaciones } from '../data/notificaciones'
+import { CLAVE_CONTEO_SIN_ASIGNAR } from '../hooks/useTickets'
 import { formatRelativo } from '../lib/date'
 import { useAuth } from '../auth/useAuth'
 import { Link } from 'react-router-dom'
@@ -24,6 +25,8 @@ export function NotificationBell() {
     if (!perfil) return
     return suscribirNotificaciones(perfil.id, () => {
       void queryClient.invalidateQueries({ queryKey: clavesNotificaciones })
+      // Una notificación nueva puede significar que entró o salió un ticket sin asignar.
+      void queryClient.invalidateQueries({ queryKey: CLAVE_CONTEO_SIN_ASIGNAR })
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [perfil?.id])
