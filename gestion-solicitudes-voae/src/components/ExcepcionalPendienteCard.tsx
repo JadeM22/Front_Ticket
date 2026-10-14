@@ -24,7 +24,10 @@ export function ExcepcionalPendienteCard({ ticket, puedeResponder, onAceptar, on
   return (
     <div className="rounded-lg border-2 border-ambar bg-ambar-bruma/40 p-3">
       <div className="flex items-center justify-between gap-2">
-        <Link to={`/tickets/${ticket.ticket_id}`} className="flex items-center gap-1.5 font-mono text-xs font-semibold text-ambar">
+        <Link
+          to={`/tickets/${ticket.ticket_id}`}
+          className="flex items-center gap-1.5 whitespace-nowrap font-mono text-xs font-semibold text-ambar"
+        >
           <Zap size={12} /> {ticket.codigo}
         </Link>
       </div>

@@ -126,7 +126,11 @@ export function AdminBitacoraPage() {
   // --- Asignaciones ---
   const columnasAsignaciones: BitacoraColumna<FilaAsignacionLog>[] = [
     { clave: 'fecha', etiqueta: 'Fecha y hora', render: (f) => <span className="font-mono text-xs">{formatFechaHora(f.fecha_registro)}</span> },
-    { clave: 'ticket', etiqueta: 'Ticket', render: (f) => <span className="font-mono text-azul-institucional">{f.codigo}</span> },
+    {
+      clave: 'ticket',
+      etiqueta: 'Ticket',
+      render: (f) => <span className="whitespace-nowrap font-mono text-azul-institucional">{f.codigo}</span>,
+    },
     { clave: 'tipo', etiqueta: 'Tipo', render: (f) => f.tipo_solicitud },
     { clave: 'area', etiqueta: 'Área', render: (f) => f.area },
     { clave: 'accion', etiqueta: 'Acción', render: (f) => <InsigniaAccion accion={f.accion ?? ''} mapa={ACCION_ASIGNACION} /> },

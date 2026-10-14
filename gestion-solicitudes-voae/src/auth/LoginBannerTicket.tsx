@@ -20,7 +20,9 @@ export function LoginBannerTicket() {
           {/* Cuerpo con la franja azul */}
           <div className="relative flex-1">
             <div className="bg-gradient-to-r from-azul-institucional to-azul-medio px-8 py-7">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Solicitudes de diseño</p>
+              <p className="text-xs font-semibold uppercase leading-snug tracking-[0.2em] text-white/70">
+                Solicitudes de diseño y comunicación
+              </p>
               <p className="mt-1 text-5xl font-black leading-none tracking-tight sm:text-6xl">
                 <span className="text-menta">i</span>
                 <span className="text-white">Tickets</span>

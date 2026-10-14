@@ -1064,11 +1064,19 @@ export type Database = {
         Args: { p_tipo_solicitud_id: number }
         Returns: string
       }
+      fnLiberarTicketsDisenadorEscalar: {
+        Args: { p_motivo: string; p_usuario_id: number }
+        Returns: number
+      }
       fnMinutosHabilesEntreEscalar: {
         Args: { p_desde: string; p_hasta: string }
         Returns: number
       }
       fnObtenerEstadoIdEscalar: { Args: { p_nombre: string }; Returns: number }
+      fnPuedeVerAsignacionEscalar: {
+        Args: { p_area_id: number }
+        Returns: boolean
+      }
       fnRechazarExcepcionalesVencidas: { Args: never; Returns: number }
       fnSolicitudCrearEscalar: {
         Args: {

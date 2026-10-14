@@ -8,6 +8,7 @@ import { crearDictamen } from '../data/dictamenes'
 import { mensajeError } from '../lib/errors'
 import { formatFecha, formatFechaHora } from '../lib/date'
 import { TagAsignado, TagExcepcional } from '../components/tickets/Etiquetas'
+import { puedeVerAsignacion } from '../lib/permisos'
 import { useAuth } from '../auth/useAuth'
 import { useHorarioHabil } from '../hooks/useHorarioHabil'
 import { useNombresUsuarios } from '../hooks/useNombresUsuarios'
@@ -50,6 +51,9 @@ export function TicketDetailPage() {
   // Entregables, dictámenes y el contador de correcciones son solo para el equipo de diseño y el jefe
   // del área (el Asignador siempre tiene también el rol Diseñador). El solicitante solo ve el estado.
   const puedeVerGestion = tieneRol('Jefe de Área') || tieneRol('Diseñador') || esAdmin
+  // Empleado/Analista no ven quién diseña el ticket (Parte 27): ni el campo, ni la etiqueta "Asignado",
+  // ni quién hizo el cambio de diseñador en el historial.
+  const muestraAsignacion = puedeVerAsignacion(perfil?.roles ?? [])
 
   const clave = ['ticket-detalle', ticketId, puedeVerHistorial, puedeVerGestion]
   const { data: ticket, isLoading } = useQuery({
@@ -116,19 +120,24 @@ export function TicketDetailPage() {
   const puedeAgregarAdjunto =
     esSolicitante && estadoReal.estado_real !== 'Aprobado' && ticket.adjuntos.length < MAXIMO_ADJUNTOS_POR_TICKET
 
-  const eventosTimeline = ticket.log.map((entrada) => ({
-    id: entrada.id,
-    descripcion: entrada.descripcion_cambio,
-    fecha: entrada.fecha_registro,
-    autor: nombreDe(entrada.usuario_registro),
-  }))
+  const eventosTimeline = ticket.log.flatMap((entrada) => {
+    let descripcion = entrada.descripcion_cambio
+    if (!muestraAsignacion) {
+      const partes = descripcion.split('; ').filter((parte) => !parte.startsWith('Diseñador: '))
+      if (partes.length === 0) return []
+      descripcion = partes.join('; ')
+    }
+    const esOtraPersona = !muestraAsignacion && entrada.usuario_registro != null && entrada.usuario_registro !== perfil?.id
+    const autor = esOtraPersona ? 'Equipo de diseño' : nombreDe(entrada.usuario_registro)
+    return [{ id: entrada.id, descripcion, fecha: entrada.fecha_registro, autor }]
+  })
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <Card>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="font-mono text-sm text-tinta-suave">{estadoReal.codigo}</p>
+            <p className="whitespace-nowrap font-mono text-sm text-tinta-suave">{estadoReal.codigo}</p>
             <h1 className="text-xl font-bold text-azul-noche">{estadoReal.tipo_solicitud}</h1>
             <p className="text-sm text-tinta-suave">
               {estadoReal.solicitante} · {estadoReal.area}
@@ -138,7 +147,7 @@ export function TicketDetailPage() {
             <EstadoChip estado={estadoReal.estado_real ?? ''} />
             <div className="flex flex-wrap justify-end gap-1.5">
               {estadoReal.es_excepcional && <TagExcepcional />}
-              {estadoReal.asignado_por_asignador && (
+              {muestraAsignacion && estadoReal.asignado_por_asignador && (
                 <TagAsignado por={estadoReal.asignado_por_nombre} fecha={estadoReal.fecha_asignacion} />
               )}
             </div>
@@ -173,15 +182,17 @@ export function TicketDetailPage() {
               )}
             </p>
           </div>
-          <div>
-            <p className="text-xs text-tinta-suave">Diseñador</p>
-            <p>{estadoReal.disenador ?? 'Sin asignar'}</p>
-            {estadoReal.asignado_por_asignador && (
-              <p className="text-xs text-indigo-suave">
-                Asignado por {estadoReal.asignado_por_nombre} el {formatFechaHora(estadoReal.fecha_asignacion)}
-              </p>
-            )}
-          </div>
+          {muestraAsignacion && (
+            <div>
+              <p className="text-xs text-tinta-suave">Diseñador</p>
+              <p>{estadoReal.disenador ?? 'Sin asignar'}</p>
+              {estadoReal.asignado_por_asignador && (
+                <p className="text-xs text-indigo-suave">
+                  Asignado por {estadoReal.asignado_por_nombre} el {formatFechaHora(estadoReal.fecha_asignacion)}
+                </p>
+              )}
+            </div>
+          )}
           {puedeVerGestion && (
             <div>
               <p className="text-xs text-tinta-suave">Correcciones</p>

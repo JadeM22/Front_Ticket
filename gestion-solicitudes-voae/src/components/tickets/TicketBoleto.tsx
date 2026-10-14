@@ -4,6 +4,7 @@ import { EstadoChip } from '../EstadoChip'
 import { TagAsignado, TagExcepcional } from './Etiquetas'
 import { CronometroDictamen } from '../ui/CronometroDictamen'
 import { formatFecha, formatFechaHora } from '../../lib/date'
+import { puedeVerAsignacion } from '../../lib/permisos'
 import { useAuth } from '../../auth/useAuth'
 import type { TicketEstadoReal } from '../../types/domain'
 
@@ -21,12 +22,14 @@ interface TicketBoletoProps {
  * Conserva todos los campos de `TicketCard`, incluida la visibilidad por rol (el solicitante puro
  * no ve el contador de correcciones).
  */
-export function TicketBoleto({ ticket, onClick, mostrarDisenador = true }: TicketBoletoProps) {
-  const { tieneRol } = useAuth()
+export function TicketBoleto({ ticket, onClick, mostrarDisenador }: TicketBoletoProps) {
+  const { tieneRol, perfil } = useAuth()
   const correccionesUsadas = ticket.correcciones_usadas ?? 0
   const puedeVerGestion = tieneRol('Jefe de Área') || tieneRol('Diseñador') || tieneRol('Administrador')
   const muestraCorrecciones = puedeVerGestion && correccionesUsadas > 0
   const muestraCronometro = (tieneRol('Jefe de Área') || tieneRol('Diseñador')) && ticket.minutos_habiles_restantes_dictamen != null
+  // Empleado/Analista viendo sus propias solicitudes no ven quién la diseña (Parte 27).
+  const muestraAsignacion = mostrarDisenador ?? puedeVerAsignacion(perfil?.roles ?? [])
 
   return (
     <article
@@ -41,12 +44,12 @@ export function TicketBoleto({ ticket, onClick, mostrarDisenador = true }: Ticke
       <div className="relative flex shrink-0 items-center justify-between gap-3 bg-gradient-to-br from-azul-institucional to-azul-noche px-5 py-3 text-white sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:py-5">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">Ticket</p>
-          <p className="font-mono text-lg font-bold tracking-wider">{ticket.codigo}</p>
+          <p className="whitespace-nowrap font-mono text-lg font-bold tracking-wider">{ticket.codigo}</p>
         </div>
         <div className="flex flex-wrap gap-1.5">
           <EstadoChip estado={ticket.estado_real ?? ''} sobreOscuro />
           {ticket.es_excepcional && <TagExcepcional compacto />}
-          {ticket.asignado_por_asignador && (
+          {muestraAsignacion && ticket.asignado_por_asignador && (
             <TagAsignado por={ticket.asignado_por_nombre} fecha={ticket.fecha_asignacion} />
           )}
         </div>
@@ -98,7 +101,7 @@ export function TicketBoleto({ ticket, onClick, mostrarDisenador = true }: Ticke
           <Dato icono={CalendarDays} etiqueta="Creada" valor={formatFechaHora(ticket.fecha_registro)} />
           <Dato icono={PartyPopper} etiqueta="Evento" valor={formatFecha(ticket.fecha_evento)} />
           <Dato icono={CalendarClock} etiqueta="Vence" valor={formatFecha(ticket.fecha_limite)} alerta={Boolean(ticket.fuera_de_plazo)} />
-          {mostrarDisenador && (
+          {muestraAsignacion && (
             <Dato icono={User} etiqueta="Diseñador" valor={ticket.disenador ?? 'Sin asignar'} tenue={!ticket.disenador} />
           )}
         </dl>

@@ -40,7 +40,10 @@ export function SolicitudExcepcionalPage() {
             {excepcionales.map((ticket) => (
               <Card key={ticket.ticket_id} className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <Link to={`/tickets/${ticket.ticket_id}`} className="font-mono text-sm font-semibold text-azul-institucional hover:underline">
+                  <Link
+                    to={`/tickets/${ticket.ticket_id}`}
+                    className="whitespace-nowrap font-mono text-sm font-semibold text-azul-institucional hover:underline"
+                  >
                     {ticket.codigo}
                   </Link>
                   <p className="text-sm text-tinta">{ticket.tipo_solicitud}</p>

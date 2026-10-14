@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Download, Search, X } from 'lucide-react'
-import { coincideTexto } from '../lib/texto'
+import { coincideCodigo, coincideTexto } from '../lib/buscar'
 import { hoyTegucigalpaISO } from '../lib/date'
 import { exportarCSV, type ColumnaExportar } from '../lib/exportar'
 import { Button } from './ui/Button'
@@ -114,7 +114,11 @@ export function BitacoraTabla<T>({
   const filasFiltradas = useMemo(
     () =>
       filas.filter((fila) => {
-        if (busqueda && !camposBusqueda(fila).some((campo) => coincideTexto(campo, busqueda))) return false
+        if (
+          busqueda &&
+          !camposBusqueda(fila).some((campo) => coincideTexto(campo, busqueda) || coincideCodigo(campo, busqueda))
+        )
+          return false
         const fecha = (obtenerFecha(fila) ?? '').slice(0, 10)
         if (desde && fecha < desde) return false
         if (hasta && fecha > hasta) return false

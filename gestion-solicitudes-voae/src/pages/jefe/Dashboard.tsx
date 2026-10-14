@@ -7,7 +7,7 @@ import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { crearDictamen } from '../../data/dictamenes'
 import { mensajeError } from '../../lib/errors'
 import { formatFecha } from '../../lib/date'
-import { coincideTexto } from '../../lib/texto'
+import { coincideCodigo, coincideTexto } from '../../lib/buscar'
 import { exportarCSV, exportarPDF, type ColumnaExportar } from '../../lib/exportar'
 import { useAuth } from '../../auth/useAuth'
 import { useHorarioHabil } from '../../hooks/useHorarioHabil'
@@ -64,9 +64,9 @@ export function JefeDashboard() {
     () =>
       historialCompleto.filter((t) => {
         if (busqueda) {
-          const coincide = [t.codigo, t.tipo_solicitud, t.disenador, t.solicitante, t.estado_real].some((campo) =>
-            coincideTexto(campo, busqueda),
-          )
+          const coincide =
+            coincideCodigo(t.codigo, busqueda) ||
+            [t.tipo_solicitud, t.disenador, t.solicitante, t.estado_real].some((campo) => coincideTexto(campo, busqueda))
           if (!coincide) return false
         }
         const fecha = (t.fecha_registro ?? '').slice(0, 10)
@@ -254,7 +254,7 @@ export function JefeDashboard() {
               <tbody className="divide-y divide-azul-niebla/60">
                 {historial.map((ticket) => (
                   <tr key={ticket.ticket_id}>
-                    <td className="px-4 py-2">
+                    <td className="whitespace-nowrap px-4 py-2">
                       <Link to={`/tickets/${ticket.ticket_id}`} className="font-mono text-azul-institucional hover:underline">
                         {ticket.codigo}
                       </Link>

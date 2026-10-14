@@ -22,6 +22,7 @@ import {
 import { obtenerEstadisticas, type FilaEstadistica } from '../../data/estadisticas'
 import { listarAreas, listarTiposSolicitud } from '../../data/catalogos'
 import { formatFecha, hoyTegucigalpaISO, mesTegucigalpa } from '../../lib/date'
+import { coincideCodigo, coincideTexto } from '../../lib/buscar'
 import { exportarCSV, exportarPDF, type ColumnaExportar } from '../../lib/exportar'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -89,6 +90,9 @@ export function AnalistaDashboard() {
   const [orden, setOrden] = useState<{ columna: keyof FilaEstadistica; asc: boolean }>({ columna: 'ticket_id', asc: false })
   const [busqueda, setBusqueda] = useState('')
   const [exportarAbierto, setExportarAbierto] = useState(false)
+  const esMovil = useEsMovil()
+  const anchoEjeY = esMovil ? 130 : 190
+  const anchoTick = esMovil ? 120 : 180
   const exportarRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -254,9 +258,12 @@ export function AnalistaDashboard() {
   }, [filasFiltradas, orden])
 
   const filasDetalle = useMemo(() => {
-    const q = busqueda.trim().toLowerCase()
-    if (!q) return filasOrdenadas
-    return filasOrdenadas.filter((f) => (f.codigo ?? '').toLowerCase().includes(q))
+    if (!busqueda.trim()) return filasOrdenadas
+    return filasOrdenadas.filter(
+      (f) =>
+        coincideCodigo(f.codigo, busqueda) ||
+        [f.tipo_solicitud, f.area, f.disenador].some((v) => coincideTexto(v, busqueda)),
+    )
   }, [filasOrdenadas, busqueda])
 
   const totalPaginas = Math.max(1, Math.ceil(filasDetalle.length / FILAS_POR_PAGINA))
@@ -459,13 +466,25 @@ export function AnalistaDashboard() {
             </GraficoCard>
 
             <GraficoCard titulo="Por tipo de solicitud" vacio={datosPorTipo.length === 0}>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={datosPorTipo} layout="vertical" margin={{ left: 24 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-azul-niebla)" />
-                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
-                  <YAxis type="category" dataKey="etiqueta" width={120} tick={{ fontSize: 11 }} />
+              <ResponsiveContainer width="100%" height={altoBarrasHorizontal(datosPorTipo.length)}>
+                <BarChart
+                  data={datosPorTipo}
+                  layout="vertical"
+                  margin={{ top: 8, right: 32, bottom: 8, left: 8 }}
+                  barCategoryGap="28%"
+                >
+                  <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--color-azul-niebla)" />
+                  <XAxis type="number" allowDecimals={false} tickMargin={8} tick={{ fontSize: 12 }} />
+                  <YAxis
+                    type="category"
+                    dataKey="etiqueta"
+                    width={anchoEjeY}
+                    interval={0}
+                    tickLine={false}
+                    tick={<TickEnvuelto ancho={anchoTick} />}
+                  />
                   <Tooltip />
-                  <Bar dataKey="valor" name="Solicitudes" fill="var(--color-azul-medio)" radius={4} />
+                  <Bar dataKey="valor" name="Solicitudes" fill="var(--color-azul-medio)" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </GraficoCard>
@@ -499,11 +518,23 @@ export function AnalistaDashboard() {
             </GraficoCard>
 
             <GraficoCard titulo="Cumplimiento a tiempo por tipo" vacio={cumplimientoPorTipo.length === 0}>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={cumplimientoPorTipo} layout="vertical" margin={{ left: 24 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-azul-niebla)" />
-                  <XAxis type="number" unit="%" tick={{ fontSize: 12 }} />
-                  <YAxis type="category" dataKey="tipo" width={120} tick={{ fontSize: 11 }} />
+              <ResponsiveContainer width="100%" height={altoBarrasHorizontal(cumplimientoPorTipo.length)}>
+                <BarChart
+                  data={cumplimientoPorTipo}
+                  layout="vertical"
+                  margin={{ top: 8, right: 32, bottom: 8, left: 8 }}
+                  barCategoryGap="28%"
+                >
+                  <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--color-azul-niebla)" />
+                  <XAxis type="number" unit="%" tickMargin={8} tick={{ fontSize: 12 }} />
+                  <YAxis
+                    type="category"
+                    dataKey="tipo"
+                    width={anchoEjeY}
+                    interval={0}
+                    tickLine={false}
+                    tick={<TickEnvuelto ancho={anchoTick} />}
+                  />
                   <Tooltip />
                   <Legend />
                   <Bar dataKey="aTiempo" name="A tiempo" stackId="a" fill="var(--color-menta)" />
@@ -513,15 +544,27 @@ export function AnalistaDashboard() {
             </GraficoCard>
 
             <GraficoCard titulo="Carga por diseñador" vacio={cargaPorDisenador.length === 0}>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={cargaPorDisenador} layout="vertical" margin={{ left: 24 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-azul-niebla)" />
-                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
-                  <YAxis type="category" dataKey="disenador" width={120} tick={{ fontSize: 11 }} />
+              <ResponsiveContainer width="100%" height={altoBarrasHorizontal(cargaPorDisenador.length)}>
+                <BarChart
+                  data={cargaPorDisenador}
+                  layout="vertical"
+                  margin={{ top: 8, right: 32, bottom: 8, left: 8 }}
+                  barCategoryGap="28%"
+                >
+                  <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--color-azul-niebla)" />
+                  <XAxis type="number" allowDecimals={false} tickMargin={8} tick={{ fontSize: 12 }} />
+                  <YAxis
+                    type="category"
+                    dataKey="disenador"
+                    width={anchoEjeY}
+                    interval={0}
+                    tickLine={false}
+                    tick={<TickEnvuelto ancho={anchoTick} />}
+                  />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="asignados" name="Asignados" fill="var(--color-azul-institucional)" radius={4} />
-                  <Bar dataKey="aTiempo" name="A tiempo" fill="var(--color-menta)" radius={4} />
+                  <Bar dataKey="asignados" name="Asignados" fill="var(--color-azul-institucional)" radius={[0, 6, 6, 0]} />
+                  <Bar dataKey="aTiempo" name="A tiempo" fill="var(--color-menta)" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </GraficoCard>
@@ -537,7 +580,7 @@ export function AnalistaDashboard() {
                   <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-tinta-suave" />
                   <input
                     className={`${CLASE_INPUT} w-56 pl-8`}
-                    placeholder="Buscar por código (ej. ADH0001)"
+                    placeholder="Buscar por código (ej. ADH-0001), tipo, área o diseñador"
                     value={busqueda}
                     onChange={(e) => {
                       setBusqueda(e.target.value)
@@ -600,7 +643,7 @@ export function AnalistaDashboard() {
                     <tbody className="divide-y divide-azul-niebla/60">
                       {filasPagina.map((fila) => (
                         <tr key={fila.ticket_id}>
-                          <td className="px-3 py-2 font-mono">
+                          <td className="whitespace-nowrap px-3 py-2 font-mono">
                             <Link to={`/tickets/${fila.ticket_id}`} className="text-azul-institucional hover:underline">
                               {fila.codigo}
                             </Link>
@@ -660,6 +703,71 @@ function contarPor<T>(lista: T[], claveFn: (item: T) => string | null | undefine
   return Array.from(conteos.entries())
     .map(([etiqueta, valor]) => ({ etiqueta, valor }))
     .sort((a, b) => b.valor - a.valor)
+}
+
+/** `true` por debajo del breakpoint `sm` de Tailwind (640px), para achicar las gráficas en móvil. */
+function useEsMovil(): boolean {
+  const [esMovil, setEsMovil] = useState(() => window.matchMedia('(max-width: 639px)').matches)
+  useEffect(() => {
+    const medios = window.matchMedia('(max-width: 639px)')
+    const manejar = () => setEsMovil(medios.matches)
+    medios.addEventListener('change', manejar)
+    return () => medios.removeEventListener('change', manejar)
+  }, [])
+  return esMovil
+}
+
+const PIXELES_POR_BARRA = 44
+const ALTO_MINIMO_GRAFICA = 260
+
+/** Altura dinámica para una gráfica de barras horizontales: crece con la cantidad de categorías. */
+function altoBarrasHorizontal(cantidad: number): number {
+  return Math.max(ALTO_MINIMO_GRAFICA, cantidad * PIXELES_POR_BARRA)
+}
+
+interface TickEnvueltoProps {
+  x?: number
+  y?: number
+  payload?: { value: string }
+  ancho?: number
+}
+
+/** Tick del eje Y que parte una etiqueta larga en hasta 2 líneas (con "…" si no alcanza), para que
+ * los nombres de tipo/área/diseñador no se amontonen en las gráficas de barras horizontales. */
+function TickEnvuelto({ x = 0, y = 0, payload, ancho = 180 }: TickEnvueltoProps) {
+  const valor = String(payload?.value ?? '')
+  const palabras = valor.split(' ')
+  const lineas: string[] = []
+  let actual = ''
+  const maxCar = Math.floor(ancho / 7)
+  for (const palabra of palabras) {
+    if ((actual + ' ' + palabra).trim().length > maxCar) {
+      lineas.push(actual.trim())
+      actual = palabra
+    } else {
+      actual += ' ' + palabra
+    }
+  }
+  lineas.push(actual.trim())
+  const visibles = lineas.slice(0, 2)
+  if (lineas.length > 2) visibles[1] = visibles[1].replace(/.{0,1}$/, '…')
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <title>{valor}</title>
+      {visibles.map((linea, indice) => (
+        <text
+          key={indice}
+          x={-8}
+          y={(indice - (visibles.length - 1) / 2) * 14}
+          dy={4}
+          textAnchor="end"
+          className="fill-tinta-suave text-[12px]"
+        >
+          {linea}
+        </text>
+      ))}
+    </g>
+  )
 }
 
 function Kpi({ etiqueta, valor, color }: { etiqueta: string; valor: string | number; color: 'azul' | 'menta' | 'coral' | 'ambar' }) {

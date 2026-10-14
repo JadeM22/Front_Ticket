@@ -6,6 +6,7 @@ import { TagAsignado, TagExcepcional, TagLiberado } from './tickets/Etiquetas'
 import { CronometroDictamen } from './ui/CronometroDictamen'
 import { formatFecha, formatFechaHora } from '../lib/date'
 import { esTicketLiberado } from '../lib/tableroDisenador'
+import { puedeVerAsignacion } from '../lib/permisos'
 import { useAuth } from '../auth/useAuth'
 import type { TicketEstadoReal } from '../types/domain'
 
@@ -19,12 +20,14 @@ interface TicketCardProps {
 }
 
 export function TicketCard({ ticket, onClick, accion }: TicketCardProps) {
-  const { tieneRol } = useAuth()
+  const { tieneRol, perfil } = useAuth()
   const correccionesUsadas = ticket.correcciones_usadas ?? 0
   const muestraCronometro =
     (tieneRol('Jefe de Área') || tieneRol('Diseñador')) && ticket.minutos_habiles_restantes_dictamen != null
   const liberado = esTicketLiberado(ticket)
-  const muestraInsignias = ticket.es_excepcional || ticket.asignado_por_asignador || correccionesUsadas > 0 || liberado
+  const muestraAsignacion = puedeVerAsignacion(perfil?.roles ?? [])
+  const muestraInsignias =
+    ticket.es_excepcional || (muestraAsignacion && ticket.asignado_por_asignador) || correccionesUsadas > 0 || liberado
 
   return (
     <article
@@ -36,7 +39,7 @@ export function TicketCard({ ticket, onClick, accion }: TicketCardProps) {
       className="flex h-full flex-col rounded-xl bg-white p-4 shadow-sm transition-shadow duration-150 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul-institucional"
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="rounded-md bg-azul-niebla px-2 py-0.5 font-mono text-xs font-semibold text-azul-institucional">
+        <span className="whitespace-nowrap rounded-md bg-azul-niebla px-2 py-0.5 font-mono text-xs font-semibold text-azul-institucional">
           {ticket.codigo}
         </span>
         <EstadoChip estado={ticket.estado_real ?? ''} />
@@ -45,7 +48,9 @@ export function TicketCard({ ticket, onClick, accion }: TicketCardProps) {
       {muestraInsignias && (
         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
           {ticket.es_excepcional && <TagExcepcional />}
-          {ticket.asignado_por_asignador && <TagAsignado por={ticket.asignado_por_nombre} fecha={ticket.fecha_asignacion} />}
+          {muestraAsignacion && ticket.asignado_por_asignador && (
+            <TagAsignado por={ticket.asignado_por_nombre} fecha={ticket.fecha_asignacion} />
+          )}
           {liberado && <TagLiberado />}
           {correccionesUsadas > 0 && (
             <span
@@ -76,12 +81,14 @@ export function TicketCard({ ticket, onClick, accion }: TicketCardProps) {
         <FilaCampo icono={Calendar} etiqueta="Creada" valor={formatFechaHora(ticket.fecha_registro)} />
         <FilaCampo icono={PartyPopper} etiqueta="Evento" valor={formatFecha(ticket.fecha_evento)} />
         <FilaCampo icono={Clock} etiqueta="Vence" valor={formatFecha(ticket.fecha_limite)} vencido={Boolean(ticket.fuera_de_plazo)} />
-        <FilaCampo
-          icono={User}
-          etiqueta="Diseñador"
-          valor={ticket.disenador ?? 'Sin asignar'}
-          sinAsignar={!ticket.disenador}
-        />
+        {muestraAsignacion && (
+          <FilaCampo
+            icono={User}
+            etiqueta="Diseñador"
+            valor={ticket.disenador ?? 'Sin asignar'}
+            sinAsignar={!ticket.disenador}
+          />
+        )}
       </div>
 
       {muestraCronometro && (
