@@ -46,13 +46,14 @@ export function TicketBoleto({ ticket, onClick, mostrarDisenador }: TicketBoleto
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">Ticket</p>
           <p className="whitespace-nowrap font-mono text-lg font-bold tracking-wider">{ticket.codigo}</p>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          <EstadoChip estado={ticket.estado_real ?? ''} sobreOscuro />
-          {ticket.es_excepcional && <TagExcepcional compacto />}
-          {muestraAsignacion && ticket.asignado_por_asignador && (
-            <TagAsignado por={ticket.asignado_por_nombre} fecha={ticket.fecha_asignacion} />
-          )}
-        </div>
+        {(ticket.es_excepcional || (muestraAsignacion && ticket.asignado_por_asignador)) && (
+          <div className="flex flex-wrap gap-1.5">
+            {ticket.es_excepcional && <TagExcepcional compacto />}
+            {muestraAsignacion && ticket.asignado_por_asignador && (
+              <TagAsignado por={ticket.asignado_por_nombre} fecha={ticket.fecha_asignacion} />
+            )}
+          </div>
+        )}
 
         {/* Muescas: semicírculos dentro de la franja azul (arriba y abajo), recortados por el
            overflow-hidden del <article>. Usan el color de fondo real de la página. */}
@@ -77,8 +78,12 @@ export function TicketBoleto({ ticket, onClick, mostrarDisenador }: TicketBoleto
       </div>
 
       <div className="flex-1">
+        <div className="flex justify-end px-5 pt-3 sm:pt-4">
+          <EstadoChip estado={ticket.estado_real ?? ''} />
+        </div>
+
         {(muestraCorrecciones || (ticket.es_excepcional && ticket.excepcional_estado === 'PENDIENTE')) && (
-          <div className="flex flex-wrap items-center gap-1.5 px-5 pt-3 sm:pt-4">
+          <div className="flex flex-wrap items-center gap-1.5 px-5 pt-1">
             {muestraCorrecciones && (
               <span
                 className={`rounded-full px-2 py-0.5 text-xs font-semibold ${

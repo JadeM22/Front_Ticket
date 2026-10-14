@@ -80,7 +80,7 @@ export function EmpleadoSolicitudesPage() {
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           placeholder="Buscar por código, tipo, solicitante o área…"
-          className={`${CLASE_INPUT} pl-9`}
+          className={`${CLASE_INPUT} pl-9 shadow-sm transition-shadow duration-150 hover:shadow-md focus:shadow-md`}
         />
       </label>
 
