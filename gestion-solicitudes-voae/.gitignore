@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Manuales: HTML temporal que usa md2pdf.mjs (se borra solo, pero por si acaso)
+docs/manuales/.*.tmp.html
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
