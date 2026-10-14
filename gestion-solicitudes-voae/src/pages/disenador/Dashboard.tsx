@@ -6,6 +6,7 @@ import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { tomarTicket } from '../../data/tickets'
 import { listarDisenadoresAsignables } from '../../data/usuarios'
 import { mensajeError } from '../../lib/errors'
+import { ESTADOS_FINALES_TICKET } from '../../lib/tableroDisenador'
 import { useAuth } from '../../auth/useAuth'
 import { TicketCard } from '../../components/TicketCard'
 import { ExcepcionalPendienteCard } from '../../components/ExcepcionalPendienteCard'
@@ -19,8 +20,6 @@ interface Columna {
   titulo: string
   filtro: (t: TicketEstadoReal, miId: number) => boolean
 }
-
-const ESTADOS_FINALES = ['Aprobado', 'Aprobado (Automático)', 'Rechazado']
 
 const COLUMNAS: Columna[] = [
   { titulo: 'En proceso', filtro: (t, miId) => t.disenador_id === miId && t.estado_real === 'En proceso' },
@@ -68,9 +67,9 @@ export function DisenadorDashboard() {
   )
 
   const excepcionalesPendientes = ticketsFifo.filter((t) => t.es_excepcional && t.excepcional_estado === 'PENDIENTE')
-  const sinAsignar = ticketsFifo.filter((t) => !t.disenador_id && !t.es_excepcional && !ESTADOS_FINALES.includes(t.estado_real ?? ''))
+  const sinAsignar = ticketsFifo.filter((t) => !t.disenador_id && !t.es_excepcional && !ESTADOS_FINALES_TICKET.includes(t.estado_real ?? ''))
   const historial = ticketsFifo.filter(
-    (t) => ESTADOS_FINALES.includes(t.estado_real ?? '') && (t.disenador_id === perfil.id || (!t.disenador_id && t.es_excepcional)),
+    (t) => ESTADOS_FINALES_TICKET.includes(t.estado_real ?? '') && (t.disenador_id === perfil.id || (!t.disenador_id && t.es_excepcional)),
   )
 
   function invalidar() {

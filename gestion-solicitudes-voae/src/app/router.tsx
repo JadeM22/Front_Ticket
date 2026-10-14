@@ -61,7 +61,7 @@ export const router = createBrowserRouter([
                 ],
               },
               {
-                element: <RequireRole roles={['Asignador', 'Administrador']} />,
+                element: <RequireRole roles={['Asignador']} mensajeDenegado="No tienes acceso a Asignación" />,
                 children: [{ path: '/asignador', element: <AsignadorDashboard /> }],
               },
               {

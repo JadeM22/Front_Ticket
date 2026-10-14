@@ -11,7 +11,6 @@ import { useAuth } from '../../auth/useAuth'
 import { TicketCard } from '../../components/TicketCard'
 import { ExcepcionalPendienteCard } from '../../components/ExcepcionalPendienteCard'
 import { ResponderExcepcionalModal } from '../../components/ResponderExcepcionalModal'
-import { SubirEntregableModal } from '../../components/SubirEntregableModal'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { CLASE_INPUT } from '../../components/ui/Campo'
@@ -33,7 +32,6 @@ export function AsignadorDashboard() {
   const [estadoFiltro, setEstadoFiltro] = useState('')
   const [respuesta, setRespuesta] = useState<{ ticket: TicketEstadoReal; modo: 'aceptar' | 'rechazar' } | null>(null)
   const [reasignacionPendiente, setReasignacionPendiente] = useState<{ ticket: TicketEstadoReal; disenador: DisenadorAsignable } | null>(null)
-  const [ticketEntregable, setTicketEntregable] = useState<TicketEstadoReal | null>(null)
 
   const { data: disenadores = [] } = useQuery({ queryKey: ['admin', 'disenadores-asignables'], queryFn: listarDisenadoresAsignables })
   const { data: tipos = [] } = useQuery({ queryKey: ['catalogos', 'tipos-solicitud'], queryFn: listarTiposSolicitud })
@@ -174,7 +172,6 @@ export function AsignadorDashboard() {
           disenadores={disenadores}
           onCambiarDisenador={manejarCambiarDisenador}
           onTomar={manejarTomar}
-          onSubirEntregable={setTicketEntregable}
         />
         {disenadores.map((disenador) => {
           const ticketsDisenador = filtrados.filter(
@@ -187,7 +184,6 @@ export function AsignadorDashboard() {
               tickets={ticketsDisenador}
               disenadores={disenadores}
               onCambiarDisenador={manejarCambiarDisenador}
-              onSubirEntregable={setTicketEntregable}
             />
           )
         })}
@@ -230,16 +226,6 @@ export function AsignadorDashboard() {
           </>
         )}
       </Modal>
-
-      {perfil && (
-        <SubirEntregableModal
-          abierto={ticketEntregable !== null}
-          onCerrar={() => setTicketEntregable(null)}
-          onSubido={invalidar}
-          ticketId={ticketEntregable?.ticket_id ?? 0}
-          disenadorId={perfil.id}
-        />
-      )}
     </div>
   )
 }
@@ -250,14 +236,12 @@ function Carril({
   disenadores,
   onCambiarDisenador,
   onTomar,
-  onSubirEntregable,
 }: {
   titulo: string
   tickets: TicketEstadoReal[]
   disenadores: DisenadorAsignable[]
   onCambiarDisenador: (ticket: TicketEstadoReal, disenadorId: number) => void
   onTomar?: (ticket: TicketEstadoReal) => void
-  onSubirEntregable: (ticket: TicketEstadoReal) => void
 }) {
   return (
     <div className="rounded-xl bg-azul-niebla/40 p-3">
@@ -288,9 +272,6 @@ function Carril({
                   Tomar
                 </Button>
               )}
-              <Button variante="secundario" onClick={() => onSubirEntregable(ticket)}>
-                Subir
-              </Button>
             </div>
           </div>
         ))}

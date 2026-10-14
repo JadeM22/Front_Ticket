@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -40,6 +40,53 @@ export type Database = {
           ultimo_consecutivo?: number
         }
         Relationships: []
+      }
+      FeriadosLog: {
+        Row: {
+          accion: string
+          fecha_fin_anterior: string | null
+          fecha_fin_nueva: string | null
+          fecha_inicio_anterior: string | null
+          fecha_inicio_nueva: string | null
+          fecha_registro: string
+          feriado_id: number
+          id: number
+          nombre: string
+          usuario_registro: number | null
+        }
+        Insert: {
+          accion: string
+          fecha_fin_anterior?: string | null
+          fecha_fin_nueva?: string | null
+          fecha_inicio_anterior?: string | null
+          fecha_inicio_nueva?: string | null
+          fecha_registro?: string
+          feriado_id: number
+          id?: number
+          nombre: string
+          usuario_registro?: number | null
+        }
+        Update: {
+          accion?: string
+          fecha_fin_anterior?: string | null
+          fecha_fin_nueva?: string | null
+          fecha_inicio_anterior?: string | null
+          fecha_inicio_nueva?: string | null
+          fecha_registro?: string
+          feriado_id?: number
+          id?: number
+          nombre?: string
+          usuario_registro?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fkFeriadoLog_UsuarioRegistro"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "Usuarios"
+            referencedColumns: null
+          },
+        ]
       }
       Roles: {
         Row: {
@@ -190,7 +237,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_FeriadosLog: {
+        Row: {
+          accion: string | null
+          fecha_fin_anterior: string | null
+          fecha_fin_nueva: string | null
+          fecha_inicio_anterior: string | null
+          fecha_inicio_nueva: string | null
+          fecha_registro: string | null
+          feriado_id: number | null
+          id: number | null
+          nombre: string | null
+          realizado_por: string | null
+          usuario_registro: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fkFeriadoLog_UsuarioRegistro"
+            columns: ["usuario_registro"]
+            isOneToOne: false
+            referencedRelation: "Usuarios"
+            referencedColumns: null
+          },
+        ]
+      }
     }
     Functions: {
       fnDisenadoresTabla: {
@@ -272,6 +342,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fkAdjunto_Ticket"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "Ticket"
+            referencedColumns: null
+          },
+        ]
+      }
+      AsignacionLog: {
+        Row: {
+          accion: string
+          disenador_anterior_id: number | null
+          disenador_nuevo_id: number | null
+          fecha_registro: string
+          id: number
+          ticket_id: number
+          usuario_registro: number | null
+        }
+        Insert: {
+          accion: string
+          disenador_anterior_id?: number | null
+          disenador_nuevo_id?: number | null
+          fecha_registro?: string
+          id?: number
+          ticket_id: number
+          usuario_registro?: number | null
+        }
+        Update: {
+          accion?: string
+          disenador_anterior_id?: number | null
+          disenador_nuevo_id?: number | null
+          fecha_registro?: string
+          id?: number
+          ticket_id?: number
+          usuario_registro?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fkAsignacionLog_Ticket"
             columns: null
             isOneToOne: false
             referencedRelation: "Ticket"
@@ -840,6 +948,32 @@ export type Database = {
       }
     }
     Views: {
+      vw_AsignacionLog: {
+        Row: {
+          accion: string | null
+          area: string | null
+          codigo: string | null
+          disenador_anterior: string | null
+          disenador_anterior_id: number | null
+          disenador_nuevo: string | null
+          disenador_nuevo_id: number | null
+          fecha_registro: string | null
+          id: number | null
+          realizado_por: string | null
+          ticket_id: number | null
+          tipo_solicitud: string | null
+          usuario_registro: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fkAsignacionLog_Ticket"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "Ticket"
+            referencedColumns: null
+          },
+        ]
+      }
       vw_TicketsEstadoReal: {
         Row: {
           aprobado_automatico: boolean | null

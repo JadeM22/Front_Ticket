@@ -1,4 +1,28 @@
 import { supabase } from '../lib/supabase'
+import type { Tables } from '../types/database'
+
+export type FilaFeriadoLog = Tables<{ schema: 'Seguridad' }, 'vw_FeriadosLog'>
+export type FilaAsignacionLog = Tables<{ schema: 'Solicitudes' }, 'vw_AsignacionLog'>
+
+export async function listarFeriadosLog(): Promise<FilaFeriadoLog[]> {
+  const { data, error } = await supabase
+    .schema('Seguridad')
+    .from('vw_FeriadosLog')
+    .select('*')
+    .order('fecha_registro', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function listarAsignacionLog(): Promise<FilaAsignacionLog[]> {
+  const { data, error } = await supabase
+    .schema('Solicitudes')
+    .from('vw_AsignacionLog')
+    .select('*')
+    .order('fecha_registro', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
 
 export interface EntradaBitacora {
   id: number

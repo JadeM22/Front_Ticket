@@ -6,7 +6,7 @@ import { Plus, Zap } from 'lucide-react'
 import { obtenerTicketCompleto, tomarTicket } from '../data/tickets'
 import { crearDictamen } from '../data/dictamenes'
 import { mensajeError } from '../lib/errors'
-import { formatFecha, formatFechaHora, formatoHorasHabiles } from '../lib/date'
+import { formatFecha, formatFechaHora } from '../lib/date'
 import { useAuth } from '../auth/useAuth'
 import { useHorarioHabil } from '../hooks/useHorarioHabil'
 import { useNombresUsuarios } from '../hooks/useNombresUsuarios'
@@ -19,7 +19,7 @@ import { EstadoChip } from '../components/EstadoChip'
 import { Timeline } from '../components/ui/Timeline'
 import { Stepper } from '../components/ui/Stepper'
 import { pasosProgresoTicket } from '../lib/progresoTicket'
-import { ProgressRing } from '../components/ui/ProgressRing'
+import { CronometroDictamen } from '../components/ui/CronometroDictamen'
 import { ListaEntregables } from '../components/ListaEntregables'
 import { ListaAdjuntos } from '../components/ListaAdjuntos'
 import { SubirEntregableModal } from '../components/SubirEntregableModal'
@@ -183,14 +183,11 @@ export function TicketDetailPage() {
         </div>
 
         {puedeVerGestion && estadoReal.estado_real === 'Finalizado' && estadoReal.minutos_habiles_restantes_dictamen != null && (
-          <div className="mt-4 flex items-center gap-3 rounded-lg bg-azul-niebla/40 p-3">
-            <ProgressRing horasRestantes={estadoReal.minutos_habiles_restantes_dictamen / 60} />
-            <p className="text-sm text-tinta-suave">
-              Quedan {formatoHorasHabiles(estadoReal.minutos_habiles_restantes_dictamen)} hábiles para dictaminar. Si
-              el jefe de área no dictamina antes de las{' '}
-              <span className="font-medium text-tinta">{formatFechaHora(estadoReal.fecha_aprobacion_automatica)}</span>, el
-              ticket se aprueba automáticamente.
-            </p>
+          <div className="mt-4">
+            <CronometroDictamen
+              minutos={estadoReal.minutos_habiles_restantes_dictamen}
+              fechaAprobacion={estadoReal.fecha_aprobacion_automatica}
+            />
           </div>
         )}
 

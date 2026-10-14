@@ -4,6 +4,7 @@ import { NAV_POR_ROL } from './navegacion'
 import { JERARQUIA_ROLES } from '../../types/domain'
 import type { Perfil } from '../../types/domain'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
+import { contarPendientesDisenador } from '../../lib/tableroDisenador'
 
 interface SidebarProps {
   perfil: Perfil
@@ -17,12 +18,11 @@ export function Sidebar({ perfil, onNavegar, plegado = false, onTogglePlegado }:
   const rolesOrdenados = JERARQUIA_ROLES.filter((rol) => perfil.roles.includes(rol))
 
   // Comparte la caché de `['tickets', 'estado-real']` con el resto de la app: no dispara una
-  // consulta aparte. Solo importa el conteo para quien puede aceptar/rechazar excepcionales.
-  const puedeAsignar = perfil.roles.includes('Asignador') || perfil.roles.includes('Administrador')
+  // consulta aparte. El contador de excepcionales pendientes del Asignador vive dentro de su
+  // propia página (sección "Excepcionales pendientes"), no en el sidebar.
+  const esDisenador = perfil.roles.includes('Diseñador')
   const { data: tickets } = useTicketsEstadoReal()
-  const excepcionalesPendientes = puedeAsignar
-    ? (tickets ?? []).filter((t) => t.es_excepcional && t.excepcional_estado === 'PENDIENTE').length
-    : 0
+  const pendientesDisenador = esDisenador ? contarPendientesDisenador(tickets ?? [], perfil.id) : 0
 
   return (
     <nav
@@ -76,13 +76,13 @@ export function Sidebar({ perfil, onNavegar, plegado = false, onTogglePlegado }:
                       {isActive && <span className="absolute left-0 h-5 w-1 rounded-full bg-menta" />}
                       <item.icono size={16} />
                       {!plegado && item.etiqueta}
-                      {item.ruta === '/asignador' && excepcionalesPendientes > 0 && (
+                      {item.ruta === '/disenador' && pendientesDisenador > 0 && (
                         <span
                           className={`flex h-5 min-w-5 items-center justify-center rounded-full bg-ambar px-1 text-[10px] font-bold text-azul-noche ${
                             plegado ? 'absolute -right-1 -top-1' : 'ml-auto'
                           }`}
                         >
-                          {excepcionalesPendientes}
+                          {pendientesDisenador}
                         </span>
                       )}
                     </>

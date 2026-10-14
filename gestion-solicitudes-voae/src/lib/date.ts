@@ -70,6 +70,12 @@ export function formatFechaHora(fecha: string | Date | null | undefined): string
   return `${formatFecha(fecha)} ${formatHora(fecha)}`
 }
 
+/** Minutos → "HH:MM" exactos (p. ej. 1410 → "23:30", 1440 → "24:00"). Nunca decimales. */
+export function formatoHHMM(minutos: number): string {
+  const m = Math.max(0, Math.round(minutos))
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+}
+
 /** "5 horas y 20 minutos" / "20 minutos" / "5 horas" — nunca decimales. */
 export function formatoHorasHabiles(minutos: number): string {
   const m = Math.max(0, Math.round(minutos))

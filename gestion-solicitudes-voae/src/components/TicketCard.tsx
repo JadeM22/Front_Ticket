@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
-import { Zap } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { Calendar, Clock, PartyPopper, User, Zap } from 'lucide-react'
 import { EstadoChip } from './EstadoChip'
-import { formatFecha, formatFechaHora, formatoHorasHabiles } from '../lib/date'
+import { CronometroDictamen } from './ui/CronometroDictamen'
+import { formatFecha, formatFechaHora } from '../lib/date'
 import { useAuth } from '../auth/useAuth'
 import type { TicketEstadoReal } from '../types/domain'
 
@@ -12,61 +14,101 @@ export function TicketCard({ ticket }: { ticket: TicketEstadoReal }) {
   const correccionesUsadas = ticket.correcciones_usadas ?? 0
   const muestraCronometro =
     (tieneRol('Jefe de Área') || tieneRol('Diseñador')) && ticket.minutos_habiles_restantes_dictamen != null
+  const muestraInsignias = ticket.es_excepcional || correccionesUsadas > 0
 
   return (
     <Link
       to={`/tickets/${ticket.ticket_id}`}
-      className="flex overflow-hidden rounded-xl bg-white shadow-sm transition-shadow duration-150 hover:shadow-md"
+      className="block rounded-xl bg-white p-4 shadow-sm transition-shadow duration-150 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul-institucional"
     >
-      <div className="relative flex w-16 flex-none flex-col items-center justify-center border-r-2 border-dashed border-azul-niebla bg-azul-noche py-4">
-        <span className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 rounded-full bg-fondo" />
-        <span className="font-mono text-xs font-semibold tracking-wide text-menta" style={{ writingMode: 'vertical-rl' }}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="rounded-md bg-azul-niebla px-2 py-0.5 font-mono text-xs font-semibold text-azul-institucional">
           {ticket.codigo}
         </span>
-        <span className="absolute -bottom-2 left-1/2 h-4 w-4 -translate-x-1/2 rounded-full bg-fondo" />
+        <EstadoChip estado={ticket.estado_real ?? ''} />
       </div>
 
-      <div className="flex-1 p-4">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <p className="font-semibold text-azul-noche">{ticket.tipo_solicitud}</p>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {ticket.es_excepcional && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-ambar-bruma px-2 py-0.5 text-xs font-semibold text-ambar">
-                <Zap size={12} /> Excepcional
-              </span>
-            )}
-            {correccionesUsadas > 0 && (
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  correccionesUsadas >= CORRECCIONES_MAXIMAS ? 'bg-coral-bruma text-coral' : 'bg-ambar-bruma text-ambar'
-                }`}
-              >
-                Correcciones {correccionesUsadas}/{CORRECCIONES_MAXIMAS}
-              </span>
-            )}
-            <EstadoChip estado={ticket.estado_real ?? ''} />
-          </div>
+      {muestraInsignias && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          {ticket.es_excepcional && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-ambar-bruma px-2 py-0.5 text-xs font-semibold text-ambar">
+              <Zap size={12} /> Excepcional
+            </span>
+          )}
+          {correccionesUsadas > 0 && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                correccionesUsadas >= CORRECCIONES_MAXIMAS ? 'bg-coral-bruma text-coral' : 'bg-ambar-bruma text-ambar'
+              }`}
+            >
+              Correcciones {correccionesUsadas}/{CORRECCIONES_MAXIMAS}
+            </span>
+          )}
         </div>
+      )}
 
-        {ticket.es_excepcional && ticket.excepcional_estado === 'PENDIENTE' && (
-          <p className="mb-1 text-xs font-medium text-ambar">Pendiente de aceptación</p>
-        )}
+      {ticket.es_excepcional && ticket.excepcional_estado === 'PENDIENTE' && (
+        <p className="mt-1 text-xs font-medium text-ambar">Pendiente de aceptación</p>
+      )}
 
-        {/* Una sola columna siempre: este componente también vive en columnas angostas de tablero,
-            donde un grid de varias columnas atado al ancho del viewport (no del contenedor) se encima. */}
-        <div className="space-y-0.5 text-xs text-tinta-suave">
-          <p>Creada: {formatFechaHora(ticket.fecha_registro)}</p>
-          <p>Evento: {formatFecha(ticket.fecha_evento)}</p>
-          <p>Vence: {formatFecha(ticket.fecha_limite)}</p>
-          <p>Diseñador: {ticket.disenador ?? 'Sin asignar'}</p>
-        </div>
+      <p className="mt-3 truncate font-semibold text-tinta" title={ticket.tipo_solicitud ?? undefined}>
+        {ticket.tipo_solicitud}
+      </p>
+      {ticket.area && (
+        <p className="truncate text-sm text-tinta-suave" title={ticket.area}>
+          {ticket.area}
+        </p>
+      )}
 
-        {muestraCronometro && (
-          <p className="mt-1 text-xs font-medium text-ambar">
-            Dictamen: quedan {formatoHorasHabiles(ticket.minutos_habiles_restantes_dictamen ?? 0)} hábiles
-          </p>
-        )}
+      <div className="mt-3 space-y-1.5 border-t border-azul-niebla/60 pt-3">
+        <FilaCampo icono={Calendar} etiqueta="Creada" valor={formatFechaHora(ticket.fecha_registro)} />
+        <FilaCampo icono={PartyPopper} etiqueta="Evento" valor={formatFecha(ticket.fecha_evento)} />
+        <FilaCampo icono={Clock} etiqueta="Vence" valor={formatFecha(ticket.fecha_limite)} vencido={Boolean(ticket.fuera_de_plazo)} />
+        <FilaCampo
+          icono={User}
+          etiqueta="Diseñador"
+          valor={ticket.disenador ?? 'Sin asignar'}
+          sinAsignar={!ticket.disenador}
+        />
       </div>
+
+      {muestraCronometro && (
+        <div className="mt-3 border-t border-azul-niebla/60 pt-3">
+          <CronometroDictamen
+            minutos={ticket.minutos_habiles_restantes_dictamen}
+            fechaAprobacion={ticket.fecha_aprobacion_automatica}
+            compacto
+          />
+        </div>
+      )}
     </Link>
+  )
+}
+
+function FilaCampo({
+  icono: Icono,
+  etiqueta,
+  valor,
+  vencido,
+  sinAsignar,
+}: {
+  icono: LucideIcon
+  etiqueta: string
+  valor: string
+  vencido?: boolean
+  sinAsignar?: boolean
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="flex flex-none items-center gap-1.5 text-xs text-tinta-suave">
+        <Icono size={13} /> {etiqueta}
+      </span>
+      <span
+        className={`truncate text-sm ${vencido ? 'font-medium text-coral' : sinAsignar ? 'italic text-tinta-suave' : 'text-tinta'}`}
+        title={valor}
+      >
+        {valor}
+      </span>
+    </div>
   )
 }

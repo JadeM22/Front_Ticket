@@ -4,8 +4,6 @@ import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { ChevronDown, Download, FileDown, Search, X } from 'lucide-react'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import {
   Bar,
   BarChart,
@@ -23,8 +21,8 @@ import {
 } from 'recharts'
 import { obtenerEstadisticas, type FilaEstadistica } from '../../data/estadisticas'
 import { listarAreas, listarTiposSolicitud } from '../../data/catalogos'
-import { formatFecha, formatFechaHora, hoyTegucigalpaISO, mesTegucigalpa } from '../../lib/date'
-import { descargarCsv } from '../../lib/csv'
+import { formatFecha, hoyTegucigalpaISO, mesTegucigalpa } from '../../lib/date'
+import { exportarCSV, exportarPDF, type ColumnaExportar } from '../../lib/exportar'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { CLASE_INPUT } from '../../components/ui/Campo'
@@ -279,99 +277,43 @@ export function AnalistaDashboard() {
     return partes.length > 0 ? partes.join(' · ') : 'Sin filtros adicionales'
   }
 
+  const columnasExportar: ColumnaExportar<FilaEstadistica>[] = [
+    { etiqueta: 'Código', valor: (f) => f.codigo },
+    { etiqueta: 'Tipo', valor: (f) => f.tipo_solicitud },
+    { etiqueta: 'Área', valor: (f) => f.area },
+    { etiqueta: 'Estado', valor: (f) => f.estado_real },
+    { etiqueta: 'Diseñador', valor: (f) => f.disenador ?? '—' },
+    { etiqueta: 'Registrado', valor: (f) => formatFecha(f.fecha_registro) },
+    { etiqueta: 'Límite', valor: (f) => formatFecha(f.fecha_limite) },
+    { etiqueta: 'Entrega', valor: (f) => formatFecha(f.fecha_entrega_diseno) },
+    { etiqueta: 'Evento', valor: (f) => formatFecha(f.fecha_evento) },
+    { etiqueta: 'Días resolución', valor: (f) => f.dias_resolucion ?? '—' },
+    { etiqueta: 'A tiempo', valor: (f) => (f.entregado_a_tiempo == null ? '—' : f.entregado_a_tiempo ? 'Sí' : 'No') },
+    { etiqueta: 'Correcciones', valor: (f) => f.correcciones_usadas ?? 0 },
+    { etiqueta: 'Automático', valor: (f) => (f.aprobado_automatico ? 'Sí' : 'No') },
+    { etiqueta: 'Excepcional', valor: (f) => (f.es_excepcional ? 'Sí' : 'No') },
+  ]
+
   function exportarCsv() {
     setExportarAbierto(false)
-    descargarCsv(
-      `estadisticas_voae_${hoyTegucigalpaISO()}.csv`,
-      [
-        'Código',
-        'Tipo',
-        'Área',
-        'Estado',
-        'Diseñador',
-        'Registrado',
-        'Límite',
-        'Entrega',
-        'Evento',
-        'Días resolución',
-        'A tiempo',
-        'Correcciones',
-        'Automático',
-        'Excepcional',
-      ],
-      filasDetalle.map((f) => [
-        f.codigo,
-        f.tipo_solicitud,
-        f.area,
-        f.estado_real,
-        f.disenador ?? '—',
-        formatFecha(f.fecha_registro),
-        formatFecha(f.fecha_limite),
-        formatFecha(f.fecha_entrega_diseno),
-        formatFecha(f.fecha_evento),
-        f.dias_resolucion ?? '—',
-        f.entregado_a_tiempo == null ? '—' : f.entregado_a_tiempo ? 'Sí' : 'No',
-        f.correcciones_usadas ?? 0,
-        f.aprobado_automatico ? 'Sí' : 'No',
-        f.es_excepcional ? 'Sí' : 'No',
-      ]),
-    )
+    exportarCSV(filasDetalle, columnasExportar, `estadisticas_voae_${hoyTegucigalpaISO()}.csv`)
   }
 
   function exportarPdf() {
     setExportarAbierto(false)
-    const doc = new jsPDF({ orientation: 'landscape' })
-    const anchoPagina = doc.internal.pageSize.getWidth()
-
-    doc.setFontSize(16)
-    doc.text('Estadísticas de solicitudes VOAE', 14, 15)
-    doc.setFontSize(9)
-    doc.text(`Rango: ${desde || '—'} a ${hasta || '—'}`, 14, 22)
-    doc.text(`Filtros: ${filtrosAplicadosTexto()}`, 14, 27)
-    doc.text(`Generado: ${formatFechaHora(new Date().toISOString())}`, 14, 32)
-    doc.text(
-      `Total: ${kpis.total}  ·  % a tiempo: ${kpis.pctATiempo ?? '—'}  ·  Promedio días: ${kpis.promedioDias ?? '—'}  ·  ` +
-        `Retrasadas: ${kpis.retrasadas}  ·  En curso: ${kpis.enCurso}  ·  Aprobadas: ${kpis.aprobadas} (${kpis.automaticas} auto.)  ·  ` +
-        `% con corrección: ${kpis.pctConCorreccion}%  ·  Excepcionales: ${kpis.excepcionales} (${kpis.pctExcepcionalesAceptadas ?? '—'}% aceptadas)`,
-      14,
-      39,
-      { maxWidth: anchoPagina - 28 },
-    )
-
-    autoTable(doc, {
-      startY: 48,
-      head: [
-        ['Código', 'Tipo', 'Área', 'Estado', 'Diseñador', 'Registrado', 'Límite', 'Entrega', 'Evento', 'Días', 'A tiempo', 'Correc.', 'Auto.', 'Excep.'],
+    exportarPDF({
+      titulo: 'Estadísticas de solicitudes VOAE',
+      subtitulo: [
+        `Rango: ${desde || '—'} a ${hasta || '—'}`,
+        `Filtros: ${filtrosAplicadosTexto()}`,
+        `Total: ${kpis.total}  ·  % a tiempo: ${kpis.pctATiempo ?? '—'}  ·  Promedio días: ${kpis.promedioDias ?? '—'}  ·  ` +
+          `Retrasadas: ${kpis.retrasadas}  ·  En curso: ${kpis.enCurso}  ·  Aprobadas: ${kpis.aprobadas} (${kpis.automaticas} auto.)  ·  ` +
+          `% con corrección: ${kpis.pctConCorreccion}%  ·  Excepcionales: ${kpis.excepcionales} (${kpis.pctExcepcionalesAceptadas ?? '—'}% aceptadas)`,
       ],
-      body: filasDetalle.map((f) => [
-        f.codigo ?? '',
-        f.tipo_solicitud ?? '',
-        f.area ?? '',
-        f.estado_real ?? '',
-        f.disenador ?? '—',
-        formatFecha(f.fecha_registro),
-        formatFecha(f.fecha_limite),
-        formatFecha(f.fecha_entrega_diseno),
-        formatFecha(f.fecha_evento),
-        f.dias_resolucion ?? '—',
-        f.entregado_a_tiempo == null ? '—' : f.entregado_a_tiempo ? 'Sí' : 'No',
-        f.correcciones_usadas ?? 0,
-        f.aprobado_automatico ? 'Sí' : 'No',
-        f.es_excepcional ? 'Sí' : 'No',
-      ]),
-      styles: { fontSize: 7 },
-      headStyles: { fillColor: [20, 66, 122] },
+      columnas: columnasExportar,
+      filas: filasDetalle,
+      nombreArchivo: `estadisticas_voae_${hoyTegucigalpaISO()}.pdf`,
     })
-
-    const totalPaginasPdf = doc.getNumberOfPages()
-    const altoPagina = doc.internal.pageSize.getHeight()
-    for (let i = 1; i <= totalPaginasPdf; i++) {
-      doc.setPage(i)
-      doc.setFontSize(8)
-      doc.text(`Página ${i} de ${totalPaginasPdf}`, anchoPagina - 32, altoPagina - 6)
-    }
-
-    doc.save(`estadisticas_voae_${hoyTegucigalpaISO()}.pdf`)
   }
 
   return (

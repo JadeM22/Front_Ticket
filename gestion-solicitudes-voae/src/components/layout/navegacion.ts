@@ -28,7 +28,6 @@ export const NAV_POR_ROL: Record<RolNombre, ItemNav[]> = {
     { etiqueta: 'Feriados', ruta: '/admin/feriados', icono: CalendarOff },
     { etiqueta: 'Bitácora', ruta: '/admin/bitacora', icono: History },
     { etiqueta: 'Estadísticas', ruta: '/analista', icono: BarChart3 },
-    { etiqueta: 'Asignación', ruta: '/asignador', icono: Shuffle },
   ],
   'Jefe de Área': [
     { etiqueta: 'Por dictaminar', ruta: '/jefe', icono: Gavel },

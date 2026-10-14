@@ -1,34 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { esHorarioHabil } from '../data/formularios'
 
 const INTERVALO_MS = 60 * 1000
 
 /**
  * `null` mientras se resuelve la primera consulta. Se vuelve a preguntar cada 60 s porque el
- * horario hábil (L-V 8:00 a. m.-4:00 p. m., sin feriados) lo calcula la base, no el reloj del navegador.
+ * horario hábil (L-V 8:00 a. m.-4:00 p. m., sin feriados) lo calcula la base, no el reloj del
+ * navegador. Usa TanStack Query (clave `['horario-habil']`) para que varias instancias a la vez
+ * (p. ej. cada `CronometroDictamen` de un tablero) compartan una sola consulta en vez de sondear
+ * la base por separado.
  */
 export function useHorarioHabil(): boolean | null {
-  const [horarioHabil, setHorarioHabil] = useState<boolean | null>(null)
+  const { data } = useQuery({
+    queryKey: ['horario-habil'],
+    queryFn: esHorarioHabil,
+    staleTime: INTERVALO_MS,
+    refetchInterval: INTERVALO_MS,
+  })
 
-  useEffect(() => {
-    let activo = true
-
-    async function consultar() {
-      try {
-        const valor = await esHorarioHabil()
-        if (activo) setHorarioHabil(valor)
-      } catch {
-        // Sin red: se mantiene el último valor conocido y se reintenta en la siguiente revisión.
-      }
-    }
-
-    void consultar()
-    const intervalo = window.setInterval(consultar, INTERVALO_MS)
-    return () => {
-      activo = false
-      window.clearInterval(intervalo)
-    }
-  }, [])
-
-  return horarioHabil
+  return data ?? null
 }
