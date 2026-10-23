@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { Plus } from 'lucide-react'
 import { obtenerTicketCompleto, tomarTicket } from '../data/tickets'
 import { crearDictamen } from '../data/dictamenes'
+import { INTENTOS_MAXIMOS_IA, revisarEnvioIA } from '../data/afichesIA'
 import { mensajeError } from '../lib/errors'
 import { formatFecha, formatFechaHora } from '../lib/date'
 import { TagAsignado, TagExcepcional } from '../components/tickets/Etiquetas'
@@ -20,7 +21,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { EstadoChip } from '../components/EstadoChip'
 import { Timeline } from '../components/ui/Timeline'
 import { Stepper } from '../components/ui/Stepper'
-import { pasosProgresoTicket } from '../lib/progresoTicket'
+import { pasosProgresoIA, pasosProgresoTicket } from '../lib/progresoTicket'
 import { CronometroDictamen } from '../components/ui/CronometroDictamen'
 import { ListaEntregables } from '../components/ListaEntregables'
 import { ListaAdjuntos } from '../components/ListaAdjuntos'
@@ -28,7 +29,11 @@ import { SubirEntregableModal } from '../components/SubirEntregableModal'
 import { AgregarAdjuntoModal } from '../components/AgregarAdjuntoModal'
 import { DictamenModal } from '../components/DictamenModal'
 import { DetalleFormularioVista } from '../components/formularios/DetalleFormularioVista'
-import type { DecisionJefe } from '../types/domain'
+import { HistorialEnviosIA, VistaAfiche } from '../components/afichesIA/HistorialEnviosIA'
+import { SubirAficheModal } from '../components/afichesIA/SubirAficheModal'
+import { RevisarAficheModal } from '../components/afichesIA/RevisarAficheModal'
+import type { EnvioIA } from '../data/afichesIA'
+import type { DecisionIA, DecisionJefe } from '../types/domain'
 
 const CORRECCIONES_MAXIMAS = 5
 
@@ -44,12 +49,15 @@ export function TicketDetailPage() {
   const [modalEntregable, setModalEntregable] = useState(false)
   const [modalAdjunto, setModalAdjunto] = useState(false)
   const [modalDictamen, setModalDictamen] = useState(false)
+  const [modalAfiche, setModalAfiche] = useState(false)
+  const [modalRevision, setModalRevision] = useState(false)
   const [tomando, setTomando] = useState(false)
 
   // El historial de cambios es solo para Analista y Administrador; el resto ve la barra de progreso.
   const puedeVerHistorial = tieneRol('Analista') || tieneRol('Administrador')
-  // Entregables, dictámenes y el contador de correcciones son solo para el equipo de diseño y el jefe
-  // del área (el Asignador siempre tiene también el rol Diseñador). El solicitante solo ve el estado.
+  // Dictámenes, cronómetro y contador de correcciones son solo para el equipo de diseño y el jefe del
+  // área (el Asignador siempre tiene también el rol Diseñador). Los entregables también los ve el
+  // solicitante, pero sin comentarios ni botones de dictamen.
   const puedeVerGestion = tieneRol('Jefe de Área') || tieneRol('Diseñador') || esAdmin
   // Empleado/Analista no ven quién diseña el ticket (Parte 27): ni el campo, ni la etiqueta "Asignado",
   // ni quién hizo el cambio de diseñador en el historial.
@@ -84,6 +92,19 @@ export function TicketDetailPage() {
     }
   }
 
+  async function manejarRevision(decision: DecisionIA, comentario: string) {
+    const envio = ticket ? ultimoEnvioDe(ticket.enviosIA) : null
+    if (!envio) return
+    try {
+      await revisarEnvioIA(envio.id, decision, comentario)
+      toast.success(decision === 'APROBADO' ? 'Afiche aprobado.' : 'Afiche rechazado.')
+      invalidar()
+      setModalRevision(false)
+    } catch (error) {
+      toast.error(await mensajeError(error, 'No se pudo registrar la revisión.'))
+    }
+  }
+
   async function manejarDictamen(decision: DecisionJefe, comentario?: string) {
     if (!ticket) return
     try {
@@ -108,15 +129,30 @@ export function TicketDetailPage() {
   }
 
   const { estadoReal, tipoSolicitud } = ticket
+  // Un ticket IA nunca tiene diseñador, entregables ni dictamen: lo revisa un Aprobador IA.
+  const esIA = estadoReal.flujo === 'APROBACION_IA'
+  const registrado = estadoReal.estado_registrado
   const correccionesUsadas = estadoReal.correcciones_usadas ?? 0
   const esExcepcionalPendiente = estadoReal.es_excepcional && estadoReal.excepcional_estado === 'PENDIENTE'
-  const esMiTicketDeDiseno = tieneRol('Diseñador') && estadoReal.disenador_id === perfil?.id
-  const puedeTomar = tieneRol('Diseñador') && !estadoReal.disenador_id && !esExcepcionalPendiente
+  const esMiTicketDeDiseno = !esIA && tieneRol('Diseñador') && estadoReal.disenador_id === perfil?.id
+  const puedeTomar = !esIA && tieneRol('Diseñador') && !estadoReal.disenador_id && !esExcepcionalPendiente
   const puedeSubirEntregable =
     esMiTicketDeDiseno && (estadoReal.estado_real === 'En proceso' || estadoReal.estado_real === 'Corrección' || estadoReal.estado_real === 'Retrasado')
-  const puedeDictaminar = tieneRol('Jefe de Área') && estadoReal.estado_real === 'Finalizado'
+  const puedeDictaminar = !esIA && tieneRol('Jefe de Área') && estadoReal.estado_real === 'Finalizado'
   const dictamenBloqueadoPorHorario = puedeDictaminar && !estadoReal.es_excepcional && !esAdmin && horarioHabil === false
   const esSolicitante = perfil?.id === estadoReal.usuario_registro
+
+  // Flujo IA: el estado lo cambia la base al insertar en EnvioIA/RevisionIA; aquí solo se decide qué
+  // botón mostrar. estado_real puede decir "Retrasado" con estado_registrado aún en "Enviado".
+  const ultimoEnvio = ultimoEnvioDe(ticket.enviosIA)
+  const ultimoEnvioRevisado = ultimoEnvio != null && ticket.revisionesIA.some((r) => r.envio_id === ultimoEnvio.id)
+  const esperandoAprobador = registrado === 'Enviado' || registrado === 'Retrasado'
+  const puedeSubirPrimerAfiche = esIA && esSolicitante && esperandoAprobador && ticket.enviosIA.length === 0
+  const puedeReenviarAfiche = esIA && esSolicitante && registrado === 'Corrección'
+  const puedeRevisarAfiche =
+    esIA && tieneRol('Aprobador IA') && esperandoAprobador && ultimoEnvio != null && !ultimoEnvioRevisado
+  const intentosRestantes = INTENTOS_MAXIMOS_IA - (estadoReal.intentos_usados ?? 0)
+  const puedeVerEntregables = !esIA && (puedeVerGestion || esSolicitante)
   const puedeAgregarAdjunto =
     esSolicitante && estadoReal.estado_real !== 'Aprobado' && ticket.adjuntos.length < MAXIMO_ADJUNTOS_POR_TICKET
 
@@ -138,8 +174,9 @@ export function TicketDetailPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="whitespace-nowrap font-mono text-sm text-tinta-suave">{estadoReal.codigo}</p>
-            <h1 className="text-xl font-bold text-azul-noche">{estadoReal.tipo_solicitud}</h1>
+            <h1 className="text-xl font-bold text-azul-noche">{estadoReal.titulo || estadoReal.tipo_solicitud}</h1>
             <p className="text-sm text-tinta-suave">
+              {estadoReal.titulo && <>{estadoReal.tipo_solicitud} · </>}
               {estadoReal.solicitante} · {estadoReal.area}
             </p>
           </div>
@@ -174,7 +211,7 @@ export function TicketDetailPage() {
             <p>{formatFecha(estadoReal.fecha_evento)}</p>
           </div>
           <div>
-            <p className="text-xs text-tinta-suave">Vence</p>
+            <p className="text-xs text-tinta-suave">{esIA ? 'Fecha límite de respuesta' : 'Vence'}</p>
             <p>
               {formatFecha(estadoReal.fecha_limite)}
               {tipoSolicitud && !estadoReal.es_excepcional && (
@@ -182,7 +219,15 @@ export function TicketDetailPage() {
               )}
             </p>
           </div>
-          {muestraAsignacion && (
+          {esIA && (
+            <div>
+              <p className="text-xs text-tinta-suave">Intentos restantes</p>
+              <p className={intentosRestantes <= 1 ? 'font-semibold text-coral' : undefined}>
+                {Math.max(intentosRestantes, 0)} de {INTENTOS_MAXIMOS_IA}
+              </p>
+            </div>
+          )}
+          {muestraAsignacion && !esIA && (
             <div>
               <p className="text-xs text-tinta-suave">Diseñador</p>
               <p>{estadoReal.disenador ?? 'Sin asignar'}</p>
@@ -193,7 +238,7 @@ export function TicketDetailPage() {
               )}
             </div>
           )}
-          {puedeVerGestion && (
+          {puedeVerGestion && !esIA && (
             <div>
               <p className="text-xs text-tinta-suave">Correcciones</p>
               <p>{correccionesUsadas} / {CORRECCIONES_MAXIMAS}</p>
@@ -217,6 +262,10 @@ export function TicketDetailPage() {
             </Button>
           )}
           {puedeSubirEntregable && <Button onClick={() => setModalEntregable(true)}>Subir entregable</Button>}
+          {(puedeSubirPrimerAfiche || puedeReenviarAfiche) && (
+            <Button onClick={() => setModalAfiche(true)}>{puedeReenviarAfiche ? 'Reenviar afiche' : 'Subir afiche'}</Button>
+          )}
+          {puedeRevisarAfiche && <Button onClick={() => setModalRevision(true)}>Revisar afiche</Button>}
           {puedeDictaminar && (
             <Button
               onClick={() => setModalDictamen(true)}
@@ -238,6 +287,33 @@ export function TicketDetailPage() {
         )}
       </Card>
 
+      {esIA && (
+        <Card>
+          <h2 className="mb-3 font-semibold text-azul-noche">Afiche</h2>
+          {ultimoEnvio ? (
+            <>
+              <p className="mb-2 text-xs text-tinta-suave">
+                Intento {ultimoEnvio.intento} · {ultimoEnvio.nombre_archivo}
+              </p>
+              <VistaAfiche envio={ultimoEnvio} />
+            </>
+          ) : (
+            <p className="text-sm text-tinta-suave">
+              {puedeSubirPrimerAfiche
+                ? 'Tu solicitud se creó, pero el afiche no se llegó a subir. Usa "Subir afiche" para enviarlo a revisión.'
+                : 'El solicitante todavía no ha subido el afiche.'}
+            </p>
+          )}
+
+          {ticket.enviosIA.length > 0 && (
+            <div className="mt-6">
+              <h3 className="mb-2 text-sm font-semibold text-azul-noche">Envíos y revisiones</h3>
+              <HistorialEnviosIA envios={ticket.enviosIA} revisiones={ticket.revisionesIA} />
+            </div>
+          )}
+        </Card>
+      )}
+
       <Card>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold text-azul-noche">
@@ -252,7 +328,7 @@ export function TicketDetailPage() {
         <ListaAdjuntos adjuntos={ticket.adjuntos} />
       </Card>
 
-      {puedeVerGestion && (
+      {puedeVerEntregables && (
         <Card>
           <h2 className="mb-3 font-semibold text-azul-noche">Entregables</h2>
           <ListaEntregables entregables={ticket.entregables} />
@@ -284,7 +360,7 @@ export function TicketDetailPage() {
       ) : (
         <Card>
           <h2 className="mb-4 font-semibold text-azul-noche">Progreso de la solicitud</h2>
-          <Stepper pasos={pasosProgresoTicket(estadoReal)} />
+          <Stepper pasos={esIA ? pasosProgresoIA(estadoReal, INTENTOS_MAXIMOS_IA) : pasosProgresoTicket(estadoReal)} />
         </Card>
       )}
 
@@ -305,6 +381,22 @@ export function TicketDetailPage() {
         ticketId={estadoReal.ticket_id!}
       />
 
+      <SubirAficheModal
+        abierto={modalAfiche}
+        onCerrar={() => setModalAfiche(false)}
+        onSubido={invalidar}
+        ticketId={estadoReal.ticket_id!}
+        titulo={puedeReenviarAfiche ? 'Reenviar afiche' : 'Subir afiche'}
+      />
+
+      <RevisarAficheModal
+        abierto={modalRevision}
+        onCerrar={() => setModalRevision(false)}
+        onConfirmar={manejarRevision}
+        codigo={estadoReal.codigo ?? ''}
+        intento={ultimoEnvio?.intento ?? 1}
+      />
+
       <DictamenModal
         abierto={modalDictamen}
         onCerrar={() => setModalDictamen(false)}
@@ -314,4 +406,9 @@ export function TicketDetailPage() {
       />
     </div>
   )
+}
+
+/** Solo se revisa el envío más reciente. */
+function ultimoEnvioDe(envios: EnvioIA[]): EnvioIA | null {
+  return envios.reduce<EnvioIA | null>((ultimo, e) => (!ultimo || e.intento > ultimo.intento ? e : ultimo), null)
 }

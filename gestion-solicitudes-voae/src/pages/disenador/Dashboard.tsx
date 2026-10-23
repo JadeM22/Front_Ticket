@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ChevronDown, ChevronUp, Hand } from 'lucide-react'
-import { useTicketsEstadoReal, useConteoSinAsignar } from '../../hooks/useTickets'
+import { useTicketsDiseno, useConteoSinAsignar } from '../../hooks/useTickets'
 import { tomarTicket } from '../../data/tickets'
 import { mensajeError } from '../../lib/errors'
 import { ESTADOS_FINALES_TICKET } from '../../lib/tableroDisenador'
@@ -34,7 +34,7 @@ type Vista = 'sin-asignar' | 'mis-tickets'
  * del diseñador, aunque el usuario también tenga el rol Asignador).
  */
 export function DisenadorDashboard() {
-  const { data: tickets = [], isLoading } = useTicketsEstadoReal()
+  const { data: tickets = [], isLoading } = useTicketsDiseno()
   const { data: conteoSinAsignar } = useConteoSinAsignar()
   const { perfil } = useAuth()
   const queryClient = useQueryClient()

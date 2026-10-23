@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -387,6 +387,92 @@ export type Database = {
           },
         ]
       }
+      CampoFormulario: {
+        Row: {
+          ayuda: string | null
+          clave: string
+          estado: boolean
+          etiqueta: string
+          fecha_registro: string
+          id: number
+          obligatorio: boolean
+          opciones: Json | null
+          orden: number
+          placeholder: string | null
+          tipo_campo: string
+          tipo_solicitud_id: number
+          usuario_registro: number | null
+          validaciones: Json | null
+          valor_defecto: Json | null
+        }
+        Insert: {
+          ayuda?: string | null
+          clave: string
+          estado?: boolean
+          etiqueta: string
+          fecha_registro?: string
+          id?: never
+          obligatorio?: boolean
+          opciones?: Json | null
+          orden?: number
+          placeholder?: string | null
+          tipo_campo: string
+          tipo_solicitud_id: number
+          usuario_registro?: number | null
+          validaciones?: Json | null
+          valor_defecto?: Json | null
+        }
+        Update: {
+          ayuda?: string | null
+          clave?: string
+          estado?: boolean
+          etiqueta?: string
+          fecha_registro?: string
+          id?: never
+          obligatorio?: boolean
+          opciones?: Json | null
+          orden?: number
+          placeholder?: string | null
+          tipo_campo?: string
+          tipo_solicitud_id?: number
+          usuario_registro?: number | null
+          validaciones?: Json | null
+          valor_defecto?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fkCampoFormulario_TipoSolicitud"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "TipoSolicitud"
+            referencedColumns: null
+          },
+        ]
+      }
+      Campus: {
+        Row: {
+          estado: boolean
+          id: number
+          nombre: string
+          orden: number
+          siglas: string | null
+        }
+        Insert: {
+          estado?: boolean
+          id?: never
+          nombre: string
+          orden?: number
+          siglas?: string | null
+        }
+        Update: {
+          estado?: boolean
+          id?: never
+          nombre?: string
+          orden?: number
+          siglas?: string | null
+        }
+        Relationships: []
+      }
       DictamenJefe: {
         Row: {
           comentario: string | null
@@ -473,6 +559,50 @@ export type Database = {
           },
         ]
       }
+      EnvioIA: {
+        Row: {
+          comentario: string | null
+          fecha_registro: string
+          id: number
+          intento: number
+          nombre_archivo: string
+          ruta_archivo: string
+          ticket_id: number
+          tipo_mime: string | null
+          usuario_registro: number
+        }
+        Insert: {
+          comentario?: string | null
+          fecha_registro?: string
+          id?: never
+          intento: number
+          nombre_archivo: string
+          ruta_archivo: string
+          ticket_id: number
+          tipo_mime?: string | null
+          usuario_registro: number
+        }
+        Update: {
+          comentario?: string | null
+          fecha_registro?: string
+          id?: never
+          intento?: number
+          nombre_archivo?: string
+          ruta_archivo?: string
+          ticket_id?: number
+          tipo_mime?: string | null
+          usuario_registro?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fkEnvioIA_Ticket"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "Ticket"
+            referencedColumns: null
+          },
+        ]
+      }
       Estado: {
         Row: {
           id: number
@@ -518,172 +648,29 @@ export type Database = {
         }
         Relationships: []
       }
-      FormularioArte: {
+      FormularioCampus: {
         Row: {
-          alcance: string | null
-          aplica_articulo_140: boolean
-          enlace_qr: string | null
+          campus_id: number
           formulario_id: number
-          hora_fin: string | null
-          hora_inicio: string | null
-          informacion_adicional: string | null
-          logotipos: string[]
-          lugar: string | null
-          modalidad: string | null
-          titulo: string
         }
         Insert: {
-          alcance?: string | null
-          aplica_articulo_140?: boolean
-          enlace_qr?: string | null
+          campus_id: number
           formulario_id: number
-          hora_fin?: string | null
-          hora_inicio?: string | null
-          informacion_adicional?: string | null
-          logotipos?: string[]
-          lugar?: string | null
-          modalidad?: string | null
-          titulo: string
         }
         Update: {
-          alcance?: string | null
-          aplica_articulo_140?: boolean
-          enlace_qr?: string | null
+          campus_id?: number
           formulario_id?: number
-          hora_fin?: string | null
-          hora_inicio?: string | null
-          informacion_adicional?: string | null
-          logotipos?: string[]
-          lugar?: string | null
-          modalidad?: string | null
-          titulo?: string
         }
         Relationships: [
           {
-            foreignKeyName: "fkFormularioArte_Formulario"
+            foreignKeyName: "fkFormularioCampus_Campus"
             columns: null
             isOneToOne: false
-            referencedRelation: "Formularios"
+            referencedRelation: "Campus"
             referencedColumns: null
           },
-        ]
-      }
-      FormularioDircom: {
-        Row: {
-          fecha_necesaria: string
-          formulario_id: number
-          informacion_valor: string
-          logotipos: string[]
-          necesita_dictamen: boolean
-          tipo_material: string
-        }
-        Insert: {
-          fecha_necesaria: string
-          formulario_id: number
-          informacion_valor: string
-          logotipos?: string[]
-          necesita_dictamen?: boolean
-          tipo_material: string
-        }
-        Update: {
-          fecha_necesaria?: string
-          formulario_id?: number
-          informacion_valor?: string
-          logotipos?: string[]
-          necesita_dictamen?: boolean
-          tipo_material?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "fkFormularioDircom_Formulario"
-            columns: null
-            isOneToOne: false
-            referencedRelation: "Formularios"
-            referencedColumns: null
-          },
-        ]
-      }
-      FormularioGenerico: {
-        Row: {
-          descripcion: string
-          formulario_id: number
-          informacion_producto: string | null
-          logotipos: string[]
-          observaciones: string | null
-          titulo: string
-        }
-        Insert: {
-          descripcion: string
-          formulario_id: number
-          informacion_producto?: string | null
-          logotipos?: string[]
-          observaciones?: string | null
-          titulo: string
-        }
-        Update: {
-          descripcion?: string
-          formulario_id?: number
-          informacion_producto?: string | null
-          logotipos?: string[]
-          observaciones?: string | null
-          titulo?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fkFormularioGenerico_Formulario"
-            columns: null
-            isOneToOne: false
-            referencedRelation: "Formularios"
-            referencedColumns: null
-          },
-        ]
-      }
-      FormularioProtocolo: {
-        Row: {
-          cantidad_invitados: number | null
-          elaborar_invitacion: boolean
-          equipo_requerido: string | null
-          formulario_id: number
-          hora: string
-          informacion_programa: string | null
-          lugar_propuesto: string
-          maestro_ceremonia_preferido: string | null
-          necesita_edecanes: boolean
-          necesita_maestro_ceremonia: boolean
-          necesita_pumas: boolean
-          nombre_actividad: string
-        }
-        Insert: {
-          cantidad_invitados?: number | null
-          elaborar_invitacion?: boolean
-          equipo_requerido?: string | null
-          formulario_id: number
-          hora: string
-          informacion_programa?: string | null
-          lugar_propuesto: string
-          maestro_ceremonia_preferido?: string | null
-          necesita_edecanes?: boolean
-          necesita_maestro_ceremonia?: boolean
-          necesita_pumas?: boolean
-          nombre_actividad: string
-        }
-        Update: {
-          cantidad_invitados?: number | null
-          elaborar_invitacion?: boolean
-          equipo_requerido?: string | null
-          formulario_id?: number
-          hora?: string
-          informacion_programa?: string | null
-          lugar_propuesto?: string
-          maestro_ceremonia_preferido?: string | null
-          necesita_edecanes?: boolean
-          necesita_maestro_ceremonia?: boolean
-          necesita_pumas?: boolean
-          nombre_actividad?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fkFormularioProtocolo_Formulario"
+            foreignKeyName: "fkFormularioCampus_Formulario"
             columns: null
             isOneToOne: false
             referencedRelation: "Formularios"
@@ -693,22 +680,34 @@ export type Database = {
       }
       Formularios: {
         Row: {
+          campos_snapshot: Json
+          dirigido_a: string
           fecha_creacion: string
           fecha_evento: string
           id: number
+          respuestas: Json
           tipo_solicitud_id: number
+          titulo: string
         }
         Insert: {
+          campos_snapshot?: Json
+          dirigido_a: string
           fecha_creacion?: string
           fecha_evento: string
           id?: number
+          respuestas?: Json
           tipo_solicitud_id: number
+          titulo: string
         }
         Update: {
+          campos_snapshot?: Json
+          dirigido_a?: string
           fecha_creacion?: string
           fecha_evento?: string
           id?: number
+          respuestas?: Json
           tipo_solicitud_id?: number
+          titulo?: string
         }
         Relationships: [
           {
@@ -716,44 +715,6 @@ export type Database = {
             columns: null
             isOneToOne: false
             referencedRelation: "TipoSolicitud"
-            referencedColumns: null
-          },
-        ]
-      }
-      FormularioVideo: {
-        Row: {
-          encargado_actividad: string
-          fecha_entrega_publicacion: string
-          formulario_id: number
-          informacion_producto: string | null
-          logotipos: string[]
-          objetivo: string
-          participacion_estudiantes: string
-        }
-        Insert: {
-          encargado_actividad: string
-          fecha_entrega_publicacion: string
-          formulario_id: number
-          informacion_producto?: string | null
-          logotipos?: string[]
-          objetivo: string
-          participacion_estudiantes?: string
-        }
-        Update: {
-          encargado_actividad?: string
-          fecha_entrega_publicacion?: string
-          formulario_id?: number
-          informacion_producto?: string | null
-          logotipos?: string[]
-          objetivo?: string
-          participacion_estudiantes?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fkFormularioVideo_Formulario"
-            columns: null
-            isOneToOne: false
-            referencedRelation: "Formularios"
             referencedColumns: null
           },
         ]
@@ -786,6 +747,51 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fkNotificacion_Ticket"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "Ticket"
+            referencedColumns: null
+          },
+        ]
+      }
+      RevisionIA: {
+        Row: {
+          comentario: string | null
+          decision: string
+          envio_id: number
+          fecha_revision: string
+          id: number
+          revisor_id: number
+          ticket_id: number
+        }
+        Insert: {
+          comentario?: string | null
+          decision: string
+          envio_id: number
+          fecha_revision?: string
+          id?: never
+          revisor_id: number
+          ticket_id: number
+        }
+        Update: {
+          comentario?: string | null
+          decision?: string
+          envio_id?: number
+          fecha_revision?: string
+          id?: never
+          revisor_id?: number
+          ticket_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fkRevisionIA_Envio"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "EnvioIA"
+            referencedColumns: null
+          },
+          {
+            foreignKeyName: "fkRevisionIA_Ticket"
             columns: null
             isOneToOne: false
             referencedRelation: "Ticket"
@@ -923,7 +929,7 @@ export type Database = {
           dias_habiles: boolean
           estado: boolean
           fecha_registro: string
-          formulario: string
+          flujo: string
           id: number
           nombre: string
           usuario_registro: number | null
@@ -934,7 +940,7 @@ export type Database = {
           dias_habiles?: boolean
           estado?: boolean
           fecha_registro?: string
-          formulario?: string
+          flujo?: string
           id?: number
           nombre: string
           usuario_registro?: number | null
@@ -945,7 +951,7 @@ export type Database = {
           dias_habiles?: boolean
           estado?: boolean
           fecha_registro?: string
-          formulario?: string
+          flujo?: string
           id?: number
           nombre?: string
           usuario_registro?: number | null
@@ -991,6 +997,7 @@ export type Database = {
           codigo: string | null
           correcciones_maximas: number | null
           correcciones_usadas: number | null
+          dirigido_a: string | null
           disenador: string | null
           disenador_id: number | null
           es_excepcional: boolean | null
@@ -1004,13 +1011,15 @@ export type Database = {
           fecha_evento: string | null
           fecha_limite: string | null
           fecha_registro: string | null
-          formulario: string | null
+          flujo: string | null
           fuera_de_plazo: boolean | null
+          intentos_usados: number | null
           minutos_habiles_restantes_dictamen: number | null
           solicitante: string | null
           ticket_id: number | null
           tipo_solicitud: string | null
           tipo_solicitud_id: number | null
+          titulo: string | null
           usuario_registro: number | null
         }
         Relationships: [
@@ -1052,6 +1061,8 @@ export type Database = {
           fecha_evento: string
           fecha_limite: string
           fecha_registro: string
+          flujo: string
+          intentos_usados: number
           ticket_id: number
           tipo_solicitud: string
         }[]
@@ -1104,6 +1115,10 @@ export type Database = {
         Returns: string
       }
       fnTicketIdDesdeRutaEscalar: { Args: { p_ruta: string }; Returns: number }
+      fnTipoSolicitudFlujoEscalar: {
+        Args: { p_tipo_solicitud_id: number }
+        Returns: string
+      }
       fnVentanaAprobacionVencidaEscalar: {
         Args: { p_fecha_entrega_diseno: string }
         Returns: boolean

@@ -85,3 +85,60 @@ export function pasosProgresoTicket(ticket: TicketEstadoReal): PasoStepper[] {
     return { etiqueta: etapa.etiqueta, estado: 'actual', descripcion, alerta: retrasado }
   })
 }
+
+/**
+ * Etapas de un ticket de aprobación de afiches con IA: no hay diseñador ni dictamen, sino envíos del
+ * solicitante y revisiones del Aprobador IA, con hasta `intentosMaximos` envíos.
+ */
+export function pasosProgresoIA(ticket: TicketEstadoReal, intentosMaximos: number): PasoStepper[] {
+  const registrado = ticket.estado_registrado
+  const intentosUsados = ticket.intentos_usados ?? 0
+  const rechazos = ticket.correcciones_usadas ?? 0
+  const retrasado = ticket.estado_real === 'Retrasado'
+
+  const enviada: PasoStepper = { etiqueta: 'Enviada', estado: 'completado' }
+
+  if (registrado === 'Aprobado') {
+    return [enviada, { etiqueta: 'Revisión del afiche', estado: 'completado' }, { etiqueta: 'Aprobada', estado: 'completado' }]
+  }
+  if (registrado === 'Rechazado') {
+    return [
+      enviada,
+      { etiqueta: 'Revisión del afiche', estado: 'completado' },
+      {
+        etiqueta: 'Rechazada',
+        estado: 'actual',
+        alerta: true,
+        descripcion: `Se usaron los ${intentosMaximos} intentos`,
+      },
+    ]
+  }
+
+  const pasos: PasoStepper[] = []
+  if (intentosUsados === 0) {
+    pasos.push({ etiqueta: 'Enviada', estado: 'actual', descripcion: 'Falta subir el afiche', alerta: retrasado })
+    pasos.push({ etiqueta: 'Revisión del afiche', estado: 'pendiente' })
+  } else if (registrado === 'Corrección') {
+    pasos.push(enviada)
+    pasos.push({ etiqueta: 'Revisión del afiche', estado: 'completado' })
+    pasos.push({
+      etiqueta: 'Corrección',
+      estado: 'actual',
+      descripcion: `Corrige y reenvía el afiche (quedan ${intentosMaximos - intentosUsados} intento(s))`,
+    })
+  } else {
+    pasos.push(enviada)
+    pasos.push({
+      etiqueta: 'Revisión del afiche',
+      estado: 'actual',
+      alerta: retrasado,
+      descripcion: retrasado
+        ? 'Fuera de plazo'
+        : rechazos > 0
+          ? `Intento ${intentosUsados} de ${intentosMaximos}`
+          : 'Esperando al Aprobador IA',
+    })
+  }
+  pasos.push({ etiqueta: 'Aprobada', estado: 'pendiente' })
+  return pasos
+}

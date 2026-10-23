@@ -9,6 +9,7 @@ import {
   ListChecks,
   PlusCircle,
   Shuffle,
+  Sparkles,
   Users,
   Zap,
 } from 'lucide-react'
@@ -36,6 +37,7 @@ export const NAV_POR_ROL: Record<RolNombre, ItemNav[]> = {
     { etiqueta: 'Mis solicitudes', ruta: '/empleado/solicitudes', icono: ListChecks },
   ],
   Asignador: [{ etiqueta: 'Asignación', ruta: '/asignador', icono: Shuffle }],
+  'Aprobador IA': [{ etiqueta: 'Afiches por revisar', ruta: '/aprobador-ia', icono: Sparkles }],
   Diseñador: [{ etiqueta: 'Mi tablero', ruta: '/disenador', icono: Kanban }],
   Analista: [
     { etiqueta: 'Estadísticas', ruta: '/analista', icono: BarChart3 },

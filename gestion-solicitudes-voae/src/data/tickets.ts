@@ -1,11 +1,12 @@
 import { supabase } from '../lib/supabase'
 import type { Tables } from '../types/database'
-import type { DetalleFormulario, FormularioCodigo, TicketEstadoReal } from '../types/domain'
+import type { DetalleFormulario, TicketEstadoReal } from '../types/domain'
 import { obtenerIdEstadoPorNombre, obtenerTipoSolicitud, type TipoSolicitud } from './catalogos'
 import { obtenerDetalleFormulario } from './formularios'
 import { listarEntregablesPorTicket, type Entregable } from './entregables'
 import { listarDictamenesPorTicket, type DictamenJefe } from './dictamenes'
 import { listarAdjuntosPorTicket, type Adjunto } from './adjuntos'
+import { listarEnviosIA, listarRevisionesIA, type EnvioIA, type RevisionIA } from './afichesIA'
 
 export type TicketBase = Tables<{ schema: 'Solicitudes' }, 'Ticket'>
 export type TicketLog = Tables<{ schema: 'Solicitudes' }, 'TicketLog'>
@@ -19,6 +20,9 @@ export interface TicketCompleto {
   entregables: Entregable[]
   dictamenes: DictamenJefe[]
   adjuntos: Adjunto[]
+  /** Solo en tickets de flujo APROBACION_IA; vacíos en los de diseño. */
+  enviosIA: EnvioIA[]
+  revisionesIA: RevisionIA[]
 }
 
 export async function listarTicketsEstadoReal(): Promise<TicketEstadoReal[]> {
@@ -79,8 +83,10 @@ export async function listarTicketLog(ticketId: number): Promise<TicketLog[]> {
 /**
  * `incluirHistorial` decide si se consulta `TicketLog`: solo Analista y Administrador ven el
  * historial, así que para el resto ni siquiera se pide (queda `log: []`). `incluirGestion` hace lo
- * mismo con `Entregables`/`DictamenJefe`: el solicitante puro ya no ve ni entregables ni dictámenes
- * (RLS tampoco se los devolvería), así que para él tampoco se consultan.
+ * mismo con `DictamenJefe`: el solicitante no ve dictámenes. Los `Entregables` se piden siempre:
+ * el solicitante sí los ve, y RLS solo devuelve los que cada quien puede leer.
+ *
+ * Un ticket IA nunca tiene entregables ni dictamen; en su lugar trae sus envíos y revisiones.
  */
 export async function obtenerTicketCompleto(
   ticketId: number,
@@ -95,15 +101,30 @@ export async function obtenerTicketCompleto(
 
   const tipoSolicitud = await obtenerTipoSolicitud(base.tipo_solicitud_id)
 
-  const [detalleFormulario, log, entregables, dictamenes, adjuntos] = await Promise.all([
-    tipoSolicitud ? obtenerDetalleFormulario(base.formulario_id, tipoSolicitud.formulario as FormularioCodigo) : null,
+  const esIA = estadoReal.flujo === 'APROBACION_IA'
+
+  const [detalleFormulario, log, entregables, dictamenes, adjuntos, enviosIA, revisionesIA] = await Promise.all([
+    obtenerDetalleFormulario(base.formulario_id),
     incluirHistorial ? listarTicketLog(ticketId) : [],
-    incluirGestion ? listarEntregablesPorTicket(ticketId) : [],
-    incluirGestion ? listarDictamenesPorTicket(ticketId) : [],
+    esIA ? [] : listarEntregablesPorTicket(ticketId),
+    incluirGestion && !esIA ? listarDictamenesPorTicket(ticketId) : [],
     listarAdjuntosPorTicket(ticketId),
+    esIA ? listarEnviosIA(ticketId) : [],
+    esIA ? listarRevisionesIA(ticketId) : [],
   ])
 
-  return { estadoReal, base, tipoSolicitud, detalleFormulario, log, entregables, dictamenes, adjuntos }
+  return {
+    estadoReal,
+    base,
+    tipoSolicitud,
+    detalleFormulario,
+    log,
+    entregables,
+    dictamenes,
+    adjuntos,
+    enviosIA,
+    revisionesIA,
+  }
 }
 
 /**
@@ -146,6 +167,9 @@ export async function contarTicketsSinAsignar(): Promise<number> {
     .select('ticket_id', { count: 'exact', head: true })
     .is('disenador_id', null)
     .eq('es_excepcional', false)
+    // Los tickets IA nunca tienen diseñador: RLS ya se los oculta al Diseñador, pero alguien que además
+    // sea Administrador sí los recibe y no deben contar como "sin asignar".
+    .eq('flujo', 'DISENO')
     .not('estado_registrado', 'in', '("Aprobado","Rechazado","Finalizado")')
   if (error) throw error
   return count ?? 0

@@ -1,11 +1,12 @@
 import { supabase } from '../lib/supabase'
 import type { Json } from '../types/database'
-import type { DetalleFormulario, FormularioCodigo } from '../types/domain'
+import { normalizarCampos } from '../lib/validacionFormularios'
+import type { DetalleFormulario, DetalleSolicitud } from '../types/domain'
 
-/** `detalle` debe incluir `fecha_evento` (obligatoria en todos los formularios). */
+/** La base valida generalidades, campus y respuestas, y aplica los valores por defecto. */
 export async function crearSolicitud(
   tipoSolicitudId: number,
-  detalle: DetalleFormulario & { fecha_evento: string },
+  detalle: DetalleSolicitud,
   excepcional = false,
 ): Promise<number> {
   const { data, error } = await supabase.schema('Solicitudes').rpc('fnSolicitudCrearEscalar', {
@@ -41,41 +42,44 @@ export async function esHorarioHabil(): Promise<boolean> {
   return data as boolean
 }
 
-export async function obtenerDetalleFormulario(
-  formularioId: number,
-  formulario: FormularioCodigo,
-): Promise<DetalleFormulario | null> {
+interface FilaFormularioCampus {
+  Campus: { nombre: string; orden: number } | null
+}
+
+/**
+ * Generalidades + respuestas de una solicitud ya enviada. Los campos salen de `campos_snapshot` (lo
+ * que el solicitante vio al enviar), nunca de la configuración actual de `CampoFormulario`.
+ */
+export async function obtenerDetalleFormulario(formularioId: number): Promise<DetalleFormulario | null> {
   const sb = supabase.schema('Solicitudes')
 
-  switch (formulario) {
-    case 'ARTE': {
-      const { data, error } = await sb.from('FormularioArte').select('*').eq('formulario_id', formularioId).maybeSingle()
-      if (error) throw error
-      return data
-    }
-    case 'VIDEO': {
-      const { data, error } = await sb.from('FormularioVideo').select('*').eq('formulario_id', formularioId).maybeSingle()
-      if (error) throw error
-      return data
-    }
-    case 'DIRCOM': {
-      const { data, error } = await sb.from('FormularioDircom').select('*').eq('formulario_id', formularioId).maybeSingle()
-      if (error) throw error
-      return data
-    }
-    case 'PROTOCOLO': {
-      const { data, error } = await sb
-        .from('FormularioProtocolo')
-        .select('*')
-        .eq('formulario_id', formularioId)
-        .maybeSingle()
-      if (error) throw error
-      return data
-    }
-    case 'GENERICO': {
-      const { data, error } = await sb.from('FormularioGenerico').select('*').eq('formulario_id', formularioId).maybeSingle()
-      if (error) throw error
-      return data
-    }
+  const [formulario, campus] = await Promise.all([
+    sb
+      .from('Formularios')
+      .select('titulo, dirigido_a, fecha_evento, respuestas, campos_snapshot')
+      .eq('id', formularioId)
+      .maybeSingle(),
+    sb.from('FormularioCampus').select('Campus(nombre, orden)').eq('formulario_id', formularioId),
+  ])
+  if (formulario.error) throw formulario.error
+  if (campus.error) throw campus.error
+  if (!formulario.data) return null
+
+  const { titulo, dirigido_a, fecha_evento, respuestas, campos_snapshot } = formulario.data
+
+  return {
+    titulo,
+    dirigido_a,
+    fecha_evento,
+    campus: ((campus.data ?? []) as unknown as FilaFormularioCampus[])
+      .map((fila) => fila.Campus)
+      .filter((c): c is { nombre: string; orden: number } => c != null)
+      .sort((a, b) => a.orden - b.orden)
+      .map((c) => c.nombre),
+    campos: normalizarCampos(Array.isArray(campos_snapshot) ? campos_snapshot : []),
+    respuestas:
+      respuestas && typeof respuestas === 'object' && !Array.isArray(respuestas)
+        ? (respuestas as DetalleFormulario['respuestas'])
+        : {},
   }
 }

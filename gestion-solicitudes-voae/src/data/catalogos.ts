@@ -82,3 +82,23 @@ export async function actualizarFeriado(id: number, cambios: TablesUpdate<{ sche
   const { error } = await supabase.schema('Solicitudes').from('Feriados').update(cambios).eq('id', id)
   if (error) throw error
 }
+
+export type Campus = Tables<{ schema: 'Solicitudes' }, 'Campus'>
+
+/** Activos e inactivos, por `orden`. El formulario de solicitud filtra los activos. */
+export async function listarCampus(): Promise<Campus[]> {
+  const { data, error } = await supabase.schema('Solicitudes').from('Campus').select('*').order('orden').order('nombre')
+  if (error) throw error
+  return data ?? []
+}
+
+export async function crearCampus(payload: Omit<TablesInsert<{ schema: 'Solicitudes' }, 'Campus'>, 'id'>) {
+  const { error } = await supabase.schema('Solicitudes').from('Campus').insert(payload)
+  if (error) throw error
+}
+
+/** No hay borrado: un campus se desactiva con `estado = false`. */
+export async function actualizarCampus(id: number, cambios: Omit<TablesUpdate<{ schema: 'Solicitudes' }, 'Campus'>, 'id'>) {
+  const { error } = await supabase.schema('Solicitudes').from('Campus').update(cambios).eq('id', id)
+  if (error) throw error
+}

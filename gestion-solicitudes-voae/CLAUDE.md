@@ -26,6 +26,10 @@ The git root is one level up (`Front_Ticket/`) and holds only a stub `README.md`
 - `npm run lint` — ESLint flat config (`eslint.config.js`): `@eslint/js` + `typescript-eslint` recommended +
   `react-hooks` + `react-refresh`. Must pass with zero errors/warnings.
 - `npm run preview` — serve the production build locally.
+- `npm run manuales` — regenerates the per-role user manuals (`.docx` + `.pdf`) from the Markdown sources
+  in `docs/manuales/` via `scripts/manuales/` (`md2docx.cjs` uses `docx`; `md2pdf.mjs` uses
+  `puppeteer-core`, so it needs a locally installed Chrome). Screenshots referenced by the manuals live in
+  `docs/manuales/capturas/<rol>/`. Edit the `.md`, never the generated files.
 
 There is no test runner configured. There is no dev-time way to exercise the Supabase-dependent flows
 without real Supabase env vars (see below) — verification here means `build` + `lint` passing, not running
@@ -38,22 +42,33 @@ ones in `src/types/domain.ts`), `verbatimModuleSyntax` (type-only imports must b
 
 ## Environment
 
-`src/lib/supabase.ts` reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from Vite env files. Put them
-in `.env.local` — `.gitignore` only covers `*.local`, so a plain `.env` is **not** ignored and will show up
-as untracked. Only the **publishable/anon** key ever goes here — it ends up in the client JS
-bundle shipped to every visitor. The secret/`service_role` key must never be used in this project.
+`src/lib/supabase.ts` reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from Vite env files. A `.env`
+holding exactly those two vars is currently **committed** (`.gitignore` only covers `*.local`); put any
+personal overrides in `.env.local` instead of editing it. Only the **publishable/anon** key ever goes in
+either file — it ends up in the client JS bundle shipped to every visitor. The secret/`service_role` key
+must never be used in this project.
 
 The database schema, RLS policies, Storage buckets, and the `crear-usuario` Edge Function live entirely in
 Supabase and are out of scope to modify from this repo. `docs/gestion_solicitudes_voae.sql` is the original
 base schema; `docs/cambios/cambios_bd_2026-10-06_v2.sql` + `docs/cambios/parte13_nombres_usuarios.sql` are
 the v2 migration on top of it (días hábiles/feriados, `Adjuntos`, autoría, rol Analista — see Architecture
-below). Both are kept here for reference only — `src/types/database.ts` is the authoritative, generated API
+below). Later changes are numbered "Partes" applied in order, one at a time, in the Supabase SQL editor:
+`cambios_bd_2026-10-12.sql` (Partes 1–12: area prefixes + per-area ticket `codigo` like `ADH0001`, …),
+`cambios_bd_2026-10-13.sql` (13–19), `cambios_bd_2026-10-13_bitacoras.sql` (20–23),
+`cambios_bd_2026-10-14_asignado.sql` (24: `asignado_por`/`fecha_asignacion`),
+`cambios_bd_2026-10-14_guion_visibilidad.sql` (26–27: hides assignment columns from roles that shouldn't
+see them), plus `analista_ver_tickets.sql`. Code comments cite these by number ("Parte 27"), so grep
+`docs/cambios/` for `PARTE <n>` to find the rule a comment refers to. `docs/semilla_datos_prueba.sql` is
+test seed data. All of these are kept here for reference only — `src/types/database.ts` is the authoritative, generated API
 surface and is already regenerated against the live schema. Do not hand-edit `database.ts`; regenerate it
 if the remote schema changes again, and when it does, grep for whatever old table/column names disappeared
 to find every call site that needs updating (that's exactly how the v2 migration was done). The `supabase`
-CLI is a devDependency and the project is already linked (`supabase/.temp/`), so regenerating is
-`npx supabase gen types typescript --linked --schema Seguridad --schema Solicitudes`, written over
-`src/types/database.ts`. There is no local Supabase stack (`supabase/` has no `config.toml`, migrations, or
+CLI is a devDependency; `supabase/.temp/linked-project.json` holds the project ref, but `--linked` fails
+("Cannot find project ref"), so regenerate with
+`npx supabase gen types typescript --project-id jpryccmjymiixnvgeuka --schema Seguridad --schema Solicitudes`,
+written over `src/types/database.ts`. The generated `Insert` types mark DB-filled NOT NULL columns as
+required (e.g. `EnvioIA.intento`/`usuario_registro`, `RevisionIA.ticket_id`/`revisor_id`); those inserts
+cast to `TablesInsert<…>` with a comment rather than sending the columns. There is no local Supabase stack (`supabase/` has no `config.toml`, migrations, or
 functions) — the CLI is only used against the remote project.
 
 ## Architecture
@@ -66,7 +81,7 @@ the Analista dashboard's charts only (everywhere else uses the hand-rolled `Barr
 **Supabase access pattern**: both schemas (`Seguridad`, `Solicitudes`) are non-`public`, so every call is
 `supabase.schema('Seguridad'|'Solicitudes').from('PascalCaseTable')...` — table names PascalCase, columns
 snake_case, matching the DB exactly. All Supabase calls are centralized in `src/data/*.ts` (one file per
-domain: `perfil`, `tickets`, `formularios`, `entregables`, `adjuntos`, `dictamenes`, `notificaciones`,
+domain: `perfil`, `tickets`, `formularios`, `camposFormulario`, `afichesIA`, `entregables`, `adjuntos`, `dictamenes`, `notificaciones`,
 `usuarios`, `catalogos`, `bitacora`, `estadisticas`); pages/components never call `supabase` directly, they
 call a `data/` function through a TanStack Query hook. The only exceptions are `supabase.auth.*` calls in
 `src/auth/*` and the `fnUsuariosNombresTabla` RPC inside `hooks/useNombresUsuarios.ts`. Row types are
@@ -90,11 +105,12 @@ invalidates on each event.
 **Status source of truth**: `Solicitudes.vw_TicketsEstadoReal` (typed as `TicketEstadoReal` in
 `src/types/domain.ts`) is what every list, card, and dashboard queries — it has the live-computed
 `estado_real` (including `"Aprobado (Automático)"` and `"Retrasado"` before any cron has run),
-`horas_restantes_dictamen`, `fuera_de_plazo`, `correcciones_usadas`. It does **not** carry the type's
-`formulario` code or `tipo_solicitud_id`. `src/data/tickets.ts#obtenerTicketCompleto()` is what the detail
-page actually uses — it joins the view + base `Ticket` row + the ticket's `TipoSolicitud` (needed purely to
-get `formulario`/`dias_estimados`/`dias_habiles`) + the type-specific `FormularioX` detail + `TicketLog` +
-`Entregables` + `DictamenJefe` + `Adjuntos`.
+`horas_restantes_dictamen`, `fuera_de_plazo`, `correcciones_usadas`, plus `titulo`, `dirigido_a`, `flujo`
+and `intentos_usados` (IA tickets only). It does **not** carry `tipo_solicitud_id`.
+`src/data/tickets.ts#obtenerTicketCompleto()` is what the detail page actually uses — it joins the view +
+base `Ticket` row + the ticket's `TipoSolicitud` (for `dias_estimados`/`dias_habiles`) + the form
+(`Formularios` + `FormularioCampus`→`Campus`) + `TicketLog` + `Entregables` + `DictamenJefe` + `Adjuntos`,
+and for IA tickets `EnvioIA` + `RevisionIA` instead of entregables/dictamen.
 
 **Ticket state machine lives in DB triggers, not here.** Valid transitions (`Enviado → En revisión/En
 proceso`, `Finalizado → Corrección (max 1) | Aprobado`, `Corrección → Finalizado`, `Retrasado → Finalizado`
@@ -104,20 +120,32 @@ only decides which action buttons to show per role + `estado_real` (see `tomarTi
 proceso'` when a ticket is already `Retrasado`, since that transition is invalid) and surfaces whatever
 Spanish error message the trigger raises via `src/lib/errors.ts#mensajeError`.
 
-**Per-type request forms**: which form a `TipoSolicitud` uses is picked by its `formulario` column
-(`'ARTE'|'VIDEO'|'DIRCOM'|'PROTOCOLO'|'GENERICO'`) — **never by the type's name**; an admin can add a new
-`TipoSolicitud` row pointing at an existing `formulario` code and it works with zero code changes. Each
-code fans out 1:1 into `FormularioArte`/`FormularioVideo`/`FormularioDircom`/`FormularioProtocolo`/
-`FormularioGenerico`. Shapes live in `src/types/domain.ts` (`DetalleArte`/`DetalleVideo`/etc., union
-`DetalleFormulario`), editable fields in `src/components/formularios/campos/*.tsx` (one component per
-code, barrel-exported from `campos/index.ts`), defaults + client-side validation in
-`src/lib/validacionFormularios.ts`, read-only rendering in `DetalleFormularioVista.tsx`. Creating a request
-goes through `fnSolicitudCrearEscalar` with the whole detail object as JSON
-(`src/data/formularios.ts#crearSolicitud`) — the DB does the real validation (including rejecting any of
-the 4 known date fields if they're in the past); the frontend's job is just payload shape + fast feedback.
-Unlike the pre-migration schema, these forms use plain `date`/`time` columns (not `timestamptz`), so there's
-no timezone-offset conversion needed when submitting — only `hoyTegucigalpaISO()` (`lib/date.ts`) as the
-`min` on every date input and for the "not in the past" client-side check.
+**Configurable request forms**: no form field is hard-coded. Every request has fixed *generalidades*
+(`titulo`, `fecha_evento`, `dirigido_a`, `campus_ids` — `components/formularios/Generalidades.tsx`) plus the
+active `CampoFormulario` rows of its `TipoSolicitud` (`tipo_campo` ∈ TEXTO, TEXTO_LARGO, NUMERO, FECHA,
+HORA, BOOLEANO, SELECCION, SELECCION_MULTIPLE, URL), drawn by `components/formularios/FormularioDinamico.tsx`.
+jsonb columns are normalized to `DefinicionCampo` by `lib/validacionFormularios.ts#normalizarCampo`, which
+also holds the client-side validation mirroring the DB (fast feedback only — the DB message is final).
+Creating a request is `fnSolicitudCrearEscalar(p_tipo_solicitud_id, p_detalle, p_excepcional)` with
+`p_detalle = { titulo, fecha_evento, dirigido_a, campus_ids, respuestas: { <clave>: valor } }`; empty values
+are omitted so the DB applies `valor_defecto`. The DB stores `campos_snapshot` (the active fields at send
+time, same columns as `CampoFormulario`), and `DetalleFormularioVista.tsx` renders a sent ticket **from the
+snapshot, never from current `CampoFormulario`**. Admins manage fields per type (`CamposTipoModal` +
+`EditorCampo`: `clave`/`tipo_campo` are immutable after insert, nothing is ever deleted — `estado = false`)
+and the `Campus` catalog from `pages/admin/Catalogos.tsx`. `TipoSolicitud.flujo` (`'DISENO'|'APROBACION_IA'`)
+is chosen only on create. Dates in forms are plain `date`/`time` — only `hoyTegucigalpaISO()`
+(`lib/date.ts`) is needed as the `min` and for the "not in the past" check.
+
+**Aprobación de afiches con IA** (`flujo = 'APROBACION_IA'`): no designer, entregables, dictamen or
+excepcional. The requester uploads the poster to the private `afiches-ia` bucket (`<ticket_id>/…`, ≤10 MB,
+png/jpeg/webp/pdf) and inserts `EnvioIA`; an **Aprobador IA** (`/aprobador-ia`, `pages/aprobadorIA/`)
+inserts `RevisionIA` (`APROBADO`|`RECHAZADO`, comment required to reject) on the latest envío. All state
+changes (Enviado → Aprobado | Corrección | Rechazado after 5 intentos; reenvío → Enviado with a new
+`fecha_limite`) and notifications are done by DB triggers — the frontend never writes `estado_id` on an IA
+ticket. All of it lives in `src/data/afichesIA.ts` + `components/afichesIA/`; creating an IA request is
+create ticket → upload → insert `EnvioIA` (storage object removed if the insert fails), and if the upload
+fails the detail page offers "Subir afiche". Asignador/Diseñador screens read tickets through
+`hooks/useTickets.ts#useTicketsDiseno` (same cache, IA filtered out).
 
 **Date fields**: every date input in the app is `components/ui/FechaInput.tsx` — never a raw
 `<input type="date">`. It takes/emits the same `'YYYY-MM-DD'`-or-`''` string a native date input would
@@ -138,7 +166,8 @@ registered — there's no retroactive recalculation.
 `adjuntos`, `src/data/adjuntos.ts`) is what the *requester* attaches to their own ticket (max 10, insert-only,
 blocked once the ticket is `Aprobado`, gated client-side in `TicketDetail.tsx` by
 `perfil.id === estadoReal.usuario_registro`). `Entregables` (bucket `entregables`,
-`src/data/entregables.ts`) is unrelated: what the *designer* delivers, unchanged from before. Both follow
+`src/data/entregables.ts`) is unrelated: what the *designer* delivers; the requester can also read them
+(no comments, no dictamen). Both follow
 the same upload→insert→rollback-on-failure pattern; `src/lib/archivos.ts` holds the shared
 filename-cleaning/path-building helpers both use.
 
@@ -159,12 +188,27 @@ Route guards compose in this order (see `src/app/router.tsx`): `RequireAuth` (ha
 `RequirePasswordOk` (if `debe_cambiar_password`, the DB treats the user as roleless/ticketless, so this must
 be resolved before anything else) → `RequireRole` (per-route role check). `InicioRedirect` sends `/` to the
 dashboard of the user's highest-ranked role (`JERARQUIA_ROLES` in `domain.ts`: Administrador > Jefe de Área
-> Diseñador > **Analista** > Empleado) and shows a dead-end screen (never a redirect loop) if the account
+> **Asignador** > **Aprobador IA** > Diseñador > **Analista** > Empleado; landing route per role in `RUTA_POR_ROL`) and shows a dead-end screen (never a redirect loop) if the account
 has no role at all. A user can hold multiple roles — the sidebar (`components/layout/Sidebar.tsx`) renders
-one nav section per role the profile has, in hierarchy order. **Analista** reuses the Empleado "Nueva
-solicitud"/"Mis solicitudes" pages (both routes allow `['Empleado','Analista']`) plus its own stats
-dashboard at `/analista` (also reachable by Administrador, via a "Estadísticas" nav item under its own
-section — same route, same `RequireRole roles={['Analista','Administrador']}`).
+one nav section per role the profile has, in hierarchy order. The Empleado "Nueva solicitud"/"Mis
+solicitudes" pages are shared by `['Empleado','Analista','Jefe de Área']`. **Analista** additionally has its
+own stats dashboard at `/analista` (also reachable by Administrador, via a "Estadísticas" nav item under its
+own section — same route, same `RequireRole roles={['Analista','Administrador']}`).
+
+**Asignador & solicitudes excepcionales**: the Asignador (`/asignador`) distributes work — assigns/reassigns
+tickets to designers (`data/tickets.ts#reasignarTicket`, also allowed for Administrador; it moves
+`Enviado`/`En revisión` tickets to `En proceso` in the same update) and is the *only* role that accepts or
+rejects an **excepcional** request (`responderExcepcional` → `fnSolicitudExcepcionalResponderEscalar`). A
+Jefe de Área files excepcionales from `/jefe/excepcional`, which reuses `AsistenteSolicitud` with the
+`excepcional` prop; the difference is a shorter minimum event date computed server-side
+(`fnFechaEventoMinimaEscalar`, `p_excepcional`) and the `es_excepcional` flag on the ticket. Who can see a
+ticket's designer/assigner is decided in the DB (Parte 27 nulls those view columns);
+`lib/permisos.ts#puedeVerAsignacion` only stops the UI from rendering "Sin asignar" to roles that get nulls.
+
+**Horario hábil**: business hours (Mon–Fri 8:00–16:00, excluding feriados) are decided by the DB
+(`fnEsHorarioHabilEscalar`), never the browser clock. Read it through `hooks/useHorarioHabil.ts` (shared
+query key `['horario-habil']`, polled every 60 s) — used by the request wizard, the dictamen countdown
+(`CronometroDictamen`), the Jefe dashboard and `TicketDetail`.
 
 **Analista stats dashboard** (`src/pages/analista/Dashboard.tsx`): the only screen built on `recharts`
 instead of the hand-rolled `BarraSimple`. Data comes from one RPC, `fnEstadisticasTicketsTabla`
@@ -175,9 +219,10 @@ view is shareable; `calcularRango()` derives `desde`/`hasta` from the shortcut k
 storing computed dates, so changing "hoy" never needs an invalidation. The ticket id in the detail table links
 to `/tickets/:id` for both roles; whether an Analista actually gets the ticket back depends on the `Ticket`
 SELECT policy in Supabase (`docs/cambios/analista_ver_tickets.sql` is the policy that grants it). Exporting
-the filtered table goes through the shared `src/lib/csv.ts#descargarCsv()` helper (BOM-prefixed UTF-8 so
-Excel renders tildes correctly) — reuse it rather than building another CSV writer if another screen needs
-one.
+the filtered table goes through `src/lib/exportar.ts`, which defines columns once (`ColumnaExportar<T>`) and
+feeds both `exportarCSV` (wrapping `lib/csv.ts#descargarCsv`, BOM-prefixed UTF-8 so Excel renders tildes)
+and `exportarPDF` (`jspdf` + `jspdf-autotable`, landscape) — reuse it rather than building another
+exporter if another screen needs one.
 
 **Ticket history visibility**: on `TicketDetail.tsx`, only Analista and Administrador see the full
 `TicketLog` audit trail (rendered via `Timeline`); every other role sees just the simplified `Stepper`
@@ -193,7 +238,7 @@ role, so it must already be present when the trigger runs.
 
 **Routing structure**: `src/app/router.tsx` is the single place route trees, guards, and layout nesting are
 defined — check it first when adding a page or changing who can see what. Pages are grouped by role under
-`src/pages/{empleado,disenador,jefe,admin,analista}/`; `src/pages/TicketDetail.tsx` is shared across all roles
+`src/pages/{empleado,disenador,jefe,asignador,aprobadorIA,admin,analista}/`; `src/pages/TicketDetail.tsx` is shared across all roles
 (visibility is RLS's job, not a route guard's — if the query returns nothing, the page just shows an empty
 state).
 

@@ -58,7 +58,7 @@ export function TicketCard({ ticket, onClick, accion }: TicketCardProps) {
                 correccionesUsadas >= CORRECCIONES_MAXIMAS ? 'bg-coral-bruma text-coral' : 'bg-ambar-bruma text-ambar'
               }`}
             >
-              Correcciones {correccionesUsadas}/{CORRECCIONES_MAXIMAS}
+              {ticket.flujo === 'APROBACION_IA' ? 'Rechazos' : 'Correcciones'} {correccionesUsadas}/{CORRECCIONES_MAXIMAS}
             </span>
           )}
         </div>
@@ -68,9 +68,14 @@ export function TicketCard({ ticket, onClick, accion }: TicketCardProps) {
         <p className="mt-1 text-xs font-medium text-ambar">Pendiente de aceptación</p>
       )}
 
-      <p className="mt-3 truncate font-semibold text-tinta" title={ticket.tipo_solicitud ?? undefined}>
-        {ticket.tipo_solicitud}
+      <p className="mt-3 truncate font-semibold text-tinta" title={ticket.titulo ?? ticket.tipo_solicitud ?? undefined}>
+        {ticket.titulo || ticket.tipo_solicitud}
       </p>
+      {ticket.titulo && (
+        <p className="truncate text-sm text-tinta-suave" title={ticket.tipo_solicitud ?? undefined}>
+          {ticket.tipo_solicitud}
+        </p>
+      )}
       {ticket.area && (
         <p className="truncate text-sm text-tinta-suave" title={ticket.area}>
           {ticket.area}
@@ -81,7 +86,7 @@ export function TicketCard({ ticket, onClick, accion }: TicketCardProps) {
         <FilaCampo icono={Calendar} etiqueta="Creada" valor={formatFechaHora(ticket.fecha_registro)} />
         <FilaCampo icono={PartyPopper} etiqueta="Evento" valor={formatFecha(ticket.fecha_evento)} />
         <FilaCampo icono={Clock} etiqueta="Vence" valor={formatFecha(ticket.fecha_limite)} vencido={Boolean(ticket.fuera_de_plazo)} />
-        {muestraAsignacion && (
+        {muestraAsignacion && ticket.flujo !== 'APROBACION_IA' && (
           <FilaCampo
             icono={User}
             etiqueta="Diseñador"

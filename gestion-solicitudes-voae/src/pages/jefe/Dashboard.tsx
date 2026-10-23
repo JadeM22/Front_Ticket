@@ -20,9 +20,19 @@ import { EmptyState } from '../../components/ui/EmptyState'
 import { EstadoChip } from '../../components/EstadoChip'
 import { CronometroDictamen } from '../../components/ui/CronometroDictamen'
 import { DictamenModal } from '../../components/DictamenModal'
-import type { DecisionJefe, TicketEstadoReal } from '../../types/domain'
+import { ETIQUETA_FLUJO, type DecisionJefe, type Flujo, type TicketEstadoReal } from '../../types/domain'
 
-const DECISIONES = ['Aprobado', 'Corrección', 'Aprobado (Automático)']
+const DECISIONES = ['Aprobado', 'Corrección', 'Aprobado (Automático)', 'Rechazado', 'Retrasado']
+
+function etiquetaFlujo(t: TicketEstadoReal): string {
+  return ETIQUETA_FLUJO[t.flujo as Flujo] ?? t.flujo ?? '—'
+}
+
+/** Los tickets IA no tienen diseñador: "Sin asignar" daría a entender que falta asignarlos. */
+function textoDisenador(t: TicketEstadoReal): string {
+  if (t.flujo === 'APROBACION_IA') return '—'
+  return t.disenador ?? 'Sin asignar'
+}
 
 export function JefeDashboard() {
   const { data: tickets = [], isLoading } = useTicketsEstadoReal()
@@ -36,6 +46,7 @@ export function JefeDashboard() {
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
   const [decisionFiltro, setDecisionFiltro] = useState('')
+  const [flujoFiltro, setFlujoFiltro] = useState('')
   const [exportarAbierto, setExportarAbierto] = useState(false)
   const exportarRef = useRef<HTMLDivElement>(null)
 
@@ -48,16 +59,19 @@ export function JefeDashboard() {
     return () => document.removeEventListener('mousedown', alHacerClicFuera)
   }, [exportarAbierto])
 
-  const porDictaminar = tickets.filter((t) => t.estado_real === 'Finalizado')
-  const historialCompleto = tickets.filter((t) => t.estado_real !== 'Finalizado')
+  // Los tickets IA nunca llegan a "Finalizado" ni los dictamina el jefe: los ve en el historial, solo en lectura.
+  const esPorDictaminar = (t: TicketEstadoReal) => t.estado_real === 'Finalizado' && t.flujo !== 'APROBACION_IA'
+  const porDictaminar = tickets.filter(esPorDictaminar)
+  const historialCompleto = tickets.filter((t) => !esPorDictaminar(t))
 
-  const hayFiltrosActivos = Boolean(busqueda || desde || hasta || decisionFiltro)
+  const hayFiltrosActivos = Boolean(busqueda || desde || hasta || decisionFiltro || flujoFiltro)
 
   function limpiarFiltros() {
     setBusqueda('')
     setDesde('')
     setHasta('')
     setDecisionFiltro('')
+    setFlujoFiltro('')
   }
 
   const historial = useMemo(
@@ -73,15 +87,17 @@ export function JefeDashboard() {
         if (desde && fecha < desde) return false
         if (hasta && fecha > hasta) return false
         if (decisionFiltro && t.estado_real !== decisionFiltro) return false
+        if (flujoFiltro && t.flujo !== flujoFiltro) return false
         return true
       }),
-    [historialCompleto, busqueda, desde, hasta, decisionFiltro],
+    [historialCompleto, busqueda, desde, hasta, decisionFiltro, flujoFiltro],
   )
 
   const columnasExportar: ColumnaExportar<TicketEstadoReal>[] = [
     { etiqueta: 'Código', valor: (t) => t.codigo },
     { etiqueta: 'Tipo', valor: (t) => t.tipo_solicitud },
-    { etiqueta: 'Diseñador', valor: (t) => t.disenador ?? 'Sin asignar' },
+    { etiqueta: 'Flujo', valor: etiquetaFlujo },
+    { etiqueta: 'Diseñador', valor: textoDisenador },
     { etiqueta: 'Estado', valor: (t) => t.estado_real },
     { etiqueta: 'Registrado', valor: (t) => formatFecha(t.fecha_registro) },
     { etiqueta: 'Fecha límite', valor: (t) => formatFecha(t.fecha_limite) },
@@ -98,6 +114,7 @@ export function JefeDashboard() {
     const filtrosTexto = [
       desde || hasta ? `Rango: ${desde || '—'} a ${hasta || '—'}` : null,
       decisionFiltro ? `Decisión: ${decisionFiltro}` : null,
+      flujoFiltro ? `Flujo: ${ETIQUETA_FLUJO[flujoFiltro as Flujo]}` : null,
       busqueda ? `Búsqueda: "${busqueda}"` : null,
     ].filter(Boolean)
     exportarPDF({
@@ -204,6 +221,14 @@ export function JefeDashboard() {
               ))}
             </select>
           </label>
+          <label className="text-xs text-tinta-suave">
+            Flujo
+            <select className={`${CLASE_INPUT} mt-1 w-auto`} value={flujoFiltro} onChange={(e) => setFlujoFiltro(e.target.value)}>
+              <option value="">Todos</option>
+              <option value="DISENO">{ETIQUETA_FLUJO.DISENO}</option>
+              <option value="APROBACION_IA">{ETIQUETA_FLUJO.APROBACION_IA}</option>
+            </select>
+          </label>
           <Button
             variante="secundario"
             className="border border-azul-niebla shadow-sm hover:bg-azul-niebla/60"
@@ -259,8 +284,13 @@ export function JefeDashboard() {
                         {ticket.codigo}
                       </Link>
                     </td>
-                    <td className="px-4 py-2">{ticket.tipo_solicitud}</td>
-                    <td className="px-4 py-2">{ticket.disenador ?? 'Sin asignar'}</td>
+                    <td className="px-4 py-2">
+                      {ticket.tipo_solicitud}
+                      {ticket.flujo === 'APROBACION_IA' && (
+                        <span className="ml-1.5 rounded-full bg-indigo-bruma px-2 py-0.5 text-xs text-indigo-suave">IA</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2">{textoDisenador(ticket)}</td>
                     <td className="px-4 py-2">
                       <EstadoChip estado={ticket.estado_real ?? ''} />
                     </td>

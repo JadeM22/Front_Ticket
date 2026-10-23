@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ChevronDown, ChevronUp, Hand } from 'lucide-react'
-import { useTicketsEstadoReal } from '../../hooks/useTickets'
+import { useTicketsDiseno } from '../../hooks/useTickets'
 import { tomarTicket, reasignarTicket } from '../../data/tickets'
 import { listarDisenadoresAsignables, type DisenadorAsignable } from '../../data/usuarios'
 import { mensajeError } from '../../lib/errors'
@@ -31,7 +31,7 @@ const COLUMNAS_DISENADOR = [
 ] as const
 
 export function AsignadorDashboard() {
-  const { data: tickets = [], isLoading } = useTicketsEstadoReal()
+  const { data: tickets = [], isLoading } = useTicketsDiseno()
   const { perfil } = useAuth()
   const queryClient = useQueryClient()
   const navigate = useNavigate()

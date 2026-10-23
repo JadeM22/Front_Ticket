@@ -1,11 +1,19 @@
 import type { Tables } from './database'
 
-export type RolNombre = 'Administrador' | 'Jefe de Área' | 'Asignador' | 'Diseñador' | 'Analista' | 'Empleado'
+export type RolNombre =
+  | 'Administrador'
+  | 'Jefe de Área'
+  | 'Asignador'
+  | 'Aprobador IA'
+  | 'Diseñador'
+  | 'Analista'
+  | 'Empleado'
 
 export const JERARQUIA_ROLES: RolNombre[] = [
   'Administrador',
   'Jefe de Área',
   'Asignador',
+  'Aprobador IA',
   'Diseñador',
   'Analista',
   'Empleado',
@@ -15,6 +23,7 @@ export const RUTA_POR_ROL: Record<RolNombre, string> = {
   Administrador: '/admin',
   'Jefe de Área': '/jefe',
   Asignador: '/asignador',
+  'Aprobador IA': '/aprobador-ia',
   Diseñador: '/disenador',
   Analista: '/analista',
   Empleado: '/empleado',
@@ -31,8 +40,13 @@ export interface Perfil {
   roles: RolNombre[]
 }
 
-/** Qué formulario mostrar para un tipo de solicitud — se elige por esta columna, nunca por el nombre. */
-export type FormularioCodigo = 'ARTE' | 'VIDEO' | 'DIRCOM' | 'PROTOCOLO' | 'GENERICO'
+/** Cómo se atiende un tipo de solicitud: por el equipo de diseño o subiendo un afiche que revisa un Aprobador IA. */
+export type Flujo = 'DISENO' | 'APROBACION_IA'
+
+export const ETIQUETA_FLUJO: Record<Flujo, string> = {
+  DISENO: 'Diseño',
+  APROBACION_IA: 'Aprobación con IA',
+}
 
 export type EstadoRegistrado =
   | 'Enviado'
@@ -56,56 +70,75 @@ export type TipoAdjunto = 'ARCHIVO' | 'LINK'
 
 export type DecisionJefe = 'APROBADO' | 'CORRECCION'
 
-export interface DetalleArte {
+export type DecisionIA = 'APROBADO' | 'RECHAZADO'
+
+export type TipoCampo =
+  | 'TEXTO'
+  | 'TEXTO_LARGO'
+  | 'NUMERO'
+  | 'FECHA'
+  | 'HORA'
+  | 'BOOLEANO'
+  | 'SELECCION'
+  | 'SELECCION_MULTIPLE'
+  | 'URL'
+
+export const TIPOS_CAMPO: { valor: TipoCampo; etiqueta: string }[] = [
+  { valor: 'TEXTO', etiqueta: 'Texto corto' },
+  { valor: 'TEXTO_LARGO', etiqueta: 'Texto largo' },
+  { valor: 'NUMERO', etiqueta: 'Número' },
+  { valor: 'FECHA', etiqueta: 'Fecha' },
+  { valor: 'HORA', etiqueta: 'Hora' },
+  { valor: 'BOOLEANO', etiqueta: 'Sí / No' },
+  { valor: 'SELECCION', etiqueta: 'Selección (una opción)' },
+  { valor: 'SELECCION_MULTIPLE', etiqueta: 'Selección múltiple' },
+  { valor: 'URL', etiqueta: 'Enlace (URL)' },
+]
+
+export interface ValidacionesCampo {
+  min?: number
+  max?: number
+  max_longitud?: number
+}
+
+/** Valor de una respuesta tal como viaja en `respuestas` (jsonb). */
+export type ValorCampo = string | number | boolean | string[] | null
+
+export type Respuestas = Record<string, ValorCampo>
+
+/**
+ * Definición de un campo ya normalizada (los jsonb `opciones`/`validaciones`/`valor_defecto` con su
+ * forma real). Es lo que usa el formulario dinámico, venga de `CampoFormulario` (al llenar) o de
+ * `Formularios.campos_snapshot` (al ver un ticket ya enviado).
+ */
+export interface DefinicionCampo {
+  clave: string
+  etiqueta: string
+  tipo_campo: TipoCampo
+  placeholder: string | null
+  ayuda: string | null
+  opciones: string[]
+  valor_defecto: ValorCampo
+  validaciones: ValidacionesCampo
+  obligatorio: boolean
+  orden: number
+}
+
+/** Forma de `p_detalle` de `fnSolicitudCrearEscalar`. */
+export interface DetalleSolicitud {
   titulo: string
-  hora_inicio: string | null
-  hora_fin: string | null
-  lugar: string | null
-  modalidad: 'Presencial' | 'No presencial' | null
-  aplica_articulo_140: boolean
-  enlace_qr: string | null
-  alcance: 'Todos los centros regionales' | 'Solo Ciudad Universitaria' | null
-  informacion_adicional: string | null
-  logotipos: string[]
+  fecha_evento: string
+  dirigido_a: string
+  campus_ids: number[]
+  respuestas: Respuestas
 }
 
-export interface DetalleVideo {
-  objetivo: string
-  fecha_entrega_publicacion: string
-  participacion_estudiantes: 'No aplica' | 'Artículo 140' | 'Horas beca'
-  informacion_producto: string | null
-  encargado_actividad: string
-  logotipos: string[]
-}
-
-export interface DetalleDircom {
-  tipo_material: string
-  fecha_necesaria: string
-  informacion_valor: string
-  necesita_dictamen: boolean
-  logotipos: string[]
-}
-
-export interface DetalleProtocolo {
-  nombre_actividad: string
-  lugar_propuesto: string
-  cantidad_invitados: number | null
-  hora: string
-  elaborar_invitacion: boolean
-  informacion_programa: string | null
-  necesita_maestro_ceremonia: boolean
-  maestro_ceremonia_preferido: string | null
-  equipo_requerido: string | null
-  necesita_edecanes: boolean
-  necesita_pumas: boolean
-}
-
-export interface DetalleGenerico {
+/** Generalidades de una solicitud ya enviada + sus respuestas, para mostrarla. */
+export interface DetalleFormulario {
   titulo: string
-  descripcion: string
-  informacion_producto: string | null
-  logotipos: string[]
-  observaciones: string | null
+  dirigido_a: string
+  fecha_evento: string
+  campus: string[]
+  campos: DefinicionCampo[]
+  respuestas: Respuestas
 }
-
-export type DetalleFormulario = DetalleArte | DetalleVideo | DetalleDircom | DetalleProtocolo | DetalleGenerico

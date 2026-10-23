@@ -5,14 +5,11 @@ import { Button } from './ui/Button'
 import { Campo, CLASE_INPUT } from './ui/Campo'
 import { crearTipoSolicitud, actualizarTipoSolicitud, type TipoSolicitud } from '../data/catalogos'
 import { mensajeError } from '../lib/errors'
-import type { FormularioCodigo } from '../types/domain'
+import { ETIQUETA_FLUJO, type Flujo } from '../types/domain'
 
-const EXPLICACION_FORMULARIO: Record<FormularioCodigo, string> = {
-  ARTE: 'Arte para redes sociales o piezas gráficas (título, fecha/hora, lugar, modalidad…).',
-  VIDEO: 'Video promocional (objetivo, fecha de entrega, encargado…).',
-  DIRCOM: 'Solicitud de diseño a DIRCOM (tipo de material, fecha necesaria…).',
-  PROTOCOLO: 'Protocolo para eventos de VOAE (actividad, lugar, invitados…).',
-  GENERICO: 'Formulario genérico (título, descripción, fecha requerida…).',
+const EXPLICACION_FLUJO: Record<Flujo, string> = {
+  DISENO: 'El equipo de diseño toma la solicitud, entrega y el Jefe de Área dictamina.',
+  APROBACION_IA: 'El solicitante sube su afiche y un Aprobador IA lo aprueba o rechaza (hasta 5 intentos).',
 }
 
 interface TipoSolicitudModalProps {
@@ -43,7 +40,8 @@ function FormularioTipoSolicitud({
   const [nombre, setNombre] = useState(tipo?.nombre ?? '')
   const [diasEstimados, setDiasEstimados] = useState(tipo?.dias_estimados ?? 10)
   const [diasHabiles, setDiasHabiles] = useState(tipo?.dias_habiles ?? true)
-  const [formulario, setFormulario] = useState<FormularioCodigo>((tipo?.formulario as FormularioCodigo) ?? 'GENERICO')
+  // El flujo solo se elige al crear: cambiarlo después dejaría tickets abiertos en un flujo que ya no es el suyo.
+  const [flujo, setFlujo] = useState<Flujo>((tipo?.flujo as Flujo | undefined) ?? 'DISENO')
   const [descripcion, setDescripcion] = useState(tipo?.descripcion ?? '')
   const [estado, setEstado] = useState(tipo?.estado ?? true)
   const [enviando, setEnviando] = useState(false)
@@ -59,14 +57,13 @@ function FormularioTipoSolicitud({
         nombre: nombre.trim(),
         dias_estimados: diasEstimados,
         dias_habiles: diasHabiles,
-        formulario,
         descripcion: descripcion.trim() || null,
         estado,
       }
       if (tipo) {
         await actualizarTipoSolicitud(tipo.id, payload)
       } else {
-        await crearTipoSolicitud(payload)
+        await crearTipoSolicitud({ ...payload, flujo })
       }
       toast.success(tipo ? 'Tipo de solicitud actualizado.' : 'Tipo de solicitud creado.')
       onGuardado()
@@ -102,15 +99,20 @@ function FormularioTipoSolicitud({
         </Campo>
       </div>
 
-      <Campo etiqueta="Formulario" ayuda={EXPLICACION_FORMULARIO[formulario]}>
-        <select className={CLASE_INPUT} value={formulario} onChange={(e) => setFormulario(e.target.value as FormularioCodigo)}>
-          <option value="ARTE">Arte</option>
-          <option value="VIDEO">Video</option>
-          <option value="DIRCOM">DIRCOM</option>
-          <option value="PROTOCOLO">Protocolo</option>
-          <option value="GENERICO">Genérico</option>
-        </select>
-      </Campo>
+      {tipo ? (
+        <div>
+          <p className="mb-1 text-sm font-medium text-tinta">Flujo</p>
+          <p className="rounded-lg bg-azul-niebla/50 px-3 py-2 text-sm text-tinta">{ETIQUETA_FLUJO[flujo] ?? tipo.flujo}</p>
+          <p className="mt-1 text-xs text-tinta-suave">El flujo no se puede cambiar después de crear el tipo.</p>
+        </div>
+      ) : (
+        <Campo etiqueta="Flujo" ayuda={`${EXPLICACION_FLUJO[flujo]} No se puede cambiar después.`}>
+          <select className={CLASE_INPUT} value={flujo} onChange={(e) => setFlujo(e.target.value as Flujo)}>
+            <option value="DISENO">{ETIQUETA_FLUJO.DISENO}</option>
+            <option value="APROBACION_IA">{ETIQUETA_FLUJO.APROBACION_IA}</option>
+          </select>
+        </Campo>
+      )}
 
       <Campo etiqueta="Descripción (nota al elegir el tipo)">
         <textarea className={CLASE_INPUT} rows={2} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />

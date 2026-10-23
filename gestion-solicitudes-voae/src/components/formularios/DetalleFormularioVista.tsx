@@ -1,64 +1,65 @@
-import { formatFecha, formatHora } from '../../lib/date'
-import type { DetalleFormulario } from '../../types/domain'
+import type { ReactNode } from 'react'
+import { formatFecha, formatFechaLarga, formatHora } from '../../lib/date'
+import { estaVacio } from '../../lib/validacionFormularios'
+import type { DefinicionCampo, DetalleFormulario, ValorCampo } from '../../types/domain'
 
-const ETIQUETAS: Record<string, string> = {
-  titulo: 'Título',
-  hora_inicio: 'Hora de inicio',
-  hora_fin: 'Hora de fin',
-  lugar: 'Lugar',
-  modalidad: 'Modalidad',
-  aplica_articulo_140: 'Aplica Artículo 140',
-  enlace_qr: 'Enlace del QR',
-  alcance: 'Alcance',
-  informacion_adicional: 'Información adicional',
-  logotipos: 'Logotipos',
-  objetivo: 'Objetivo',
-  fecha_entrega_publicacion: 'Fecha de entrega/publicación',
-  participacion_estudiantes: 'Participación de estudiantes',
-  informacion_producto: 'Información del producto',
-  encargado_actividad: 'Encargado de la actividad',
-  tipo_material: 'Tipo de material',
-  fecha_necesaria: 'Fecha necesaria',
-  informacion_valor: 'Contexto y valor',
-  necesita_dictamen: 'Necesita dictamen',
-  nombre_actividad: 'Actividad',
-  lugar_propuesto: 'Lugar propuesto',
-  cantidad_invitados: 'Cantidad de invitados',
-  hora: 'Hora',
-  elaborar_invitacion: 'Elaborar invitación',
-  informacion_programa: 'Información del programa',
-  necesita_maestro_ceremonia: 'Necesita maestro de ceremonia',
-  maestro_ceremonia_preferido: 'Maestro de ceremonia preferido',
-  equipo_requerido: 'Equipo requerido',
-  necesita_edecanes: 'Necesita edecanes',
-  necesita_pumas: 'Necesita Pumas',
-  descripcion: 'Descripción',
-  observaciones: 'Observaciones',
-}
-
-const CAMPOS_FECHA = new Set(['fecha_entrega_publicacion', 'fecha_necesaria'])
-const CAMPOS_HORA = new Set(['hora_inicio', 'hora_fin', 'hora'])
-
-function renderValor(clave: string, valor: unknown): string {
-  if (valor == null || valor === '') return '—'
+function renderValor(campo: DefinicionCampo | null, valor: ValorCampo | undefined): ReactNode {
+  if (campo?.tipo_campo === 'BOOLEANO') return valor === true ? 'Sí' : 'No'
+  if (valor == null || estaVacio(valor)) return '—'
   if (typeof valor === 'boolean') return valor ? 'Sí' : 'No'
-  if (Array.isArray(valor)) return valor.length > 0 ? valor.join(', ') : '—'
-  if (CAMPOS_FECHA.has(clave)) return formatFecha(valor as string)
-  if (CAMPOS_HORA.has(clave)) return formatHora(`1970-01-01T${valor}`)
-  return String(valor)
+  if (Array.isArray(valor)) return valor.join(', ')
+  const texto = String(valor)
+  switch (campo?.tipo_campo) {
+    case 'FECHA':
+      return formatFecha(texto)
+    case 'HORA':
+      return formatHora(`1970-01-01T${texto}`)
+    case 'URL':
+      return (
+        <a href={texto} target="_blank" rel="noopener noreferrer" className="break-all text-azul-institucional hover:underline">
+          {texto}
+        </a>
+      )
+    default:
+      return texto
+  }
 }
 
+function Fila({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-0.5 border-b border-azul-niebla/60 pb-2 sm:flex-row sm:justify-between sm:gap-4">
+      <dt className="text-tinta-suave">{etiqueta}</dt>
+      <dd className="whitespace-pre-line font-medium text-tinta sm:text-right">{children}</dd>
+    </div>
+  )
+}
+
+/**
+ * Generalidades + respuestas de una solicitud. Las etiquetas y tipos salen de `detalle.campos`, que
+ * para un ticket ya enviado es su `campos_snapshot`: si el Administrador cambia o desactiva un campo
+ * después, el ticket se sigue viendo como se envió.
+ */
 export function DetalleFormularioVista({ detalle }: { detalle: DetalleFormulario }) {
+  const clavesConocidas = new Set(detalle.campos.map((c) => c.clave))
+  // Respuestas sin definición en el snapshot (p. ej. tickets anteriores a los formularios configurables).
+  const huerfanas = Object.entries(detalle.respuestas).filter(([clave]) => !clavesConocidas.has(clave))
+
   return (
     <dl className="space-y-2 text-sm">
-      {Object.entries(detalle)
-        .filter(([clave]) => clave !== 'formulario_id')
-        .map(([clave, valor]) => (
-          <div key={clave} className="flex flex-col gap-0.5 border-b border-azul-niebla/60 pb-2 sm:flex-row sm:justify-between">
-            <dt className="text-tinta-suave">{ETIQUETAS[clave] ?? clave}</dt>
-            <dd className="font-medium text-tinta sm:text-right">{renderValor(clave, valor)}</dd>
-          </div>
-        ))}
+      <Fila etiqueta="Título">{detalle.titulo || '—'}</Fila>
+      <Fila etiqueta="Fecha del evento">{detalle.fecha_evento ? formatFechaLarga(detalle.fecha_evento) : '—'}</Fila>
+      <Fila etiqueta="Dirigido a">{detalle.dirigido_a || '—'}</Fila>
+      <Fila etiqueta="Alcance">{detalle.campus.length > 0 ? detalle.campus.join(', ') : '—'}</Fila>
+      {detalle.campos.map((campo) => (
+        <Fila key={campo.clave} etiqueta={campo.etiqueta}>
+          {renderValor(campo, detalle.respuestas[campo.clave])}
+        </Fila>
+      ))}
+      {huerfanas.map(([clave, valor]) => (
+        <Fila key={clave} etiqueta={clave}>
+          {renderValor(null, valor)}
+        </Fila>
+      ))}
     </dl>
   )
 }

@@ -78,7 +78,10 @@ export function TicketBoleto({ ticket, onClick, mostrarDisenador }: TicketBoleto
       </div>
 
       <div className="flex-1">
-        <div className="flex justify-end px-5 pt-3 sm:pt-4">
+        <div className="flex items-start justify-between gap-3 px-5 pt-3 sm:pt-4">
+          <p className="min-w-0 truncate font-semibold text-tinta" title={ticket.titulo ?? undefined}>
+            {ticket.titulo}
+          </p>
           <EstadoChip estado={ticket.estado_real ?? ''} />
         </div>
 
@@ -90,7 +93,7 @@ export function TicketBoleto({ ticket, onClick, mostrarDisenador }: TicketBoleto
                   correccionesUsadas >= CORRECCIONES_MAXIMAS ? 'bg-coral-bruma text-coral' : 'bg-ambar-bruma text-ambar'
                 }`}
               >
-                Correcciones {correccionesUsadas}/{CORRECCIONES_MAXIMAS}
+                {ticket.flujo === 'APROBACION_IA' ? 'Rechazos' : 'Correcciones'} {correccionesUsadas}/{CORRECCIONES_MAXIMAS}
               </span>
             )}
             {ticket.es_excepcional && ticket.excepcional_estado === 'PENDIENTE' && (
@@ -106,7 +109,7 @@ export function TicketBoleto({ ticket, onClick, mostrarDisenador }: TicketBoleto
           <Dato icono={CalendarDays} etiqueta="Creada" valor={formatFechaHora(ticket.fecha_registro)} />
           <Dato icono={PartyPopper} etiqueta="Evento" valor={formatFecha(ticket.fecha_evento)} />
           <Dato icono={CalendarClock} etiqueta="Vence" valor={formatFecha(ticket.fecha_limite)} alerta={Boolean(ticket.fuera_de_plazo)} />
-          {muestraAsignacion && (
+          {muestraAsignacion && ticket.flujo !== 'APROBACION_IA' && (
             <Dato icono={User} etiqueta="Diseñador" valor={ticket.disenador ?? 'Sin asignar'} tenue={!ticket.disenador} />
           )}
         </dl>

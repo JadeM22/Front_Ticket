@@ -7,9 +7,17 @@ interface FileDropProps {
   onArchivo: (archivo: File | null) => void
   aceptar?: string
   error?: string | null
+  /** Texto del recuadro mientras no hay archivo. */
+  indicacion?: string
 }
 
-export function FileDrop({ archivo, onArchivo, aceptar, error }: FileDropProps) {
+export function FileDrop({
+  archivo,
+  onArchivo,
+  aceptar,
+  error,
+  indicacion = 'Haz clic o arrastra un archivo (máx. 50 MB)',
+}: FileDropProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [arrastrando, setArrastrando] = useState(false)
 
@@ -42,7 +50,7 @@ export function FileDrop({ archivo, onArchivo, aceptar, error }: FileDropProps) 
       >
         <UploadCloud className="text-azul-institucional" size={24} />
         <span className="text-sm font-medium text-tinta">
-          {archivo ? archivo.name : 'Haz clic o arrastra un archivo (máx. 50 MB)'}
+          {archivo ? archivo.name : indicacion}
         </span>
       </button>
       <input

@@ -20,6 +20,7 @@ import { AdminCatalogosPage } from '../pages/admin/Catalogos'
 import { AdminBitacoraPage } from '../pages/admin/Bitacora'
 import { AdminFeriadosPage } from '../pages/admin/Feriados'
 import { AnalistaDashboard } from '../pages/analista/Dashboard'
+import { AprobadorIADashboard } from '../pages/aprobadorIA/Dashboard'
 import { TicketDetailPage } from '../pages/TicketDetail'
 import { NotFoundPage } from '../pages/NotFound'
 
@@ -63,6 +64,10 @@ export const router = createBrowserRouter([
               {
                 element: <RequireRole roles={['Asignador']} mensajeDenegado="No tienes acceso a Asignación" />,
                 children: [{ path: '/asignador', element: <AsignadorDashboard /> }],
+              },
+              {
+                element: <RequireRole roles={['Aprobador IA']} />,
+                children: [{ path: '/aprobador-ia', element: <AprobadorIADashboard /> }],
               },
               {
                 element: <RequireRole roles={['Analista', 'Administrador']} />,

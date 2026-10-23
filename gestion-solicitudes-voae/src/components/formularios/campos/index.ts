@@ -1,5 +1,0 @@
-export { CamposArte } from './CamposArte'
-export { CamposVideo } from './CamposVideo'
-export { CamposDircom } from './CamposDircom'
-export { CamposProtocolo } from './CamposProtocolo'
-export { CamposGenerico } from './CamposGenerico'

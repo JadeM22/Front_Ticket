@@ -24,6 +24,8 @@ import { listarAreas, listarTiposSolicitud } from '../../data/catalogos'
 import { formatFecha, hoyTegucigalpaISO, mesTegucigalpa } from '../../lib/date'
 import { coincideCodigo, coincideTexto } from '../../lib/buscar'
 import { exportarCSV, exportarPDF, type ColumnaExportar } from '../../lib/exportar'
+import { INTENTOS_MAXIMOS_IA } from '../../data/afichesIA'
+import { ETIQUETA_FLUJO, type Flujo } from '../../types/domain'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { CLASE_INPUT } from '../../components/ui/Campo'
@@ -112,6 +114,8 @@ export function AnalistaDashboard() {
   const tipoId = params.get('tipo') ? Number(params.get('tipo')) : null
   const estadoFiltro = params.get('estado') ?? ''
   const disenadorFiltro = params.get('disenador') ?? ''
+  // La RPC no filtra por flujo: se filtra en el cliente, igual que estado y diseñador.
+  const flujoFiltro = params.get('flujo') ?? ''
 
   function actualizarFiltro(clave: string, valor: string) {
     const siguiente = new URLSearchParams(params)
@@ -146,9 +150,12 @@ export function AnalistaDashboard() {
   const filasFiltradas = useMemo(
     () =>
       filas.filter(
-        (f) => (!estadoFiltro || f.estado_real === estadoFiltro) && (!disenadorFiltro || f.disenador === disenadorFiltro),
+        (f) =>
+          (!estadoFiltro || f.estado_real === estadoFiltro) &&
+          (!disenadorFiltro || f.disenador === disenadorFiltro) &&
+          (!flujoFiltro || f.flujo === flujoFiltro),
       ),
-    [filas, estadoFiltro, disenadorFiltro],
+    [filas, estadoFiltro, disenadorFiltro, flujoFiltro],
   )
 
   const kpis = useMemo(() => {
@@ -279,6 +286,7 @@ export function AnalistaDashboard() {
       tipoId ? `Tipo: ${tipos.find((t) => t.id === tipoId)?.nombre ?? tipoId}` : null,
       estadoFiltro ? `Estado: ${estadoFiltro}` : null,
       disenadorFiltro ? `Diseñador: ${disenadorFiltro}` : null,
+      flujoFiltro ? `Flujo: ${ETIQUETA_FLUJO[flujoFiltro as Flujo] ?? flujoFiltro}` : null,
       busqueda ? `Búsqueda: "${busqueda}"` : null,
     ].filter(Boolean)
     return partes.length > 0 ? partes.join(' · ') : 'Sin filtros adicionales'
@@ -287,6 +295,7 @@ export function AnalistaDashboard() {
   const columnasExportar: ColumnaExportar<FilaEstadistica>[] = [
     { etiqueta: 'Código', valor: (f) => f.codigo },
     { etiqueta: 'Tipo', valor: (f) => f.tipo_solicitud },
+    { etiqueta: 'Flujo', valor: (f) => ETIQUETA_FLUJO[f.flujo as Flujo] ?? f.flujo },
     { etiqueta: 'Área', valor: (f) => f.area },
     { etiqueta: 'Estado', valor: (f) => f.estado_real },
     { etiqueta: 'Diseñador', valor: (f) => f.disenador ?? '—' },
@@ -297,6 +306,7 @@ export function AnalistaDashboard() {
     { etiqueta: 'Días resolución', valor: (f) => f.dias_resolucion ?? '—' },
     { etiqueta: 'A tiempo', valor: (f) => (f.entregado_a_tiempo == null ? '—' : f.entregado_a_tiempo ? 'Sí' : 'No') },
     { etiqueta: 'Correcciones', valor: (f) => f.correcciones_usadas ?? 0 },
+    { etiqueta: 'Intentos IA', valor: (f) => (f.flujo === 'APROBACION_IA' ? `${f.intentos_usados ?? 0}/${INTENTOS_MAXIMOS_IA}` : '—') },
     { etiqueta: 'Automático', valor: (f) => (f.aprobado_automatico ? 'Sí' : 'No') },
     { etiqueta: 'Excepcional', valor: (f) => (f.es_excepcional ? 'Sí' : 'No') },
   ]
@@ -388,6 +398,19 @@ export function AnalistaDashboard() {
                 {t.nombre}
               </option>
             ))}
+          </select>
+        </label>
+
+        <label className="text-xs text-tinta-suave">
+          Flujo
+          <select
+            className={`${CLASE_INPUT} mt-1 w-auto`}
+            value={flujoFiltro}
+            onChange={(e) => actualizarFiltro('flujo', e.target.value)}
+          >
+            <option value="">Todos</option>
+            <option value="DISENO">{ETIQUETA_FLUJO.DISENO}</option>
+            <option value="APROBACION_IA">{ETIQUETA_FLUJO.APROBACION_IA}</option>
           </select>
         </label>
 
@@ -632,6 +655,7 @@ export function AnalistaDashboard() {
                             ['fecha_registro', 'Registrado'],
                             ['fecha_evento', 'Evento'],
                             ['dias_resolucion', 'Días resolución'],
+                            ['intentos_usados', 'Intentos IA'],
                           ] as [keyof FilaEstadistica, string][]
                         ).map(([columna, etiqueta]) => (
                           <th key={columna} className="cursor-pointer px-3 py-2" onClick={() => alternarOrden(columna)}>
@@ -648,7 +672,12 @@ export function AnalistaDashboard() {
                               {fila.codigo}
                             </Link>
                           </td>
-                          <td className="px-3 py-2">{fila.tipo_solicitud}</td>
+                          <td className="px-3 py-2">
+                            {fila.tipo_solicitud}
+                            {fila.flujo === 'APROBACION_IA' && (
+                              <span className="ml-1.5 rounded-full bg-indigo-bruma px-2 py-0.5 text-xs text-indigo-suave">IA</span>
+                            )}
+                          </td>
                           <td className="px-3 py-2">{fila.area}</td>
                           <td className="px-3 py-2">
                             <EstadoChip estado={fila.estado_real ?? ''} />
@@ -657,6 +686,9 @@ export function AnalistaDashboard() {
                           <td className="px-3 py-2">{formatFecha(fila.fecha_registro)}</td>
                           <td className="px-3 py-2">{formatFecha(fila.fecha_evento)}</td>
                           <td className="px-3 py-2">{fila.dias_resolucion ?? '—'}</td>
+                          <td className="px-3 py-2">
+                            {fila.flujo === 'APROBACION_IA' ? `${fila.intentos_usados ?? 0}/${INTENTOS_MAXIMOS_IA}` : '—'}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
