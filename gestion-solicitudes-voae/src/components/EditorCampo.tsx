@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from './ui/Button'
 import { Campo, CLASE_INPUT } from './ui/Campo'
+import { InputNumero } from './form/InputNumero'
 import { FormularioDinamico } from './formularios/FormularioDinamico'
 import { actualizarCampo, crearCampo, type CampoFormulario } from '../data/camposFormulario'
 import { claveDesdeEtiqueta, REGEX_CLAVE_CAMPO } from '../lib/claveCampo'
@@ -251,17 +252,17 @@ export function EditorCampo({ tipoSolicitudId, campo, existentes, onGuardado, on
       {tipoCampo === 'NUMERO' && (
         <div className="grid grid-cols-2 gap-4">
           <Campo etiqueta="Mínimo">
-            <input type="number" min={0} className={CLASE_INPUT} value={min} onChange={(e) => setMin(e.target.value)} />
+            <InputNumero className={CLASE_INPUT} value={min} onChange={setMin} />
           </Campo>
           <Campo etiqueta="Máximo">
-            <input type="number" min={0} className={CLASE_INPUT} value={max} onChange={(e) => setMax(e.target.value)} />
+            <InputNumero className={CLASE_INPUT} value={max} onChange={setMax} />
           </Campo>
         </div>
       )}
 
       {tipoCampo === 'ETIQUETAS' && (
         <Campo etiqueta="Cantidad máxima de elementos (opcional)">
-          <input type="number" min={1} className={CLASE_INPUT} value={max} onChange={(e) => setMax(e.target.value)} />
+          <InputNumero min={1} className={CLASE_INPUT} value={max} onChange={setMax} />
         </Campo>
       )}
 
@@ -270,13 +271,7 @@ export function EditorCampo({ tipoSolicitudId, campo, existentes, onGuardado, on
           etiqueta={tipoCampo === 'ETIQUETAS' ? 'Longitud máxima de cada elemento' : 'Longitud máxima (caracteres)'}
           ayuda={tipoCampo === 'ETIQUETAS' ? 'Si se deja vacía, 100 caracteres.' : undefined}
         >
-          <input
-            type="number"
-            min={1}
-            className={CLASE_INPUT}
-            value={maxLongitud}
-            onChange={(e) => setMaxLongitud(e.target.value)}
-          />
+          <InputNumero min={1} className={CLASE_INPUT} value={maxLongitud} onChange={setMaxLongitud} />
         </Campo>
       )}
 

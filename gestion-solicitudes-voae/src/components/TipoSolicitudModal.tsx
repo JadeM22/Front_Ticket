@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { Campo, CLASE_INPUT } from './ui/Campo'
+import { InputNumero } from './form/InputNumero'
 import { crearTipoSolicitud, actualizarTipoSolicitud, type TipoSolicitud } from '../data/catalogos'
 import { mensajeError } from '../lib/errors'
 import { etiquetasGenerales } from '../lib/validacionFormularios'
@@ -127,12 +128,11 @@ function FormularioTipoSolicitud({
 
       <div className="grid grid-cols-2 gap-4">
         <Campo etiqueta="Días estimados" ayuda="Mínimo 10 días hábiles">
-          <input
-            type="number"
+          <InputNumero
             min={10}
             className={CLASE_INPUT}
-            value={diasEstimados}
-            onChange={(e) => setDiasEstimados(Number(e.target.value))}
+            value={String(diasEstimados)}
+            onChange={(valor) => setDiasEstimados(Number(valor) || 0)}
           />
         </Campo>
         <Campo etiqueta="¿Días hábiles?">

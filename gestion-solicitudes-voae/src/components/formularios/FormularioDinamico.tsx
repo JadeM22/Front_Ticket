@@ -3,6 +3,7 @@ import { Campo, CLASE_INPUT } from '../ui/Campo'
 import { FechaInput } from '../ui/FechaInput'
 import { HoraInput } from '../ui/HoraInput'
 import { EtiquetasInput } from './EtiquetasInput'
+import { InputNumero } from '../form/InputNumero'
 import { hoyTegucigalpaISO } from '../../lib/date'
 import { MAX_LONGITUD_ETIQUETA, validarCampo } from '../../lib/validacionFormularios'
 import type { DefinicionCampo, Respuestas, ValorCampo } from '../../types/domain'
@@ -122,15 +123,14 @@ function CampoDinamico({ campo, valor, error, onCambiar }: CampoDinamicoProps) {
     case 'NUMERO':
       control = (
         <Campo etiqueta={etiquetaDe(campo)} ayuda={ayudaDe(campo, texto)}>
-          <input
-            type="number"
-            inputMode="decimal"
+          <InputNumero
+            permiteDecimales
             className={claseInput}
             value={texto}
             placeholder={placeholder}
             min={min}
             max={max}
-            onChange={(e) => onCambiar(e.target.value)}
+            onChange={onCambiar}
           />
         </Campo>
       )
