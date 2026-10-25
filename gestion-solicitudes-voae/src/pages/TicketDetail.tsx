@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -79,6 +79,34 @@ export function TicketDetailPage() {
     void queryClient.invalidateQueries({ queryKey: clave })
     void queryClient.invalidateQueries({ queryKey: ['tickets', 'estado-real'] })
   }
+
+  // Al llegar desde la tarjeta de "Dictaminar" (Validador/Por dictaminar del Jefe), abre de una vez el
+  // modal de decisión que corresponda. Una sola vez por navegación, nunca al refrescar el ticket.
+  const yaAbrioDictamenRef = useRef(false)
+  useEffect(() => {
+    if (!ticket || yaAbrioDictamenRef.current) return
+    const abrir = (location.state as { abrirDictamen?: boolean } | null)?.abrirDictamen
+    if (!abrir) return
+    yaAbrioDictamenRef.current = true
+    const { estadoReal } = ticket
+    const esIATicket = estadoReal.flujo === 'APROBACION_IA'
+    const esValidacionTicket = estadoReal.flujo === 'VALIDACION'
+    const esperando = estadoReal.estado_registrado === 'Enviado' || estadoReal.estado_registrado === 'Retrasado'
+    const ultimoEnvio = ultimoEnvioDe(ticket.enviosIA)
+    const ultimoEnvioRevisado = ultimoEnvio != null && ticket.revisionesIA.some((r) => r.envio_id === ultimoEnvio.id)
+    // setState se dispara desde el callback, no de forma síncrona en el cuerpo del efecto.
+    const temporizador = setTimeout(() => {
+      if (esIATicket && tieneRol('Validador') && esperando && ultimoEnvio != null && !ultimoEnvioRevisado) {
+        setModalRevision(true)
+      } else if (esValidacionTicket && tieneRol('Validador') && esperando && ticket.decisionValidacion == null) {
+        setModalValidacion(true)
+      } else if (!esIATicket && !esValidacionTicket && tieneRol('Jefe de Área') && estadoReal.estado_real === 'Finalizado') {
+        setModalDictamen(true)
+      }
+    }, 0)
+    return () => clearTimeout(temporizador)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticket])
 
   async function manejarTomar() {
     if (!ticket || !perfil) return

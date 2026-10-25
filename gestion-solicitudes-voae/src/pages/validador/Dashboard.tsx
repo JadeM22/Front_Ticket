@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
-import { AlertTriangle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { AlertTriangle, Building2, User } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { INTENTOS_MAXIMOS_IA } from '../../data/afichesIA'
 import { formatFecha, formatFechaHora } from '../../lib/date'
 import { Card } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { EstadoChip } from '../../components/EstadoChip'
@@ -37,7 +38,7 @@ export function ValidadorDashboard() {
   return (
     <div className="space-y-8">
       <Seccion
-        titulo="Solicitudes por validar"
+        titulo="Solicitudes pendientes"
         tickets={validaciones}
         vacio="No hay solicitudes esperando tu decisión"
         detalle={() => null}
@@ -71,7 +72,16 @@ function Seccion({
   extra?: ReactNode
   detalle: (ticket: TicketEstadoReal) => ReactNode
 }) {
+  const navigate = useNavigate()
   const vencidos = tickets.filter((t) => t.fuera_de_plazo).length
+
+  function abrirDetalle(ticketId: number) {
+    navigate(`/tickets/${ticketId}`)
+  }
+
+  function abrirDictamen(ticketId: number) {
+    navigate(`/tickets/${ticketId}`, { state: { abrirDictamen: true } })
+  }
 
   return (
     <section className="space-y-3">
@@ -89,9 +99,17 @@ function Seccion({
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {tickets.map((ticket) => (
-            <Link key={ticket.ticket_id} to={`/tickets/${ticket.ticket_id}`} className="block">
+            <article
+              key={ticket.ticket_id}
+              onClick={() => abrirDetalle(ticket.ticket_id!)}
+              onKeyDown={(e) => e.key === 'Enter' && abrirDetalle(ticket.ticket_id!)}
+              role="button"
+              tabIndex={0}
+              aria-label={`Ticket ${ticket.codigo}`}
+              className="cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul-institucional"
+            >
               <Card
-                className={`h-full space-y-2 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md ${
+                className={`flex h-full flex-col space-y-2 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md ${
                   ticket.fuera_de_plazo ? 'border-2 border-coral!' : ''
                 }`}
               >
@@ -102,9 +120,19 @@ function Seccion({
                 <p className="truncate font-semibold text-tinta" title={ticket.titulo ?? undefined}>
                   {ticket.titulo || ticket.tipo_solicitud}
                 </p>
-                <p className="truncate text-sm text-tinta-suave">
-                  {ticket.tipo_solicitud} · {ticket.solicitante} · {ticket.area}
-                </p>
+                <div className="space-y-0.5">
+                  <p
+                    className="flex items-start gap-1.5 truncate text-sm font-medium text-tinta"
+                    title={ticket.solicitante ?? undefined}
+                  >
+                    <User size={14} className="mt-0.5 flex-none text-tinta-suave" />
+                    {ticket.solicitante}
+                  </p>
+                  <p className="flex items-start gap-1.5 text-xs text-tinta-suave" title={ticket.area ?? undefined}>
+                    <Building2 size={13} className="mt-0.5 flex-none" />
+                    <span className="line-clamp-2">{ticket.area}</span>
+                  </p>
+                </div>
                 <div className="space-y-0.5 border-t border-azul-niebla/60 pt-2 text-xs text-tinta-suave">
                   {detalle(ticket)}
                   <p className={ticket.fuera_de_plazo ? 'flex items-center gap-1 font-semibold text-coral' : undefined}>
@@ -114,8 +142,17 @@ function Seccion({
                   <p>Evento: {formatFecha(ticket.fecha_evento)}</p>
                   <p>Solicitada: {formatFechaHora(ticket.fecha_registro)}</p>
                 </div>
+                <Button
+                  className="mt-auto w-full"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    abrirDictamen(ticket.ticket_id!)
+                  }}
+                >
+                  Dictaminar
+                </Button>
               </Card>
-            </Link>
+            </article>
           ))}
         </div>
       )}
