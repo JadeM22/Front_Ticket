@@ -67,7 +67,7 @@ nav.toc a { color:#1c3d6e; text-decoration:none } nav.toc { page-break-after: al
 <p class="tit">${titulo}</p><p class="sub">${subtitulo}</p>
 <p class="inst">Vicerrectoría de Orientación y Asuntos Estudiantiles (VOAE)<br>Universidad Nacional Autónoma de Honduras (UNAH)</p>
 <table class="meta"><tr><td>Versión</td><td>${version}</td></tr><tr><td>Fecha</td><td>${fecha}</td></tr>
-<tr><td>Elaborado por</td><td>________________________________</td></tr><tr><td>Revisado por</td><td>________________________________</td></tr></table></div>
+<tr><td>Elaborado por</td><td>Jade Miralda y Angie Enamorado</td></tr></table></div>
 <nav class="toc"><h2>Contenido</h2><ul>${toc}</ul></nav>
 ${cuerpo}</body></html>`
 

@@ -119,3 +119,118 @@ y capturas pendientes. Se completa mientras se redactan los manuales.
 - **B6** vista móvil (pospuesta).
 - **Jefe:** cronómetro HH:MM de un ticket propio, entregables, Pedir corrección, Aprobar y el contador
   5/5. Necesitan un ticket del área en "Finalizado" y horario hábil para dictaminar.
+
+## Tercera sesión (14/10/2026, desde las 7:00 p. m.)
+
+- Entorno: `npm install` no se había corrido con las dependencias nuevas (`docx`, `marked`,
+  `puppeteer-core`) — `npm run manuales`/los generadores fallaban con `Cannot find module 'docx'`.
+  Se corrió `npm install` (agregó 70 paquetes) y los generadores funcionaron sin tocar su código.
+- La extensión **Claude in Chrome no está conectada** en esta sesión (`tabs_context_mcp` devuelve
+  "Browser extension is not connected"). No se tomó ninguna captura nueva; todo el trabajo de esta
+  sesión fue con las capturas que ya existían de la segunda sesión. Pendiente: reconectar la
+  extensión antes de las capturas de Analista y las de mañana (Jefe/Diseñador en horario hábil).
+- También es fuera de horario hábil (miércoles 7:00 p. m.), así que tampoco se podían tomar las
+  capturas de dictamen aunque Chrome hubiera estado conectado.
+- **Manual del Asignador:** escrito completo (`Manual_Usuario_Asignador.md/.docx/.pdf`), con sus 7
+  capturas ya existentes. Se renumeraron de nombres descriptivos a `01_…` a `07_…` en el orden en que
+  aparecen en el manual (antes: `asignacion_vista_general.jpg`, etc.). Verificado: 0 coincidencias de
+  "[Falta la imagen" en el PDF y 7 imágenes incrustadas en el .docx (conteo de `word/media/`).
+- **Manual del Diseñador:** escrito con sus 9 capturas ya existentes, también renumeradas `01_…` a
+  `09_…`. La sección 6 ("Si el Jefe de Área pide una corrección") quedó solo con texto, sin captura,
+  porque subir la versión 2 después de una corrección real necesita el dictamen de mañana — se
+  documentó la regla contra el código (`src/data/tickets.ts`, límite de 5 correcciones) sin inventar
+  pantallas. Mismo resultado de verificación: 0 "[Falta la imagen", imágenes incrustadas completas.
+- **Manual de Jefe de Área:** escrito con sus 8 capturas ya existentes (renumeradas `01_…` a `08_…`).
+  La sección 3 ("Dictaminar un ticket") describe el modal de dictamen (Aprobar / Pedir corrección,
+  contador "Correcciones usadas: X/5", comentario obligatorio) tomando el texto exacto de
+  `src/components/DictamenModal.tsx`, sin capturas — quedan para mañana en horario hábil con un
+  ticket real del área esperando dictamen. También incluye, sin captura adicional, cómo enviar una
+  solicitud normal remitiendo al manual del Empleado, como pide el prompt.
+- Claude in Chrome se reconectó más tarde en la misma sesión. Entorno confirmado por la responsable:
+  publicado (`front-ticket.pages.dev`).
+- **Cuenta de prueba "Manual Analista" no existía** (a diferencia de los demás roles, el estado del
+  trabajo decía "Analista: sin empezar" y no hay rastro de ella en ninguna sesión anterior). Al
+  iniciar sesión la responsable entró primero con su propia cuenta real ("Brenda Miralda", rol
+  Analista) — se le avisó que ese nombre saldría en cada captura y, a su pedido, se creó una cuenta
+  de prueba dedicada en su lugar: **Manual Analista .**, `analista@gmail.com`, Área de Desarrollo
+  Humano, rol Analista (mismo patrón de correo que las demás cuentas "Manual …", no `@voae.test` como
+  decía el prompt original). Se creó desde la cuenta real `angienam2004` (que ya tenía el rol
+  Administrador) porque es la que estaba activa en ese momento; esa cuenta no se usó para ninguna
+  captura del manual, solo para este paso de creación. La contraseña temporal se mostró una sola vez
+  y la copió la responsable directamente desde su pantalla — no se escribió en ningún archivo ni en
+  el chat.
+- **Manual del Analista:** escrito completo con 6 capturas nuevas (`capturas/analista/01_…` a
+  `06_…`): KPIs y filtros, filtros fijos con la gráfica "Por tipo de solicitud", un filtro de Estado
+  aplicado con "Limpiar filtros" activo, la tabla de detalle filtrada por código, el menú Exportar
+  (CSV/PDF) y el PDF exportado abierto. Se documentó, confirmado contra `src/lib/permisos.ts` y lo
+  visto en pantalla, que el Analista no ve la columna Diseñador ni la gráfica "Carga por diseñador"
+  (quedan vacías) porque ese rol no está en la lista de roles que ven la asignación.
+  - Para la captura del PDF: exportarlo descarga un archivo al equipo, así que se pidió permiso antes
+    (la responsable aprobó). `file://` sigue bloqueado para la extensión, así que se sirvió el PDF
+    descargado con un servidor estático local temporal (`npx serve`, puerto 4173, solo mientras duró
+    la captura) y se abrió por `http://localhost:4173/…` para poder capturarlo con Chrome. El
+    servidor se detuvo apenas se tomó la captura.
+  - Verificación: 0 "[Falta la imagen" en el PDF generado.
+- **Verificación final de la sesión:** `npm run manuales` corrió de punta a punta sin errores,
+  generando los 12 archivos (6 `.docx` + 6 `.pdf`) de una sola vez por primera vez en el proyecto — ya
+  no falla con los 6 `.md` completos. Se repitió el conteo de "[Falta la imagen" en los 6 PDFs: 0 en
+  todos.
+
+## Cuarta sesión (14/10/2026, misma noche — horario hábil desactivado temporalmente en la base)
+
+La responsable desactivó temporalmente la restricción de horario hábil en la base de datos para
+poder completar esta noche las capturas que, en teoría, solo se podían tomar mañana en horario
+hábil. Se recargó la página antes de cada captura, como pidió.
+
+- **Las 4 capturas de dictamen** (más 2 adicionales que salieron del mismo flujo), con el ticket
+  real `ADH-0036` (id 122):
+  1. Jefe de Área: ticket Finalizado con el cronómetro "24:00" corriendo (ya no pausado, al estar el
+     horario hábil forzado) → `jefe/09_cronometro_corriendo.jpg`.
+  2. Jefe de Área: Adjuntos/Entregables/Progreso del mismo ticket → `jefe/10_entregables_progreso.jpg`.
+  3. Jefe de Área: modal "Pedir corrección" con un comentario de ejemplo sobre el logo →
+     `jefe/11_pedir_correccion_dialogo.jpg`.
+  4. Ticket recargado en "Corrección", contador "Correcciones 1/5" → `jefe/12_correccion_contador_1_5.jpg`.
+  5. Diseñador: "Mis tickets" con el ticket en la columna Corrección →
+     `disenador/10_mis_tickets_correccion.jpg`.
+  6. Diseñador: subió la Versión 2 (por enlace); el detalle recargado muestra Versión 1 + Versión 2
+     y una nueva sección **Dictámenes** con el comentario del jefe, y el stepper ya en "Dictamen
+     final" (6 pasos en total cuando hay corrección: Enviada → En diseño → Dictamen del jefe →
+     Corrección → Dictamen final → Aprobada) → `disenador/11_version2_entregable.jpg`.
+  7. Jefe de Área: modal de dictamen con "Aprobar" elegida, "Correcciones usadas: 1/5" →
+     `jefe/13_aprobar_dialogo.jpg`.
+  8. Ticket recargado, ya "Aprobado" → `jefe/14_aprobado.jpg`.
+  - Los manuales de Jefe de Área y Diseñador se actualizaron para usar estas capturas reales en vez
+    del texto-sin-imagen que tenían (secciones 3 y 6 respectivamente).
+- **B2 (Empleado, primer ingreso):** el Administrador (`Manual Administador .`) creó la cuenta
+  **Prueba Primer Ingreso Manual .** (`prueba.primer.ingreso@voae.test`, Área de Desarrollo Humano,
+  rol Empleado). La responsable copió la contraseña temporal de su pantalla (no quedó en ningún
+  archivo ni en el chat) e inició sesión con ella → se capturó la pantalla "Cambia tu contraseña"
+  obligatoria → `empleado/23_cambio_password_primer_ingreso.jpg`. **No se completó** el cambio de
+  contraseña (se dejó la cuenta tal cual, a la espera de que se decida si se termina de configurar o
+  se descarta, igual que pasó con "Prueba Manual Ejemplo Ficticio" en la segunda sesión).
+- **B6 (vista móvil):** a diferencia de intentos anteriores, el modo dispositivo de Chrome DevTools
+  (F12 → Ctrl+Shift+M, perfil 390×844) activado manualmente por la responsable **sí funcionó** esta
+  vez — la limitación documentada antes era específica de la herramienta `resize_window`, no del
+  modo dispositivo en sí. Se capturó "Mis solicitudes" del Empleado en esa resolución (boletos en
+  una columna, menú de hamburguesa) → `empleado/24_vista_movil_mis_solicitudes.jpg`.
+- Los tres manuales (`Manual_Usuario_Jefe_de_Area.md`, `Manual_Usuario_Disenador.md`,
+  `Manual_Usuario_Empleado.md`) y sus `.docx`/`.pdf` se regeneraron con `npm run manuales`: los 12
+  archivos se generaron sin errores y 0 "[Falta la imagen" en los 6 PDFs.
+
+## Pendientes para la próxima sesión
+
+- **Reactivar el horario hábil en la base** cuando la responsable confirme que ya no lo necesita
+  desactivado (se lo recordamos al cerrar esta sesión).
+- Decidir qué hacer con la cuenta **Prueba Primer Ingreso Manual .**: completar su cambio de
+  contraseña (perdiendo la posibilidad de volver a mostrar la pantalla de primer ingreso con ella) o
+  dejarla así y crear otra cuenta nueva si se necesita repetir esta captura más adelante.
+- Revisar visualmente al menos un `.docx` y un `.pdf` de los seis manuales (portada, índice, tablas e
+  imágenes) — sigue pendiente por la falta de `poppler-utils` para el visor de Claude Code; la
+  verificación hecha hasta ahora es solo automática (conteo de "[Falta la imagen" + imágenes
+  incrustadas).
+- Decidir si la cuenta real `angienam2004` debe seguir teniendo el rol Administrador o si conviene
+  usar siempre `Manual Administador .` (`admin@gmail.com`) para evitar mezclar cuentas reales y de
+  prueba en tareas administrativas futuras.
+- Con esto, **las 6 secciones de captura pendientes del documento de estado original (B1–B9 más los
+  4 de dictamen) quedan completas.** Falta solo la verificación visual manual de los documentos
+  generados (punto anterior) antes de dar el trabajo por cerrado.

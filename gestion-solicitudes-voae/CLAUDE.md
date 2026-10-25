@@ -29,7 +29,7 @@ The git root is one level up (`Front_Ticket/`) and holds only a stub `README.md`
 - `npm run manuales` — regenerates the per-role user manuals (`.docx` + `.pdf`) from the Markdown sources
   in `docs/manuales/` via `scripts/manuales/` (`md2docx.cjs` uses `docx`; `md2pdf.mjs` uses
   `puppeteer-core`, so it needs a locally installed Chrome). Screenshots referenced by the manuals live in
-  `docs/manuales/capturas/<rol>/`. Edit the `.md`, never the generated files.
+  `docs/manuales/capturas/<rol>/`. Edit the `.md`, never the generated files; unrelated to the app build.
 
 There is no test runner configured. There is no dev-time way to exercise the Supabase-dependent flows
 without real Supabase env vars (see below) — verification here means `build` + `lint` passing, not running
@@ -60,18 +60,22 @@ below). Later changes are numbered "Partes" applied in order, one at a time, in 
 see them), `cambios_bd_2026-10-23.sql` (28–35: rol "Aprobador IA" → "Validador", campus oficiales,
 `TipoSolicitud.categoria`/`etiquetas_generales`/`aviso`, campo ETIQUETAS, flujo VALIDACION +
 `DecisionValidacion`), plus `analista_ver_tickets.sql`. The formularios-configurables/afiches-IA changes
-before Parte 28 were applied from chat and have no file here. Code comments cite these by number ("Parte 27"), so grep
+before Parte 28 were applied from chat and have no file here. `cambios_bd_2026-10-25.sql` (Partes 36–42:
+role-name-free messages, Jefe de Área loses designer visibility, `Campus` read-only, `Areas.tipo`
+COORDINACION + `JefaturasArea`, días-hábiles-only event/FECHA dates, tipo "Trifolio") is the latest and has
+not been applied to the frontend yet. Code comments cite these by number ("Parte 27"), so grep
 `docs/cambios/` for `PARTE <n>` to find the rule a comment refers to. `docs/semilla_datos_prueba.sql` is
 test seed data. All of these are kept here for reference only — `src/types/database.ts` is the authoritative, generated API
 surface and is already regenerated against the live schema. Do not hand-edit `database.ts`; regenerate it
 if the remote schema changes again, and when it does, grep for whatever old table/column names disappeared
-to find every call site that needs updating (that's exactly how the v2 migration was done). The `supabase`
-CLI is a devDependency; `supabase/.temp/linked-project.json` holds the project ref, but `--linked` fails
-("Cannot find project ref"), so regenerate with
-`npx supabase gen types typescript --project-id jpryccmjymiixnvgeuka --schema Seguridad --schema Solicitudes`,
-written over `src/types/database.ts`. The generated `Insert` types mark DB-filled NOT NULL columns as
-required (e.g. `EnvioIA.intento`/`usuario_registro`, `RevisionIA.ticket_id`/`revisor_id`); those inserts
-cast to `TablesInsert<…>` with a comment rather than sending the columns. There is no local Supabase stack (`supabase/` has no `config.toml`, migrations, or
+to find every call site that needs updating (that's exactly how past migrations were done). The `supabase`
+CLI is a devDependency; `supabase/.temp/linked-project.json` holds the project ref, but `--linked` fails on
+a fresh checkout until you run `supabase link --project-ref jpryccmjymiixnvgeuka` once (or regenerate with
+`npx supabase gen types typescript --project-id jpryccmjymiixnvgeuka --schema Seguridad --schema Solicitudes`
+to skip linking entirely), written over `src/types/database.ts`. The generated `Insert` types mark DB-filled
+NOT NULL columns as required (e.g. `EnvioIA.intento`/`usuario_registro`, `RevisionIA.ticket_id`/`revisor_id`);
+those inserts cast to `TablesInsert<…>` with a comment rather than sending the columns. There is no local
+Supabase stack (`supabase/` has no `config.toml`, migrations, or
 functions) — the CLI is only used against the remote project.
 
 ## Architecture
@@ -191,8 +195,10 @@ blocked once the ticket is `Aprobado`, gated client-side in `TicketDetail.tsx` b
 the same upload→insert→rollback-on-failure pattern; `src/lib/archivos.ts` holds the shared
 filename-cleaning/path-building helpers both use.
 
-**Autoría**: `TicketLog.usuario_registro` and `UsuariosRolesLog.usuario_registro` record who made each
-change; `null` always means an automated/system action, rendered as **"Sistema"**. Names are resolved via
+**Autoría**: `TicketLog.usuario_registro`, `UsuariosRolesLog.usuario_registro`, and the newer
+`AsignacionLog`/`FeriadosLog` bitácoras (`src/data/bitacora.ts`, surfaced on `pages/admin/Bitacora.tsx` and
+`pages/admin/Feriados.tsx`) all record who made each change; `null` always means an automated/system action,
+rendered as **"Sistema"**. Names are resolved via
 `fnUsuariosNombresTabla()` (an Empleado can't read other users' `Usuarios` rows directly) through
 `src/hooks/useNombresUsuarios.ts#nombreDe(usuarioId)` — use this hook instead of querying `Usuarios`
 whenever a screen needs to show who did something (ticket history, bitácora, "creado por" on catálogos).
@@ -223,7 +229,9 @@ Jefe de Área files excepcionales from `/jefe/excepcional`, which reuses `Asiste
 `excepcional` prop; the difference is a shorter minimum event date computed server-side
 (`fnFechaEventoMinimaEscalar`, `p_excepcional`) and the `es_excepcional` flag on the ticket. Who can see a
 ticket's designer/assigner is decided in the DB (Parte 27 nulls those view columns);
-`lib/permisos.ts#puedeVerAsignacion` only stops the UI from rendering "Sin asignar" to roles that get nulls.
+`lib/permisos.ts#puedeVerAsignacion` only stops the UI from rendering "Sin asignar" to roles that get nulls
+— currently Diseñador, Asignador, Administrador and the Jefe of the ticket's own area (`ROLES_CON_ASIGNACION`
+in that file; Parte 37, not yet applied here, drops Jefe de Área from this list).
 
 **Horario hábil**: business hours (Mon–Fri 8:00–16:00, excluding feriados) are decided by the DB
 (`fnEsHorarioHabilEscalar`), never the browser clock. Read it through `hooks/useHorarioHabil.ts` (shared
@@ -267,6 +275,26 @@ state).
 Google Fonts) — reuse those tokens (`bg-azul-noche`, `text-menta-profundo`, etc.) rather than introducing
 new colors. `EstadoChip.tsx` is the single mapping from `estado_real` string to color/icon; update it there
 if a new status is ever added instead of duplicating the color logic elsewhere.
+
+## Cambios 25/10 (Partes 36–42)
+
+`docs/cambios/cambios_bd_2026-10-25.sql` is already applied to Supabase; the frontend has **not** been
+updated for it yet (this is the next round of work). What it requires once applied:
+
+- Ningún texto visible nombra roles internos (Validador/Asignador); solo la Administración de usuarios y
+  roles los muestra.
+- Solo Diseñador/Asignador y Administrador ven el diseñador de un ticket —
+  `ROLES_CON_ASIGNACION` (`src/lib/permisos.ts`) sin Jefe de Área.
+- `Campus` es de solo lectura desde la app; no hay sección Campus en Catálogo.
+- `Seguridad.Areas.tipo` es `'AREA' | 'COORDINACION'`; `Seguridad.JefaturasArea` registra qué Jefes de Área
+  dirigen coordinaciones adicionales a la suya.
+- Fechas de solicitudes (evento, campos `FECHA`): solo días hábiles, regla centralizada en
+  `src/lib/fechas.ts` — la base también la valida.
+- Enlaces (adjuntos, entregables, campos `URL`): siempre normalizados con
+  `normalizarEnlace()` de `src/lib/enlaces.ts` antes de guardarse.
+- Inputs numéricos: siempre `InputNumero` (sin rueda, sin negativos), nunca `<input type="number">` a mano.
+- El tipo "Trifolio" existe de nuevo — viene enteramente de `TipoSolicitud`/`CampoFormulario`, nada
+  hardcodeado en el frontend.
 
 ## Deployment
 

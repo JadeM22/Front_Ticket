@@ -164,7 +164,7 @@ const portada = [
     children: [new TextRun({ text: subtitulo, size: 26, color: GRIS })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Vicerrectoría de Orientación y Asuntos Estudiantiles (VOAE)', size: 22 })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 1200 }, children: [new TextRun({ text: 'Universidad Nacional Autónoma de Honduras (UNAH)', size: 22 })] }),
-  ...[['Versión', version], ['Fecha', fecha], ['Elaborado por', '______________________________'], ['Revisado por', '______________________________']]
+  ...[['Versión', version], ['Fecha', fecha], ['Elaborado por', 'Jade Miralda y Angie Enamorado']]
     .map(([a, b]) => new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 },
       children: [new TextRun({ text: a + ': ', bold: true, size: 22, color: AZUL }), new TextRun({ text: b, size: 22 })] })),
   new Paragraph({ children: [new PageBreak()] }),

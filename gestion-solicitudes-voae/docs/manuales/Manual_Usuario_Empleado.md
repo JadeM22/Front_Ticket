@@ -35,6 +35,8 @@ La primera vez que entras con la contraseña temporal que te dieron, el sistema 
 cambiarla** antes de dejarte usar el resto de la aplicación: escribe una contraseña nueva y
 confírmala para continuar. Mientras no la cambies, no puedes ver tus solicitudes ni enviar nuevas.
 
+![Pantalla "Cambia tu contraseña": es tu primer ingreso, debes definir una nueva antes de continuar](capturas/empleado/23_cambio_password_primer_ingreso.jpg)
+
 ## 2.3 Conoce la pantalla
 
 Una vez dentro verás:
@@ -140,6 +142,11 @@ Aquí ves **todas** tus solicitudes, con filtros y búsqueda.
 - El contador "N de M solicitudes" te dice cuántas estás viendo del total.
 
 ![Filtro de tipo "Diploma" aplicado: el contador muestra "1 de 5 solicitudes"](capturas/empleado/21_filtros_mis_solicitudes.jpg)
+
+"Mis solicitudes" también funciona bien desde el celular: los boletos se acomodan en una sola
+columna y el menú lateral se convierte en un botón de hamburguesa.
+
+![Vista móvil de "Mis solicitudes": boletos en una columna y menú de hamburguesa](capturas/empleado/24_vista_movil_mis_solicitudes.jpg)
 
 ## 4.3 Detalle del ticket
 
