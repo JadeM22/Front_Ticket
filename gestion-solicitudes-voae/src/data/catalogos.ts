@@ -42,6 +42,14 @@ export async function actualizarArea(id: number, cambios: TablesUpdate<{ schema:
   if (error) throw error
 }
 
+/** No envía `ultimo_consecutivo`: la base lo inicia en 0. */
+export async function crearArea(
+  payload: Omit<TablesInsert<{ schema: 'Seguridad' }, 'Areas'>, 'id' | 'ultimo_consecutivo'>,
+) {
+  const { error } = await supabase.schema('Seguridad').from('Areas').insert(payload)
+  if (error) throw error
+}
+
 export async function actualizarTipoSolicitud(
   id: number,
   cambios: TablesUpdate<{ schema: 'Solicitudes' }, 'TipoSolicitud'>,
@@ -85,20 +93,9 @@ export async function actualizarFeriado(id: number, cambios: TablesUpdate<{ sche
 
 export type Campus = Tables<{ schema: 'Solicitudes' }, 'Campus'>
 
-/** Activos e inactivos, por `orden`. El formulario de solicitud filtra los activos. */
+/** Catálogo fijo, de solo lectura desde la app (Parte 38): la base ya rechaza insertar/editar/borrar. */
 export async function listarCampus(): Promise<Campus[]> {
   const { data, error } = await supabase.schema('Solicitudes').from('Campus').select('*').order('orden').order('nombre')
   if (error) throw error
   return data ?? []
-}
-
-export async function crearCampus(payload: Omit<TablesInsert<{ schema: 'Solicitudes' }, 'Campus'>, 'id'>) {
-  const { error } = await supabase.schema('Solicitudes').from('Campus').insert(payload)
-  if (error) throw error
-}
-
-/** No hay borrado: un campus se desactiva con `estado = false`. */
-export async function actualizarCampus(id: number, cambios: Omit<TablesUpdate<{ schema: 'Solicitudes' }, 'Campus'>, 'id'>) {
-  const { error } = await supabase.schema('Solicitudes').from('Campus').update(cambios).eq('id', id)
-  if (error) throw error
 }

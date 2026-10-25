@@ -1,26 +1,24 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ArrowDown, ArrowUp, Plus } from 'lucide-react'
-import {
-  actualizarArea,
-  actualizarCampus,
-  listarAreas,
-  listarCampus,
-  listarTiposSolicitud,
-  type Campus,
-  type TipoSolicitud,
-} from '../../data/catalogos'
+import { Plus } from 'lucide-react'
+import { actualizarArea, listarAreas, listarTiposSolicitud, type Area, type TipoSolicitud } from '../../data/catalogos'
 import { mensajeError } from '../../lib/errors'
 import { formatFecha } from '../../lib/date'
 import { useNombresUsuarios } from '../../hooks/useNombresUsuarios'
 import { TipoSolicitudModal } from '../../components/TipoSolicitudModal'
 import { CamposTipoModal } from '../../components/CamposTipoModal'
-import { CampusModal } from '../../components/CampusModal'
+import { AreaModal } from '../../components/AreaModal'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 import { CATEGORIAS_TIPO, ETIQUETA_FLUJO, type Flujo } from '../../types/domain'
+
+interface ModalArea {
+  abierto: boolean
+  area: Area | null
+  tipo: 'AREA' | 'COORDINACION'
+}
 
 export function AdminCatalogosPage() {
   const queryClient = useQueryClient()
@@ -30,18 +28,13 @@ export function AdminCatalogosPage() {
     tipo: null,
   })
   const [tipoCampos, setTipoCampos] = useState<TipoSolicitud | null>(null)
-  const [modalCampus, setModalCampus] = useState<{ abierto: boolean; campus: Campus | null }>({
-    abierto: false,
-    campus: null,
-  })
-  const [ordenandoCampus, setOrdenandoCampus] = useState(false)
+  const [modalArea, setModalArea] = useState<ModalArea>({ abierto: false, area: null, tipo: 'AREA' })
 
   const { data: areas = [], isLoading: cargandoAreas } = useQuery({ queryKey: ['catalogos', 'areas'], queryFn: listarAreas })
   const { data: tipos = [], isLoading: cargandoTipos } = useQuery({
     queryKey: ['catalogos', 'tipos-solicitud'],
     queryFn: listarTiposSolicitud,
   })
-  const { data: campus = [], isLoading: cargandoCampus } = useQuery({ queryKey: ['catalogos', 'campus'], queryFn: listarCampus })
 
   async function manejarGuardarArea(id: number, estado: boolean) {
     try {
@@ -56,128 +49,50 @@ export function AdminCatalogosPage() {
     void queryClient.invalidateQueries({ queryKey: ['catalogos', 'tipos-solicitud'] })
   }
 
-  function invalidarCampus() {
-    void queryClient.invalidateQueries({ queryKey: ['catalogos', 'campus'] })
+  function invalidarAreas() {
+    void queryClient.invalidateQueries({ queryKey: ['catalogos', 'areas'] })
   }
 
-  async function manejarEstadoCampus(c: Campus) {
-    try {
-      await actualizarCampus(c.id, { estado: !c.estado })
-    } catch (error) {
-      toast.error(await mensajeError(error, 'No se pudo actualizar el campus.'))
-    } finally {
-      invalidarCampus()
-    }
-  }
+  if (cargandoAreas || cargandoTipos) return <SkeletonLista filas={4} />
 
-  /** Renumera 1, 2, 3… con el campus movido en su nuevo lugar; solo actualiza los que cambian. */
-  async function moverCampus(indice: number, direccion: -1 | 1) {
-    const destino = indice + direccion
-    if (destino < 0 || destino >= campus.length) return
-    const nuevoOrden = [...campus]
-    ;[nuevoOrden[indice], nuevoOrden[destino]] = [nuevoOrden[destino], nuevoOrden[indice]]
-    setOrdenandoCampus(true)
-    try {
-      for (const [i, c] of nuevoOrden.entries()) {
-        if (c.orden !== i + 1) await actualizarCampus(c.id, { orden: i + 1 })
-      }
-    } catch (error) {
-      toast.error(await mensajeError(error, 'No se pudo cambiar el orden.'))
-    } finally {
-      setOrdenandoCampus(false)
-      invalidarCampus()
-    }
-  }
-
-  if (cargandoAreas || cargandoTipos || cargandoCampus) return <SkeletonLista filas={4} />
+  const soloAreas = areas.filter((a) => a.tipo === 'AREA')
+  const coordinaciones = areas.filter((a) => a.tipo === 'COORDINACION')
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-azul-noche">Catálogos</h1>
-        <p className="text-sm text-tinta-suave">Áreas, campus y tipos de solicitud.</p>
+        <p className="text-sm text-tinta-suave">Áreas, coordinaciones y tipos de solicitud.</p>
       </div>
 
       <Card>
-        <h2 className="mb-3 font-semibold text-azul-noche">Áreas</h2>
-        <ul className="divide-y divide-azul-niebla/60">
-          {areas.map((area) => (
-            <li key={area.id} className="flex items-center justify-between py-2">
-              <p className="font-medium text-tinta">{area.nombre}</p>
-              <button
-                type="button"
-                onClick={() => manejarGuardarArea(area.id, !area.estado)}
-                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                  area.estado ? 'bg-menta-bruma text-menta-profundo' : 'bg-coral-bruma text-coral'
-                }`}
-              >
-                {area.estado ? 'Activa' : 'Inactiva'}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-semibold text-azul-noche">Áreas</h2>
+          <Button onClick={() => setModalArea({ abierto: true, area: null, tipo: 'AREA' })}>
+            <Plus size={14} /> Crear área
+          </Button>
+        </div>
+        <TablaAreas
+          areas={soloAreas}
+          vacio="Todavía no hay áreas registradas."
+          onEditar={(area) => setModalArea({ abierto: true, area, tipo: 'AREA' })}
+          onToggleEstado={(area) => manejarGuardarArea(area.id, !area.estado)}
+        />
       </Card>
 
       <Card>
         <div className="mb-3 flex items-center justify-between">
-          <div>
-            <h2 className="font-semibold text-azul-noche">Campus</h2>
-            <p className="text-xs text-tinta-suave">Opciones del "Alcance" en cada solicitud. No se borran: se desactivan.</p>
-          </div>
-          <Button onClick={() => setModalCampus({ abierto: true, campus: null })}>
-            <Plus size={14} /> Crear campus
+          <h2 className="font-semibold text-azul-noche">Coordinaciones</h2>
+          <Button onClick={() => setModalArea({ abierto: true, area: null, tipo: 'COORDINACION' })}>
+            <Plus size={14} /> Crear coordinación
           </Button>
         </div>
-        {campus.length === 0 ? (
-          <p className="text-sm text-tinta-suave">Todavía no hay campus registrados.</p>
-        ) : (
-          <ul className="divide-y divide-azul-niebla/60">
-            {campus.map((c, indice) => (
-              <li key={c.id} className="flex items-center gap-3 py-2">
-                <div className="flex flex-col">
-                  <button
-                    type="button"
-                    aria-label="Subir"
-                    disabled={ordenandoCampus || indice === 0}
-                    onClick={() => moverCampus(indice, -1)}
-                    className="text-tinta-suave hover:text-azul-institucional disabled:opacity-30"
-                  >
-                    <ArrowUp size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Bajar"
-                    disabled={ordenandoCampus || indice === campus.length - 1}
-                    onClick={() => moverCampus(indice, 1)}
-                    className="text-tinta-suave hover:text-azul-institucional disabled:opacity-30"
-                  >
-                    <ArrowDown size={14} />
-                  </button>
-                </div>
-                <p className="flex-1 font-medium text-tinta">
-                  {c.nombre}
-                  {c.siglas && <span className="ml-1 text-xs font-normal text-tinta-suave">({c.siglas})</span>}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => manejarEstadoCampus(c)}
-                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                    c.estado ? 'bg-menta-bruma text-menta-profundo' : 'bg-coral-bruma text-coral'
-                  }`}
-                >
-                  {c.estado ? 'Activo' : 'Inactivo'}
-                </button>
-                <button
-                  type="button"
-                  className="text-sm font-medium text-azul-institucional hover:underline"
-                  onClick={() => setModalCampus({ abierto: true, campus: c })}
-                >
-                  Editar
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        <TablaAreas
+          areas={coordinaciones}
+          vacio="Todavía no hay coordinaciones registradas."
+          onEditar={(area) => setModalArea({ abierto: true, area, tipo: 'COORDINACION' })}
+          onToggleEstado={(area) => manejarGuardarArea(area.id, !area.estado)}
+        />
       </Card>
 
       <Card>
@@ -264,13 +179,56 @@ export function AdminCatalogosPage() {
 
       <CamposTipoModal tipo={tipoCampos} tipos={tipos} onCerrar={() => setTipoCampos(null)} />
 
-      <CampusModal
-        abierto={modalCampus.abierto}
-        campus={modalCampus.campus}
-        ordenSiguiente={campus.reduce((maximo, c) => Math.max(maximo, c.orden), 0) + 1}
-        onCerrar={() => setModalCampus({ abierto: false, campus: null })}
-        onGuardado={invalidarCampus}
+      <AreaModal
+        abierto={modalArea.abierto}
+        area={modalArea.area}
+        tipo={modalArea.tipo}
+        onCerrar={() => setModalArea({ abierto: false, area: null, tipo: 'AREA' })}
+        onGuardado={invalidarAreas}
       />
     </div>
+  )
+}
+
+function TablaAreas({
+  areas,
+  vacio,
+  onEditar,
+  onToggleEstado,
+}: {
+  areas: Area[]
+  vacio: string
+  onEditar: (area: Area) => void
+  onToggleEstado: (area: Area) => void
+}) {
+  if (areas.length === 0) return <p className="text-sm text-tinta-suave">{vacio}</p>
+
+  return (
+    <ul className="divide-y divide-azul-niebla/60">
+      {areas.map((area) => (
+        <li key={area.id} className="flex items-center gap-3 py-2">
+          <div className="flex-1">
+            <p className="font-medium text-tinta">{area.nombre}</p>
+            {area.prefijo && <p className="font-mono text-xs text-tinta-suave">{area.prefijo}</p>}
+          </div>
+          <button
+            type="button"
+            onClick={() => onToggleEstado(area)}
+            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+              area.estado ? 'bg-menta-bruma text-menta-profundo' : 'bg-coral-bruma text-coral'
+            }`}
+          >
+            {area.estado ? 'Activa' : 'Inactiva'}
+          </button>
+          <button
+            type="button"
+            className="text-sm font-medium text-azul-institucional hover:underline"
+            onClick={() => onEditar(area)}
+          >
+            Editar
+          </button>
+        </li>
+      ))}
+    </ul>
   )
 }
