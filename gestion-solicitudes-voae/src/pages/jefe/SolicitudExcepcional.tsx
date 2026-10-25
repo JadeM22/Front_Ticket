@@ -53,7 +53,7 @@ export function SolicitudExcepcionalPage() {
                   <EstadoChip estado={ticket.estado_real ?? ''} />
                   <p className="text-xs text-tinta-suave">
                     {ticket.excepcional_estado === 'PENDIENTE' && 'Pendiente de aceptación'}
-                    {ticket.excepcional_estado === 'ACEPTADA' && `Aceptada por ${ticket.disenador ?? 'el equipo de diseño'}`}
+                    {ticket.excepcional_estado === 'ACEPTADA' && 'Aceptada – en proceso'}
                     {ticket.excepcional_estado === 'RECHAZADA' && `Rechazada: ${ticket.excepcional_motivo_rechazo ?? 'sin motivo registrado'}`}
                   </p>
                 </div>
