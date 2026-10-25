@@ -41,6 +41,7 @@ import { useHorarioHabil } from '../../hooks/useHorarioHabil'
 import { DetalleFormularioVista } from './DetalleFormularioVista'
 import { FormularioDinamico } from './FormularioDinamico'
 import { GeneralidadesCampos } from './Generalidades'
+import { AvisoEnvioModal } from './AvisoEnvioModal'
 import { MultiFileDrop } from '../ui/MultiFileDrop'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
@@ -110,6 +111,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
   const [enviando, setEnviando] = useState(false)
   const [progreso, setProgreso] = useState<ProgresoAdjunto[]>([])
   const [solicitudCreada, setSolicitudCreada] = useState(false)
+  const [modalAviso, setModalAviso] = useState(false)
 
   // Elegir un tipo sin llenar nada no cuenta como cambio; una vez creada la solicitud ya no hay nada que perder.
   const detalleModificado =
@@ -577,7 +579,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
               <ArrowLeft size={16} /> Volver
             </Button>
             <Button
-              onClick={enviarSolicitud}
+              onClick={() => (tipoSeleccionado?.aviso ? setModalAviso(true) : enviarSolicitud())}
               cargando={enviando}
               disabled={bloqueadoPorHorario}
               title={bloqueadoPorHorario ? 'Las solicitudes solo se envían en horario hábil.' : undefined}
@@ -602,6 +604,17 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
           </Button>
         </div>
       </Modal>
+
+      <AvisoEnvioModal
+        abierto={modalAviso}
+        aviso={tipoSeleccionado?.aviso ?? ''}
+        enviando={enviando}
+        onVolver={() => setModalAviso(false)}
+        onAceptar={() => {
+          setModalAviso(false)
+          void enviarSolicitud()
+        }}
+      />
     </div>
   )
 }
