@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Campo, CLASE_INPUT } from '../ui/Campo'
 import { FechaInput } from '../ui/FechaInput'
 import { HoraInput } from '../ui/HoraInput'
 import { EtiquetasInput } from './EtiquetasInput'
 import { InputNumero } from '../form/InputNumero'
 import { hoyTegucigalpaISO } from '../../lib/date'
+import { esDiaHabil } from '../../lib/fechas'
 import { MAX_LONGITUD_ETIQUETA, validarCampo } from '../../lib/validacionFormularios'
+import { listarFeriados, type Feriado } from '../../data/catalogos'
 import type { DefinicionCampo, Respuestas, ValorCampo } from '../../types/domain'
 
 interface FormularioDinamicoProps {
@@ -21,6 +24,9 @@ interface FormularioDinamicoProps {
  * `campos_snapshot`). Ningún campo de solicitud se escribe a mano en el código: todo sale de aquí.
  */
 export function FormularioDinamico({ campos, respuestas, onCambiar, mostrarErrores = false }: FormularioDinamicoProps) {
+  // Para que los campos FECHA deshabiliten fines de semana y feriados, igual que la fecha del evento.
+  const { data: feriados = [] } = useQuery({ queryKey: ['catalogos', 'feriados'], queryFn: listarFeriados })
+
   if (campos.length === 0) return null
 
   return (
@@ -31,6 +37,7 @@ export function FormularioDinamico({ campos, respuestas, onCambiar, mostrarError
           campo={campo}
           valor={respuestas[campo.clave] ?? null}
           error={mostrarErrores ? validarCampo(campo, respuestas[campo.clave]) : null}
+          feriados={feriados}
           onCambiar={(valor) => onCambiar({ ...respuestas, [campo.clave]: valor })}
         />
       ))}
@@ -42,6 +49,7 @@ interface CampoDinamicoProps {
   campo: DefinicionCampo
   valor: ValorCampo
   error: string | null
+  feriados: Feriado[]
   onCambiar: (valor: ValorCampo) => void
 }
 
@@ -70,7 +78,7 @@ function Grupo({ etiqueta, ayuda, children }: { etiqueta: string; ayuda?: string
   )
 }
 
-function CampoDinamico({ campo, valor, error, onCambiar }: CampoDinamicoProps) {
+function CampoDinamico({ campo, valor, error, feriados, onCambiar }: CampoDinamicoProps) {
   const claseInput = `${CLASE_INPUT} ${error ? 'border-coral' : ''}`
   const texto = typeof valor === 'string' || typeof valor === 'number' ? String(valor) : ''
   const placeholder = campo.placeholder ?? undefined
@@ -138,7 +146,12 @@ function CampoDinamico({ campo, valor, error, onCambiar }: CampoDinamicoProps) {
     case 'FECHA':
       control = (
         <Campo etiqueta={etiquetaDe(campo)} ayuda={ayudaDe(campo, texto)}>
-          <FechaInput valor={texto} onCambiar={onCambiar} min={hoyTegucigalpaISO()} />
+          <FechaInput
+            valor={texto}
+            onCambiar={onCambiar}
+            min={hoyTegucigalpaISO()}
+            diaInhabilitado={(iso) => !esDiaHabil(iso, feriados)}
+          />
         </Campo>
       )
       break

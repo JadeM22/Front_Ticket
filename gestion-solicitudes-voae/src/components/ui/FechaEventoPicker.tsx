@@ -7,6 +7,7 @@ import { Skeleton } from './Skeleton'
 import { hoyTegucigalpaISO } from '../../lib/date'
 import { isoATextoFecha } from '../../lib/fechaInput'
 import { posicionDesplegable } from '../../lib/desplegable'
+import { deshabilitarDia, feriadoEn } from '../../lib/fechas'
 import { obtenerFechaEventoMinima } from '../../data/formularios'
 import { listarFeriados } from '../../data/catalogos'
 
@@ -77,15 +78,6 @@ export function FechaEventoPicker({ tipoId, excepcional, diasProduccion, value, 
   const mes = Number(mesVisible.slice(5, 7))
   const primerDiaSemana = new Date(Date.UTC(anio, mes - 1, 1)).getUTCDay()
   const diasDelMes = new Date(Date.UTC(anio, mes, 0)).getUTCDate()
-
-  function feriadoEn(iso: string) {
-    return feriados.find((f) => f.estado && f.fecha_inicio <= iso && iso <= f.fecha_fin)
-  }
-
-  function esFinDeSemana(iso: string) {
-    const dia = new Date(`${iso}T00:00:00Z`).getUTCDay()
-    return dia === 0 || dia === 6
-  }
 
   function abrir() {
     if (abierto) return
@@ -189,15 +181,18 @@ export function FechaEventoPicker({ tipoId, excepcional, diasProduccion, value, 
               const elegido = iso === value
               const esPasado = iso < hoy
               const enProduccion = !esPasado && iso < minimo
-              const bloqueado = iso < minimo
-              const feriado = feriadoEn(iso)
-              const finDeSemana = esFinDeSemana(iso)
+              const feriado = feriadoEn(iso, feriados)
+              const bloqueado = deshabilitarDia(iso, { minimo, feriados })
+              const diaSemana = new Date(`${iso}T00:00:00Z`).getUTCDay()
+              const esFinDeSemana = diaSemana === 0 || diaSemana === 6
 
               const titulo = feriado
                 ? feriado.nombre
                 : enProduccion
                   ? `Periodo de producción: ${diasProduccion} día(s) hábiles`
-                  : undefined
+                  : esFinDeSemana
+                    ? 'Fin de semana'
+                    : undefined
 
               return (
                 <button
@@ -216,7 +211,7 @@ export function FechaEventoPicker({ tipoId, excepcional, diasProduccion, value, 
                         ? enProduccion
                           ? 'cursor-not-allowed text-tinta-suave/70 [background-image:repeating-linear-gradient(135deg,rgba(100,116,139,0.18)_0_3px,transparent_3px_7px)]'
                           : 'cursor-not-allowed text-tinta-suave/40'
-                        : `hover:bg-azul-niebla ${finDeSemana ? 'text-tinta-suave' : ''} ${iso === hoy ? 'font-semibold text-menta-profundo ring-1 ring-menta-profundo' : ''}`
+                        : `hover:bg-azul-niebla ${iso === hoy ? 'font-semibold text-menta-profundo ring-1 ring-menta-profundo' : ''}`
                   }`}
                 >
                   {i + 1}

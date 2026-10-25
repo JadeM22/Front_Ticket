@@ -5,6 +5,7 @@ import { CLASE_INPUT } from './Campo'
 import { hoyTegucigalpaISO } from '../../lib/date'
 import { posicionDesplegable } from '../../lib/desplegable'
 import { enmascararFecha, isoATextoFecha, textoFechaAIso } from '../../lib/fechaInput'
+import { MENSAJE_DIA_NO_HABIL } from '../../lib/fechas'
 
 interface FechaInputProps {
   /** Fecha como 'YYYY-MM-DD', o '' si está vacía (igual que un `<input type="date">`). */
@@ -16,6 +17,11 @@ interface FechaInputProps {
   disabled?: boolean
   id?: string
   className?: string
+  /**
+   * Si se da, los días para los que devuelve `true` aparecen deshabilitados en el calendario y, si
+   * se escriben a mano, muestran el aviso de día no hábil (la base vuelve a validar esto al enviar).
+   */
+  diaInhabilitado?: (iso: string) => boolean
 }
 
 const ANCHO_CALENDARIO = 288
@@ -35,7 +41,7 @@ const pad = (n: number) => String(n).padStart(2, '0')
  * (con su aviso), igual que el input nativo, para que la validación del formulario y la de la base
  * sigan dando su propio mensaje.
  */
-export function FechaInput({ valor, onCambiar, min, max, required, disabled, id, className }: FechaInputProps) {
+export function FechaInput({ valor, onCambiar, min, max, required, disabled, id, className, diaInhabilitado }: FechaInputProps) {
   const [texto, setTexto] = useState(() => isoATextoFecha(valor))
   const [valorVisto, setValorVisto] = useState(valor)
   const [abierto, setAbierto] = useState(false)
@@ -64,6 +70,7 @@ export function FechaInput({ valor, onCambiar, min, max, required, disabled, id,
   else if (salioIncompleto && texto && !isoTexto) error = 'Escribe la fecha completa: dd/mm/aaaa.'
   else if (isoTexto && min && isoTexto < min) error = `No puede ser anterior al ${isoATextoFecha(min)}.`
   else if (isoTexto && max && isoTexto > max) error = `No puede ser posterior al ${isoATextoFecha(max)}.`
+  else if (isoTexto && diaInhabilitado?.(isoTexto)) error = MENSAJE_DIA_NO_HABIL
 
   // Mes que muestra el calendario: el que se navegó a mano o, si no, el de la fecha escrita.
   const mesVisible = mesElegido ?? (isoTexto ?? (min && min > hoy ? min : hoy)).slice(0, 7)
@@ -217,7 +224,7 @@ export function FechaInput({ valor, onCambiar, min, max, required, disabled, id,
             {Array.from({ length: diasDelMes }, (_, i) => {
               const iso = `${mesVisible}-${pad(i + 1)}`
               const elegido = iso === isoTexto
-              const bloqueado = fueraDeRango(iso)
+              const bloqueado = fueraDeRango(iso) || Boolean(diaInhabilitado?.(iso))
               return (
                 <button
                   key={iso}
@@ -245,7 +252,7 @@ export function FechaInput({ valor, onCambiar, min, max, required, disabled, id,
             <button
               type="button"
               tabIndex={-1}
-              disabled={fueraDeRango(hoy)}
+              disabled={fueraDeRango(hoy) || Boolean(diaInhabilitado?.(hoy))}
               onClick={() => elegir(hoy)}
               className="rounded px-2 py-1 text-azul-institucional transition-colors duration-150 hover:bg-azul-niebla disabled:cursor-not-allowed disabled:opacity-40"
             >
