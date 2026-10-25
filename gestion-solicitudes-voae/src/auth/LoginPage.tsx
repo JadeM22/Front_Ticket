@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button'
 import { PasswordInput } from '../components/ui/PasswordInput'
 import { MarcaITickets } from '../components/MarcaITickets'
 import { LoginBannerTicket } from './LoginBannerTicket'
+import { LogosInstitucionales } from './LogosInstitucionales'
 import { useAuth } from './useAuth'
 
 export function LoginPage() {
@@ -52,8 +53,9 @@ export function LoginPage() {
 
       <div className="flex flex-1 items-center justify-center bg-white p-6 sm:p-10">
         <div className="w-full max-w-sm">
-          {/* En móvil el banner está oculto, así que la marca y el motivo del sistema van aquí arriba. */}
+          {/* En móvil el banner está oculto, así que los logos, la marca y el motivo del sistema van aquí arriba. */}
           <div className="mb-6 lg:hidden">
+            <LogosInstitucionales className="mb-4" />
             <MarcaITickets tamano="grande" className="text-azul-noche" />
             <p className="mt-1 text-sm text-tinta-suave">Gestión de solicitudes de diseño · VOAE</p>
           </div>

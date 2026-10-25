@@ -1,3 +1,5 @@
+import { LogosInstitucionales } from './LogosInstitucionales'
+
 export function LoginBannerTicket() {
   const anio = new Date().getFullYear()
 
@@ -9,9 +11,8 @@ export function LoginBannerTicket() {
         className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:radial-gradient(currentColor_1px,transparent_1px)] [background-size:22px_22px]"
       />
 
-      {/* Logos institucionales: no existen todavía en public/logos/, así que se reserva el espacio */}
-      <header className="relative flex h-12 items-center gap-4">
-        {/* Logos institucionales */}
+      <header className="relative flex h-14 items-center">
+        <LogosInstitucionales />
       </header>
 
       {/* Boleto */}
