@@ -20,7 +20,7 @@ import { CampusModal } from '../../components/CampusModal'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { SkeletonLista } from '../../components/ui/Skeleton'
-import { ETIQUETA_FLUJO, type Flujo } from '../../types/domain'
+import { CATEGORIAS_TIPO, ETIQUETA_FLUJO, type Flujo } from '../../types/domain'
 
 export function AdminCatalogosPage() {
   const queryClient = useQueryClient()
@@ -193,6 +193,7 @@ export function AdminCatalogosPage() {
               <tr>
                 <th className="px-3 py-2">Nombre</th>
                 <th className="px-3 py-2">Días</th>
+                <th className="px-3 py-2">Categoría</th>
                 <th className="px-3 py-2">Flujo</th>
                 <th className="px-3 py-2">Activo</th>
                 <th className="px-3 py-2">Creado por</th>
@@ -209,6 +210,9 @@ export function AdminCatalogosPage() {
                   </td>
                   <td className="px-3 py-2">
                     {tipo.dias_estimados} {tipo.dias_habiles ? 'hábiles' : 'corridos'}
+                  </td>
+                  <td className="px-3 py-2 text-tinta-suave">
+                    {CATEGORIAS_TIPO.find((c) => c.valor === tipo.categoria)?.etiqueta ?? tipo.categoria}
                   </td>
                   <td className="px-3 py-2">
                     <span className="rounded-full bg-azul-niebla px-2 py-0.5 text-xs text-azul-institucional">

@@ -4,6 +4,7 @@ import type { Json } from '../types/database'
 import type {
   DefinicionCampo,
   DetalleSolicitud,
+  EtiquetasGenerales,
   Respuestas,
   TipoCampo,
   ValidacionesCampo,
@@ -25,7 +26,35 @@ const TIPOS_CAMPO = new Set<TipoCampo>([
   'SELECCION',
   'SELECCION_MULTIPLE',
   'URL',
+  'ETIQUETAS',
 ])
+
+/** Tipos cuyo valor es una lista de textos. */
+const TIPOS_LISTA = new Set<TipoCampo>(['SELECCION_MULTIPLE', 'ETIQUETAS'])
+
+/** Largo máximo de cada elemento de un campo ETIQUETAS cuando no trae `max_longitud` (igual que la base). */
+export const MAX_LONGITUD_ETIQUETA = 100
+
+const ETIQUETAS_GENERALES_POR_DEFECTO: EtiquetasGenerales = {
+  titulo: 'Título',
+  fecha_evento: 'Fecha del evento',
+  dirigido_a: 'Dirigido a',
+  alcance: 'Alcance',
+}
+
+/**
+ * Nombres visibles de las generalidades de un tipo (`TipoSolicitud.etiquetas_generales`, p. ej.
+ * "Fecha de entrega" en lugar de "Fecha del evento"); lo que no esté definido usa el nombre de siempre.
+ */
+export function etiquetasGenerales(json: Json | null | undefined): EtiquetasGenerales {
+  const crudo: Record<string, Json | undefined> = json && typeof json === 'object' && !Array.isArray(json) ? json : {}
+  const resultado = { ...ETIQUETAS_GENERALES_POR_DEFECTO }
+  for (const clave of Object.keys(resultado) as (keyof EtiquetasGenerales)[]) {
+    const valor = crudo[clave]
+    if (typeof valor === 'string' && valor.trim()) resultado[clave] = valor.trim()
+  }
+  return resultado
+}
 
 interface CampoCrudo {
   clave?: unknown
@@ -95,7 +124,7 @@ export function normalizarCampos(crudos: readonly unknown[]): DefinicionCampo[] 
 /** Valor "vacío" del control de cada tipo, para cuando el campo no tiene `valor_defecto`. */
 function valorVacio(tipo: TipoCampo): ValorCampo {
   if (tipo === 'BOOLEANO') return false
-  if (tipo === 'SELECCION_MULTIPLE') return []
+  if (TIPOS_LISTA.has(tipo)) return []
   return ''
 }
 
@@ -106,7 +135,7 @@ export function respuestasIniciales(campos: DefinicionCampo[]): Respuestas {
     const defecto = campo.valor_defecto
     if (defecto == null) {
       respuestas[campo.clave] = valorVacio(campo.tipo_campo)
-    } else if (campo.tipo_campo === 'SELECCION_MULTIPLE') {
+    } else if (TIPOS_LISTA.has(campo.tipo_campo)) {
       respuestas[campo.clave] = Array.isArray(defecto) ? defecto : [String(defecto)]
     } else if (campo.tipo_campo === 'BOOLEANO') {
       respuestas[campo.clave] = defecto === true || defecto === 'true'
@@ -182,6 +211,16 @@ export function validarCampo(campo: DefinicionCampo, valor: ValorCampo | undefin
       return (valor as string[]).every((v) => campo.opciones.includes(v))
         ? null
         : `Hay opciones no válidas en "${etiqueta}".`
+    case 'ETIQUETAS': {
+      // Las opciones son solo sugerencias: se admite cualquier texto.
+      const lista = valor as string[]
+      const largo = max_longitud ?? MAX_LONGITUD_ETIQUETA
+      if (lista.some((v) => v.trim().length > largo)) {
+        return `Cada elemento de "${etiqueta}" puede tener como máximo ${largo} caracteres.`
+      }
+      if (max !== undefined && lista.length > max) return `"${etiqueta}" admite como máximo ${max} elementos.`
+      return null
+    }
     default:
       return null
   }
@@ -201,24 +240,32 @@ export function generalidadesIniciales(): Generalidades {
   return { titulo: '', fecha_evento: '', dirigido_a: '', campus_ids: [] }
 }
 
-export function validarGeneralidades(g: Generalidades): string | null {
-  if (!g.titulo.trim()) return 'Escribe el título de la solicitud.'
+export function validarGeneralidades(
+  g: Generalidades,
+  etiquetas: EtiquetasGenerales = ETIQUETAS_GENERALES_POR_DEFECTO,
+): string | null {
+  if (!g.titulo.trim()) return `Completa "${etiquetas.titulo}".`
   if (g.titulo.trim().length > MAX_LONGITUD_GENERALIDAD) {
-    return `El título no puede tener más de ${MAX_LONGITUD_GENERALIDAD} caracteres.`
+    return `"${etiquetas.titulo}" no puede tener más de ${MAX_LONGITUD_GENERALIDAD} caracteres.`
   }
-  if (!g.fecha_evento) return 'Elige la fecha del evento.'
-  if (g.fecha_evento < hoyTegucigalpaISO()) return 'La fecha del evento no puede ser una fecha pasada.'
-  if (!g.dirigido_a.trim()) return 'Indica a quién va dirigida la solicitud.'
+  if (!g.fecha_evento) return `Elige la ${etiquetas.fecha_evento.toLowerCase()}.`
+  if (g.fecha_evento < hoyTegucigalpaISO()) return `"${etiquetas.fecha_evento}" no puede ser una fecha pasada.`
+  if (!g.dirigido_a.trim()) return `Completa "${etiquetas.dirigido_a}".`
   if (g.dirigido_a.trim().length > MAX_LONGITUD_GENERALIDAD) {
-    return `El campo "Dirigido a" no puede tener más de ${MAX_LONGITUD_GENERALIDAD} caracteres.`
+    return `"${etiquetas.dirigido_a}" no puede tener más de ${MAX_LONGITUD_GENERALIDAD} caracteres.`
   }
-  if (g.campus_ids.length === 0) return 'Elige al menos un campus en el alcance.'
+  if (g.campus_ids.length === 0) return `Elige al menos un campus en "${etiquetas.alcance}".`
   return null
 }
 
 /** Primer error de las generalidades o de los campos configurables, o `null`. */
-export function validarSolicitud(g: Generalidades, campos: DefinicionCampo[], respuestas: Respuestas): string | null {
-  const errorGeneral = validarGeneralidades(g)
+export function validarSolicitud(
+  g: Generalidades,
+  campos: DefinicionCampo[],
+  respuestas: Respuestas,
+  etiquetas?: EtiquetasGenerales,
+): string | null {
+  const errorGeneral = validarGeneralidades(g, etiquetas)
   if (errorGeneral) return errorGeneral
 
   for (const campo of campos) {

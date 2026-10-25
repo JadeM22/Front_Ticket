@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react'
 import { obtenerTicketCompleto, tomarTicket } from '../data/tickets'
 import { crearDictamen } from '../data/dictamenes'
 import { INTENTOS_MAXIMOS_IA, revisarEnvioIA } from '../data/afichesIA'
+import { registrarDecisionValidacion } from '../data/validacion'
 import { mensajeError } from '../lib/errors'
 import { formatFecha, formatFechaHora } from '../lib/date'
 import { TagAsignado, TagExcepcional } from '../components/tickets/Etiquetas'
@@ -21,7 +22,8 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { EstadoChip } from '../components/EstadoChip'
 import { Timeline } from '../components/ui/Timeline'
 import { Stepper } from '../components/ui/Stepper'
-import { pasosProgresoIA, pasosProgresoTicket } from '../lib/progresoTicket'
+import { pasosProgresoIA, pasosProgresoTicket, pasosProgresoValidacion } from '../lib/progresoTicket'
+import { etiquetasGenerales } from '../lib/validacionFormularios'
 import { CronometroDictamen } from '../components/ui/CronometroDictamen'
 import { ListaEntregables } from '../components/ListaEntregables'
 import { ListaAdjuntos } from '../components/ListaAdjuntos'
@@ -51,6 +53,7 @@ export function TicketDetailPage() {
   const [modalDictamen, setModalDictamen] = useState(false)
   const [modalAfiche, setModalAfiche] = useState(false)
   const [modalRevision, setModalRevision] = useState(false)
+  const [modalValidacion, setModalValidacion] = useState(false)
   const [tomando, setTomando] = useState(false)
 
   // El historial de cambios es solo para Analista y Administrador; el resto ve la barra de progreso.
@@ -105,6 +108,23 @@ export function TicketDetailPage() {
     }
   }
 
+  async function manejarValidacion(decision: DecisionIA, comentario: string) {
+    if (!ticket || !perfil) return
+    try {
+      await registrarDecisionValidacion({
+        ticketId: ticket.estadoReal.ticket_id!,
+        validadorId: perfil.id,
+        decision,
+        comentario,
+      })
+      toast.success(decision === 'APROBADO' ? 'Solicitud aprobada.' : 'Solicitud rechazada.')
+      invalidar()
+      setModalValidacion(false)
+    } catch (error) {
+      toast.error(await mensajeError(error, 'No se pudo registrar la decisión.'))
+    }
+  }
+
   async function manejarDictamen(decision: DecisionJefe, comentario?: string) {
     if (!ticket) return
     try {
@@ -129,16 +149,19 @@ export function TicketDetailPage() {
   }
 
   const { estadoReal, tipoSolicitud } = ticket
-  // Un ticket IA nunca tiene diseñador, entregables ni dictamen: lo revisa un Aprobador IA.
+  // Solo los tickets de diseño tienen diseñador, entregables y dictamen. Los IA y los de validación
+  // los resuelve un Validador.
   const esIA = estadoReal.flujo === 'APROBACION_IA'
+  const esValidacion = estadoReal.flujo === 'VALIDACION'
+  const esDiseno = !esIA && !esValidacion
   const registrado = estadoReal.estado_registrado
   const correccionesUsadas = estadoReal.correcciones_usadas ?? 0
   const esExcepcionalPendiente = estadoReal.es_excepcional && estadoReal.excepcional_estado === 'PENDIENTE'
-  const esMiTicketDeDiseno = !esIA && tieneRol('Diseñador') && estadoReal.disenador_id === perfil?.id
-  const puedeTomar = !esIA && tieneRol('Diseñador') && !estadoReal.disenador_id && !esExcepcionalPendiente
+  const esMiTicketDeDiseno = esDiseno && tieneRol('Diseñador') && estadoReal.disenador_id === perfil?.id
+  const puedeTomar = esDiseno && tieneRol('Diseñador') && !estadoReal.disenador_id && !esExcepcionalPendiente
   const puedeSubirEntregable =
     esMiTicketDeDiseno && (estadoReal.estado_real === 'En proceso' || estadoReal.estado_real === 'Corrección' || estadoReal.estado_real === 'Retrasado')
-  const puedeDictaminar = !esIA && tieneRol('Jefe de Área') && estadoReal.estado_real === 'Finalizado'
+  const puedeDictaminar = esDiseno && tieneRol('Jefe de Área') && estadoReal.estado_real === 'Finalizado'
   const dictamenBloqueadoPorHorario = puedeDictaminar && !estadoReal.es_excepcional && !esAdmin && horarioHabil === false
   const esSolicitante = perfil?.id === estadoReal.usuario_registro
 
@@ -150,11 +173,19 @@ export function TicketDetailPage() {
   const puedeSubirPrimerAfiche = esIA && esSolicitante && esperandoAprobador && ticket.enviosIA.length === 0
   const puedeReenviarAfiche = esIA && esSolicitante && registrado === 'Corrección'
   const puedeRevisarAfiche =
-    esIA && tieneRol('Aprobador IA') && esperandoAprobador && ultimoEnvio != null && !ultimoEnvioRevisado
+    esIA && tieneRol('Validador') && esperandoAprobador && ultimoEnvio != null && !ultimoEnvioRevisado
+  // Validación: una sola decisión, mientras el ticket sigue en "Enviado"/"Retrasado".
+  const decision = ticket.decisionValidacion
+  const puedeDecidirValidacion = esValidacion && tieneRol('Validador') && esperandoAprobador && decision == null
   const intentosRestantes = INTENTOS_MAXIMOS_IA - (estadoReal.intentos_usados ?? 0)
-  const puedeVerEntregables = !esIA && (puedeVerGestion || esSolicitante)
+  const puedeVerEntregables = esDiseno && (puedeVerGestion || esSolicitante)
+  // Los tickets IA solo admiten el afiche (Parte 32).
   const puedeAgregarAdjunto =
-    esSolicitante && estadoReal.estado_real !== 'Aprobado' && ticket.adjuntos.length < MAXIMO_ADJUNTOS_POR_TICKET
+    !esIA &&
+    esSolicitante &&
+    estadoReal.estado_real !== 'Aprobado' &&
+    ticket.adjuntos.length < MAXIMO_ADJUNTOS_POR_TICKET
+  const etiquetas = etiquetasGenerales(tipoSolicitud?.etiquetas_generales)
 
   const eventosTimeline = ticket.log.flatMap((entrada) => {
     let descripcion = entrada.descripcion_cambio
@@ -207,11 +238,11 @@ export function TicketDetailPage() {
             <p>{formatFechaHora(estadoReal.fecha_registro)}</p>
           </div>
           <div>
-            <p className="text-xs text-tinta-suave">Fecha del evento</p>
+            <p className="text-xs text-tinta-suave">{etiquetas.fecha_evento}</p>
             <p>{formatFecha(estadoReal.fecha_evento)}</p>
           </div>
           <div>
-            <p className="text-xs text-tinta-suave">{esIA ? 'Fecha límite de respuesta' : 'Vence'}</p>
+            <p className="text-xs text-tinta-suave">{esDiseno ? 'Vence' : 'Fecha límite de respuesta'}</p>
             <p>
               {formatFecha(estadoReal.fecha_limite)}
               {tipoSolicitud && !estadoReal.es_excepcional && (
@@ -227,7 +258,7 @@ export function TicketDetailPage() {
               </p>
             </div>
           )}
-          {muestraAsignacion && !esIA && (
+          {muestraAsignacion && esDiseno && (
             <div>
               <p className="text-xs text-tinta-suave">Diseñador</p>
               <p>{estadoReal.disenador ?? 'Sin asignar'}</p>
@@ -238,7 +269,7 @@ export function TicketDetailPage() {
               )}
             </div>
           )}
-          {puedeVerGestion && !esIA && (
+          {puedeVerGestion && esDiseno && (
             <div>
               <p className="text-xs text-tinta-suave">Correcciones</p>
               <p>{correccionesUsadas} / {CORRECCIONES_MAXIMAS}</p>
@@ -266,6 +297,7 @@ export function TicketDetailPage() {
             <Button onClick={() => setModalAfiche(true)}>{puedeReenviarAfiche ? 'Reenviar afiche' : 'Subir afiche'}</Button>
           )}
           {puedeRevisarAfiche && <Button onClick={() => setModalRevision(true)}>Revisar afiche</Button>}
+          {puedeDecidirValidacion && <Button onClick={() => setModalValidacion(true)}>Aprobar o rechazar</Button>}
           {puedeDictaminar && (
             <Button
               onClick={() => setModalDictamen(true)}
@@ -281,7 +313,7 @@ export function TicketDetailPage() {
       <Card>
         <h2 className="mb-3 font-semibold text-azul-noche">Detalle de la solicitud</h2>
         {ticket.detalleFormulario ? (
-          <DetalleFormularioVista detalle={ticket.detalleFormulario} />
+          <DetalleFormularioVista detalle={ticket.detalleFormulario} etiquetas={etiquetas} />
         ) : (
           <p className="text-sm text-tinta-suave">No se encontró el detalle del formulario.</p>
         )}
@@ -314,6 +346,24 @@ export function TicketDetailPage() {
         </Card>
       )}
 
+      {esValidacion && decision && (
+        <Card>
+          <h2 className="mb-3 font-semibold text-azul-noche">Decisión del Validador</h2>
+          <div
+            className={`rounded-lg p-3 text-sm ${
+              decision.decision === 'APROBADO' ? 'bg-menta-bruma text-menta-profundo' : 'bg-coral-bruma text-coral'
+            }`}
+          >
+            <p className="font-semibold">
+              {decision.decision === 'APROBADO' ? 'Aprobada' : 'Rechazada'} · {formatFechaHora(decision.fecha_decision)}
+            </p>
+            {decision.comentario && <p className="mt-1 whitespace-pre-line text-tinta">{decision.comentario}</p>}
+          </div>
+        </Card>
+      )}
+
+      {/* Un ticket IA solo lleva su afiche; se muestran los adjuntos que tuviera de antes. */}
+      {(!esIA || ticket.adjuntos.length > 0) && (
       <Card>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold text-azul-noche">
@@ -327,6 +377,7 @@ export function TicketDetailPage() {
         </div>
         <ListaAdjuntos adjuntos={ticket.adjuntos} />
       </Card>
+      )}
 
       {puedeVerEntregables && (
         <Card>
@@ -360,7 +411,15 @@ export function TicketDetailPage() {
       ) : (
         <Card>
           <h2 className="mb-4 font-semibold text-azul-noche">Progreso de la solicitud</h2>
-          <Stepper pasos={esIA ? pasosProgresoIA(estadoReal, INTENTOS_MAXIMOS_IA) : pasosProgresoTicket(estadoReal)} />
+          <Stepper
+            pasos={
+              esIA
+                ? pasosProgresoIA(estadoReal, INTENTOS_MAXIMOS_IA)
+                : esValidacion
+                  ? pasosProgresoValidacion(estadoReal, decision?.comentario ?? null)
+                  : pasosProgresoTicket(estadoReal)
+            }
+          />
         </Card>
       )}
 
@@ -393,8 +452,15 @@ export function TicketDetailPage() {
         abierto={modalRevision}
         onCerrar={() => setModalRevision(false)}
         onConfirmar={manejarRevision}
-        codigo={estadoReal.codigo ?? ''}
+        titulo={`Revisar afiche de ${estadoReal.codigo ?? ''}`}
         intento={ultimoEnvio?.intento ?? 1}
+      />
+
+      <RevisarAficheModal
+        abierto={modalValidacion}
+        onCerrar={() => setModalValidacion(false)}
+        onConfirmar={manejarValidacion}
+        titulo={`Validar ${estadoReal.codigo ?? ''}`}
       />
 
       <DictamenModal

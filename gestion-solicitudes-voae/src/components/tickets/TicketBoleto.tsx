@@ -109,7 +109,7 @@ export function TicketBoleto({ ticket, onClick, mostrarDisenador }: TicketBoleto
           <Dato icono={CalendarDays} etiqueta="Creada" valor={formatFechaHora(ticket.fecha_registro)} />
           <Dato icono={PartyPopper} etiqueta="Evento" valor={formatFecha(ticket.fecha_evento)} />
           <Dato icono={CalendarClock} etiqueta="Vence" valor={formatFecha(ticket.fecha_limite)} alerta={Boolean(ticket.fuera_de_plazo)} />
-          {muestraAsignacion && ticket.flujo !== 'APROBACION_IA' && (
+          {muestraAsignacion && (ticket.flujo ?? 'DISENO') === 'DISENO' && (
             <Dato icono={User} etiqueta="Diseñador" valor={ticket.disenador ?? 'Sin asignar'} tenue={!ticket.disenador} />
           )}
         </dl>

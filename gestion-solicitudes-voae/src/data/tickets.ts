@@ -7,6 +7,7 @@ import { listarEntregablesPorTicket, type Entregable } from './entregables'
 import { listarDictamenesPorTicket, type DictamenJefe } from './dictamenes'
 import { listarAdjuntosPorTicket, type Adjunto } from './adjuntos'
 import { listarEnviosIA, listarRevisionesIA, type EnvioIA, type RevisionIA } from './afichesIA'
+import { obtenerDecisionValidacion, type DecisionValidacion } from './validacion'
 
 export type TicketBase = Tables<{ schema: 'Solicitudes' }, 'Ticket'>
 export type TicketLog = Tables<{ schema: 'Solicitudes' }, 'TicketLog'>
@@ -23,6 +24,8 @@ export interface TicketCompleto {
   /** Solo en tickets de flujo APROBACION_IA; vacíos en los de diseño. */
   enviosIA: EnvioIA[]
   revisionesIA: RevisionIA[]
+  /** Solo en tickets de flujo VALIDACION, una vez que el Validador decidió. */
+  decisionValidacion: DecisionValidacion | null
 }
 
 export async function listarTicketsEstadoReal(): Promise<TicketEstadoReal[]> {
@@ -86,7 +89,8 @@ export async function listarTicketLog(ticketId: number): Promise<TicketLog[]> {
  * mismo con `DictamenJefe`: el solicitante no ve dictámenes. Los `Entregables` se piden siempre:
  * el solicitante sí los ve, y RLS solo devuelve los que cada quien puede leer.
  *
- * Un ticket IA nunca tiene entregables ni dictamen; en su lugar trae sus envíos y revisiones.
+ * Solo los tickets de diseño tienen entregables y dictamen: uno IA trae en su lugar sus envíos y
+ * revisiones, y uno de validación la decisión del Validador.
  */
 export async function obtenerTicketCompleto(
   ticketId: number,
@@ -102,16 +106,20 @@ export async function obtenerTicketCompleto(
   const tipoSolicitud = await obtenerTipoSolicitud(base.tipo_solicitud_id)
 
   const esIA = estadoReal.flujo === 'APROBACION_IA'
+  const esValidacion = estadoReal.flujo === 'VALIDACION'
+  const esDiseno = !esIA && !esValidacion
 
-  const [detalleFormulario, log, entregables, dictamenes, adjuntos, enviosIA, revisionesIA] = await Promise.all([
-    obtenerDetalleFormulario(base.formulario_id),
-    incluirHistorial ? listarTicketLog(ticketId) : [],
-    esIA ? [] : listarEntregablesPorTicket(ticketId),
-    incluirGestion && !esIA ? listarDictamenesPorTicket(ticketId) : [],
-    listarAdjuntosPorTicket(ticketId),
-    esIA ? listarEnviosIA(ticketId) : [],
-    esIA ? listarRevisionesIA(ticketId) : [],
-  ])
+  const [detalleFormulario, log, entregables, dictamenes, adjuntos, enviosIA, revisionesIA, decisionValidacion] =
+    await Promise.all([
+      obtenerDetalleFormulario(base.formulario_id),
+      incluirHistorial ? listarTicketLog(ticketId) : [],
+      esDiseno ? listarEntregablesPorTicket(ticketId) : [],
+      incluirGestion && esDiseno ? listarDictamenesPorTicket(ticketId) : [],
+      listarAdjuntosPorTicket(ticketId),
+      esIA ? listarEnviosIA(ticketId) : [],
+      esIA ? listarRevisionesIA(ticketId) : [],
+      esValidacion ? obtenerDecisionValidacion(ticketId) : null,
+    ])
 
   return {
     estadoReal,
@@ -124,6 +132,7 @@ export async function obtenerTicketCompleto(
     adjuntos,
     enviosIA,
     revisionesIA,
+    decisionValidacion,
   }
 }
 

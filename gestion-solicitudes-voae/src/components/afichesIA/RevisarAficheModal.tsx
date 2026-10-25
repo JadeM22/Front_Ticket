@@ -9,14 +9,17 @@ interface RevisarAficheModalProps {
   abierto: boolean
   onCerrar: () => void
   onConfirmar: (decision: DecisionIA, comentario: string) => Promise<void>
-  codigo: string
-  /** Intento del envío que se revisa (1 a 5). */
-  intento: number
+  titulo: string
+  /**
+   * Intento del envío que se revisa (1 a 5). Sin intento es la decisión única de una solicitud de
+   * validación: no hay reenvíos, así que rechazar es definitivo.
+   */
+  intento?: number
 }
 
-export function RevisarAficheModal({ abierto, onCerrar, onConfirmar, codigo, intento }: RevisarAficheModalProps) {
+export function RevisarAficheModal({ abierto, onCerrar, onConfirmar, titulo, intento }: RevisarAficheModalProps) {
   return (
-    <Modal abierto={abierto} onCerrar={onCerrar} titulo={`Revisar afiche de ${codigo}`}>
+    <Modal abierto={abierto} onCerrar={onCerrar} titulo={titulo}>
       {abierto && <Formulario onCerrar={onCerrar} onConfirmar={onConfirmar} intento={intento} />}
     </Modal>
   )
@@ -26,7 +29,7 @@ function Formulario({ onCerrar, onConfirmar, intento }: Pick<RevisarAficheModalP
   const [decision, setDecision] = useState<DecisionIA>('APROBADO')
   const [comentario, setComentario] = useState('')
   const [enviando, setEnviando] = useState(false)
-  const esUltimoIntento = intento >= INTENTOS_MAXIMOS_IA
+  const esDefinitivo = intento === undefined || intento >= INTENTOS_MAXIMOS_IA
   const faltaComentario = decision === 'RECHAZADO' && !comentario.trim()
 
   async function confirmar() {
@@ -62,22 +65,32 @@ function Formulario({ onCerrar, onConfirmar, intento }: Pick<RevisarAficheModalP
         </button>
       </div>
 
-      <p className="text-xs text-tinta-suave">
-        Intento {intento} de {INTENTOS_MAXIMOS_IA}.
-      </p>
+      {intento !== undefined && (
+        <p className="text-xs text-tinta-suave">
+          Intento {intento} de {INTENTOS_MAXIMOS_IA}.
+        </p>
+      )}
 
       {decision === 'RECHAZADO' && (
-        <p className={`text-xs ${esUltimoIntento ? 'font-semibold text-coral' : 'text-ambar'}`}>
-          {esUltimoIntento
-            ? 'Es el último intento: si lo rechazas, la solicitud queda rechazada definitivamente.'
-            : 'El solicitante podrá corregir y reenviar el afiche.'}
+        <p className={`text-xs ${esDefinitivo ? 'font-semibold text-coral' : 'text-ambar'}`}>
+          {intento === undefined
+            ? 'La decisión es definitiva: la solicitud quedará rechazada.'
+            : esDefinitivo
+              ? 'Es el último intento: si lo rechazas, la solicitud queda rechazada definitivamente.'
+              : 'El solicitante podrá corregir y reenviar el afiche.'}
         </p>
       )}
 
       <textarea
         className={CLASE_INPUT}
         rows={4}
-        placeholder={decision === 'RECHAZADO' ? 'Explica qué debe corregir (obligatorio)…' : 'Comentario (opcional)'}
+        placeholder={
+          decision === 'RECHAZADO'
+            ? intento === undefined
+              ? 'Explica el motivo del rechazo (obligatorio)…'
+              : 'Explica qué debe corregir (obligatorio)…'
+            : 'Comentario (opcional)'
+        }
         value={comentario}
         onChange={(e) => setComentario(e.target.value)}
       />

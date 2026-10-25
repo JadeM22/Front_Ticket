@@ -473,6 +473,41 @@ export type Database = {
         }
         Relationships: []
       }
+      DecisionValidacion: {
+        Row: {
+          comentario: string | null
+          decision: string
+          fecha_decision: string
+          id: number
+          ticket_id: number
+          validador_id: number
+        }
+        Insert: {
+          comentario?: string | null
+          decision: string
+          fecha_decision?: string
+          id?: never
+          ticket_id: number
+          validador_id: number
+        }
+        Update: {
+          comentario?: string | null
+          decision?: string
+          fecha_decision?: string
+          id?: never
+          ticket_id?: number
+          validador_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fkDecisionValidacion_Ticket"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "Ticket"
+            referencedColumns: null
+          },
+        ]
+      }
       DictamenJefe: {
         Row: {
           comentario: string | null
@@ -924,10 +959,13 @@ export type Database = {
       }
       TipoSolicitud: {
         Row: {
+          aviso: string | null
+          categoria: string
           descripcion: string | null
           dias_estimados: number
           dias_habiles: boolean
           estado: boolean
+          etiquetas_generales: Json
           fecha_registro: string
           flujo: string
           id: number
@@ -935,10 +973,13 @@ export type Database = {
           usuario_registro: number | null
         }
         Insert: {
+          aviso?: string | null
+          categoria?: string
           descripcion?: string | null
           dias_estimados?: number
           dias_habiles?: boolean
           estado?: boolean
+          etiquetas_generales?: Json
           fecha_registro?: string
           flujo?: string
           id?: number
@@ -946,10 +987,13 @@ export type Database = {
           usuario_registro?: number | null
         }
         Update: {
+          aviso?: string | null
+          categoria?: string
           descripcion?: string | null
           dias_estimados?: number
           dias_habiles?: boolean
           estado?: boolean
+          etiquetas_generales?: Json
           fecha_registro?: string
           flujo?: string
           id?: number

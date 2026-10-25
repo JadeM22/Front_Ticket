@@ -2,7 +2,21 @@ import { useCallback, useState } from 'react'
 import { useBeforeUnload, useBlocker, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Link as LinkIcon, Loader2, Palette, Sparkles, XCircle } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  Clapperboard,
+  Info,
+  Landmark,
+  LayoutGrid,
+  Link as LinkIcon,
+  Loader2,
+  Megaphone,
+  Palette,
+  XCircle,
+} from 'lucide-react'
 import { listarCampus, listarTiposSolicitud, type TipoSolicitud } from '../../data/catalogos'
 import { listarCamposPorTipo } from '../../data/camposFormulario'
 import { crearSolicitud, obtenerFechaLimiteEstimada } from '../../data/formularios'
@@ -12,6 +26,7 @@ import { AFICHE_VACIO, subirAficheIA, validarArchivoAfiche, type AficheSeleccion
 import { SelectorAfiche } from '../afichesIA/SelectorAfiche'
 import {
   armarDetalle,
+  etiquetasGenerales,
   generalidadesIniciales,
   normalizarCampos,
   respuestasIniciales,
@@ -33,7 +48,14 @@ import { CLASE_INPUT } from '../ui/Campo'
 import { EmptyState } from '../ui/EmptyState'
 import { Modal } from '../ui/Modal'
 import { SkeletonLista } from '../ui/Skeleton'
-import { ETIQUETA_FLUJO, type DefinicionCampo, type Flujo, type Respuestas } from '../../types/domain'
+import {
+  CATEGORIAS_TIPO,
+  TAG_FLUJO,
+  type CategoriaTipo,
+  type DefinicionCampo,
+  type Flujo,
+  type Respuestas,
+} from '../../types/domain'
 
 interface EnlacePendiente {
   titulo: string
@@ -45,9 +67,14 @@ interface ProgresoAdjunto {
   estado: 'subiendo' | 'listo' | 'error'
 }
 
-/** Las divisiones del paso 1 son solo visuales: agrupan las tarjetas por flujo. */
-const ORDEN_FLUJOS: Flujo[] = ['DISENO', 'APROBACION_IA']
-const ICONO_POR_FLUJO: Record<Flujo, typeof Palette> = { DISENO: Palette, APROBACION_IA: Sparkles }
+/** Las divisiones del paso 1 son solo visuales: agrupan las tarjetas por `TipoSolicitud.categoria`. */
+const ICONO_POR_CATEGORIA: Record<CategoriaTipo, typeof Palette> = {
+  ARTE: Palette,
+  VIDEO: Clapperboard,
+  DIRCOM: Megaphone,
+  PROTOCOLO: Landmark,
+  OTROS: LayoutGrid,
+}
 const DIAS_PRODUCCION_EXCEPCIONAL = 2
 
 interface AsistenteSolicitudProps {
@@ -74,7 +101,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
   const [campos, setCampos] = useState<DefinicionCampo[]>([])
   const [respuestas, setRespuestas] = useState<Respuestas>({})
   const [mostrarErrores, setMostrarErrores] = useState(false)
-  // Solo para tipos de flujo APROBACION_IA: el afiche que revisará el Aprobador IA.
+  // Solo para tipos de flujo APROBACION_IA: el afiche que revisará el Validador.
   const [afiche, setAfiche] = useState<AficheSeleccionado>(AFICHE_VACIO)
   const [archivos, setArchivos] = useState<File[]>([])
   const [enlaces, setEnlaces] = useState<EnlacePendiente[]>([])
@@ -99,6 +126,8 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
       urlEnlace.trim() !== '')
 
   const esIA = tipoSeleccionado?.flujo === 'APROBACION_IA'
+  const esValidacion = tipoSeleccionado?.flujo === 'VALIDACION'
+  const etiquetas = etiquetasGenerales(tipoSeleccionado?.etiquetas_generales)
 
   const bloqueador = useBlocker(
     useCallback(
@@ -171,7 +200,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
 
   function continuarAPaso3() {
     if (!tipoSeleccionado) return
-    const error = validarSolicitud(generalidades, campos, respuestas)
+    const error = validarSolicitud(generalidades, campos, respuestas, etiquetas)
     if (error) {
       setMostrarErrores(true)
       toast.error(error)
@@ -279,10 +308,14 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
     setTimeout(() => navigate(`/tickets/${ticketId}`), huboError ? 1500 : 300)
   }
 
-  // Las solicitudes de flujo APROBACION_IA no pueden ser excepcionales (la base también lo rechaza).
-  const gruposTipo = ORDEN_FLUJOS.filter((flujo) => !excepcional || flujo === 'DISENO')
-    .map((flujo) => ({ flujo, tipos: tipos.filter((t) => t.estado && t.flujo === flujo) }))
-    .filter((grupo) => grupo.tipos.length > 0)
+  // Solo las solicitudes de diseño pueden ser excepcionales (la base también rechaza las demás).
+  const tiposVisibles = tipos.filter((t) => t.estado && (!excepcional || t.flujo === 'DISENO'))
+  const categoriaDe = (t: TipoSolicitud): CategoriaTipo =>
+    CATEGORIAS_TIPO.some((c) => c.valor === t.categoria) ? (t.categoria as CategoriaTipo) : 'OTROS'
+  const gruposTipo = CATEGORIAS_TIPO.map((categoria) => ({
+    ...categoria,
+    tipos: tiposVisibles.filter((t) => categoriaDe(t) === categoria.valor),
+  })).filter((grupo) => grupo.tipos.length > 0)
 
   const nombresCampus = campus.filter((c) => generalidades.campus_ids.includes(c.id)).map((c) => c.nombre)
 
@@ -291,7 +324,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
       <div>
         <h1 className="text-xl font-bold text-azul-noche">{excepcional ? 'Solicitud excepcional' : 'Nueva solicitud'}</h1>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-tinta-suave">
-          {['Tipo', 'Formulario', esIA ? 'Afiche y adjuntos' : 'Adjuntos', 'Revisar y enviar'].map((etiqueta, indice) => (
+          {['Tipo', 'Formulario', esIA ? 'Afiche' : 'Adjuntos', 'Revisar y enviar'].map((etiqueta, indice) => (
             <span
               key={etiqueta}
               className={`rounded-full px-2.5 py-1 ${paso === indice + 1 ? 'bg-azul-institucional text-white' : 'bg-azul-niebla'}`}
@@ -308,12 +341,12 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
         ) : (
           <div className="space-y-6">
             {gruposTipo.map((grupo) => {
-              const Icono = ICONO_POR_FLUJO[grupo.flujo]
+              const Icono = ICONO_POR_CATEGORIA[grupo.valor]
               return (
-                <div key={grupo.flujo}>
+                <div key={grupo.valor}>
                   {gruposTipo.length > 1 && (
                     <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-tinta-suave">
-                      {ETIQUETA_FLUJO[grupo.flujo]}
+                      {grupo.etiqueta}
                     </p>
                   )}
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -329,7 +362,14 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
                           {cargandoTipoId === tipo.id ? <Loader2 size={20} className="animate-spin" /> : <Icono size={20} />}
                         </span>
                         <span>
-                          <p className="font-semibold text-tinta">{tipo.nombre}</p>
+                          <p className="font-semibold text-tinta">
+                            {tipo.nombre}
+                            {TAG_FLUJO[tipo.flujo as Flujo] && (
+                              <span className="ml-2 rounded-full bg-indigo-bruma px-2 py-0.5 align-middle text-[10px] font-semibold text-indigo-suave">
+                                {TAG_FLUJO[tipo.flujo as Flujo]}
+                              </span>
+                            )}
+                          </p>
                           <p className="text-xs text-tinta-suave">
                             {tipo.dias_estimados} día(s) {tipo.dias_habiles ? 'hábiles' : 'corridos'}
                           </p>
@@ -357,6 +397,13 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
             </p>
           )}
 
+          {tipoSeleccionado.aviso && (
+            <div className="mb-4 flex gap-2 rounded-lg border-l-4 border-azul-medio bg-azul-niebla p-3 text-sm text-azul-institucional">
+              <Info size={18} className="mt-0.5 flex-none" />
+              <p className="whitespace-pre-line font-medium">{tipoSeleccionado.aviso}</p>
+            </div>
+          )}
+
           {!excepcional && horarioHabil === false && !esAdmin && (
             <div className="mb-4 rounded-lg bg-ambar-bruma p-3 text-sm text-ambar">
               Las solicitudes solo se pueden enviar de lunes a viernes, de 8:00 a. m. a 4:00 p. m. Puedes llenar el
@@ -370,6 +417,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
             tipoId={tipoSeleccionado.id}
             excepcional={excepcional}
             diasProduccion={excepcional ? DIAS_PRODUCCION_EXCEPCIONAL : tipoSeleccionado.dias_estimados}
+            etiquetas={etiquetas}
           />
 
           {campos.length > 0 && (
@@ -391,21 +439,24 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
 
       {paso === 3 && (
         <Card>
-          {esIA && (
-            <div className="mb-6 border-b border-azul-niebla pb-6">
+          {/* Afiches con IA: solo se sube el afiche, sin otros adjuntos (la base los rechaza). */}
+          {esIA ? (
+            <>
               <h2 className="mb-1 font-semibold text-azul-noche">Afiche *</h2>
               <p className="mb-4 text-sm text-tinta-suave">
-                El afiche que revisará el Aprobador IA. Tienes hasta 5 intentos: si lo rechaza, podrás corregirlo y
+                El afiche que revisará el Validador. Tienes hasta 5 intentos: si lo rechaza, podrás corregirlo y
                 reenviarlo desde el detalle de la solicitud.
               </p>
               <SelectorAfiche valor={afiche} onCambiar={setAfiche} />
-            </div>
-          )}
-
-          <h2 className="mb-1 font-semibold text-azul-noche">{esIA ? 'Otros adjuntos (opcional)' : 'Adjuntos'}</h2>
+            </>
+          ) : (
+          <>
+          <h2 className="mb-1 font-semibold text-azul-noche">Adjuntos</h2>
           <p className="mb-4 text-sm text-tinta-suave">
-            Adjunta logos, imágenes, textos o referencias que el diseñador necesite. Si son muchas fotos,
-            comparte un enlace de Drive. ({totalAdjuntos} / {MAXIMO_ADJUNTOS_POR_TICKET})
+            {esValidacion
+              ? 'Adjunta lo que el Validador necesite para decidir (programa, invitación, referencias).'
+              : 'Adjunta logos, imágenes, textos o referencias que el diseñador necesite.'}{' '}
+            Si son muchas fotos, comparte un enlace de Drive. ({totalAdjuntos} / {MAXIMO_ADJUNTOS_POR_TICKET})
           </p>
 
           <MultiFileDrop archivos={archivos} onCambiar={setArchivos} espacioDisponible={espacioDisponible} />
@@ -445,6 +496,8 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
               </ul>
             )}
           </div>
+          </>
+          )}
 
           <div className="mt-6 flex justify-between">
             <Button variante="fantasma" onClick={() => setPaso(2)}>
@@ -472,6 +525,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
               campos,
               respuestas,
             }}
+            etiquetas={etiquetas}
           />
 
           {bloqueadoPorHorario && (
@@ -487,18 +541,22 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
             </p>
           )}
 
-          <p className="mt-4 text-sm font-semibold text-tinta">Adjuntos ({totalAdjuntos})</p>
-          {totalAdjuntos === 0 ? (
-            <p className="text-sm text-tinta-suave">Sin adjuntos.</p>
-          ) : (
-            <ul className="mt-1 text-sm text-tinta-suave">
-              {archivos.map((a) => (
-                <li key={a.name}>· {a.name}</li>
-              ))}
-              {enlaces.map((e) => (
-                <li key={e.url}>· {e.titulo} (enlace)</li>
-              ))}
-            </ul>
+          {!esIA && (
+            <>
+              <p className="mt-4 text-sm font-semibold text-tinta">Adjuntos ({totalAdjuntos})</p>
+              {totalAdjuntos === 0 ? (
+                <p className="text-sm text-tinta-suave">Sin adjuntos.</p>
+              ) : (
+                <ul className="mt-1 text-sm text-tinta-suave">
+                  {archivos.map((a) => (
+                    <li key={a.name}>· {a.name}</li>
+                  ))}
+                  {enlaces.map((e) => (
+                    <li key={e.url}>· {e.titulo} (enlace)</li>
+                  ))}
+                </ul>
+              )}
+            </>
           )}
 
           {progreso.length > 0 && (

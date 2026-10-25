@@ -2,8 +2,9 @@ import type { ReactNode } from 'react'
 import { Campo, CLASE_INPUT } from '../ui/Campo'
 import { FechaInput } from '../ui/FechaInput'
 import { HoraInput } from '../ui/HoraInput'
+import { EtiquetasInput } from './EtiquetasInput'
 import { hoyTegucigalpaISO } from '../../lib/date'
-import { validarCampo } from '../../lib/validacionFormularios'
+import { MAX_LONGITUD_ETIQUETA, validarCampo } from '../../lib/validacionFormularios'
 import type { DefinicionCampo, Respuestas, ValorCampo } from '../../types/domain'
 
 interface FormularioDinamicoProps {
@@ -194,6 +195,23 @@ function CampoDinamico({ campo, valor, error, onCambiar }: CampoDinamicoProps) {
               </label>
             ))}
           </div>
+        </Grupo>
+      )
+      break
+    }
+    case 'ETIQUETAS': {
+      const lista = Array.isArray(valor) ? valor : []
+      control = (
+        <Grupo etiqueta={etiquetaDe(campo)} ayuda={campo.ayuda}>
+          <EtiquetasInput
+            valores={lista}
+            onCambiar={onCambiar}
+            sugerencias={campo.opciones}
+            placeholder={placeholder}
+            maxLongitud={max_longitud ?? MAX_LONGITUD_ETIQUETA}
+            maximo={max}
+            invalido={Boolean(error)}
+          />
         </Grupo>
       )
       break

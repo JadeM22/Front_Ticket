@@ -13,16 +13,17 @@ export function useTicketsEstadoReal() {
 }
 
 /**
- * Igual que `useTicketsEstadoReal` (misma consulta y caché) pero sin los tickets de flujo
- * APROBACION_IA, que nunca tienen diseñador. RLS ya se los oculta a Asignador y Diseñador; este filtro
- * evita que alguien que además sea Administrador los vea en tableros o contadores de diseño.
+ * Igual que `useTicketsEstadoReal` (misma consulta y caché) pero solo con los tickets de flujo DISENO:
+ * los de APROBACION_IA y VALIDACION nunca tienen diseñador. RLS ya se los oculta a Asignador y
+ * Diseñador; este filtro evita que alguien que además sea Administrador los vea en tableros o
+ * contadores de diseño.
  */
 export function useTicketsDiseno() {
   return useQuery({
     queryKey: ['tickets', 'estado-real'],
     queryFn: listarTicketsEstadoReal,
     refetchInterval: 60_000,
-    select: (tickets) => tickets.filter((t) => t.flujo !== 'APROBACION_IA'),
+    select: (tickets) => tickets.filter((t) => (t.flujo ?? 'DISENO') === 'DISENO'),
   })
 }
 

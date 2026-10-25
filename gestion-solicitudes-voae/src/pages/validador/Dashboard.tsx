@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { AlertTriangle } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
@@ -17,38 +18,77 @@ function porFechaLimite(a: TicketEstadoReal, b: TicketEstadoReal): number {
 }
 
 /**
- * Bandeja del Aprobador IA: tickets de flujo APROBACION_IA que esperan su revisión. RLS ya limita qué
- * tickets recibe; aquí solo se filtra por estado y por tener al menos un envío (sin afiche no hay qué
- * revisar). La revisión se hace desde el detalle, donde se ve el afiche completo.
+ * Bandeja del Validador: afiches con IA que esperan revisión y solicitudes de validación (Cobertura
+ * de evento) que esperan su decisión. RLS ya limita qué tickets recibe; aquí solo se filtra por flujo
+ * y estado (un afiche sin envío todavía no tiene qué revisar). La decisión se toma desde el detalle.
  */
-export function AprobadorIADashboard() {
+export function ValidadorDashboard() {
   const { data: tickets = [], isLoading } = useTicketsEstadoReal()
 
   if (isLoading) return <SkeletonLista filas={4} />
 
+  const esperando = (t: TicketEstadoReal) => ESTADOS_POR_REVISAR.includes(t.estado_registrado ?? '')
+
   const ticketsIA = tickets.filter((t) => t.flujo === 'APROBACION_IA')
-  const porRevisar = ticketsIA
-    .filter((t) => ESTADOS_POR_REVISAR.includes(t.estado_registrado ?? '') && (t.intentos_usados ?? 0) > 0)
-    .sort(porFechaLimite)
-  const vencidos = porRevisar.filter((t) => t.fuera_de_plazo).length
+  const afiches = ticketsIA.filter((t) => esperando(t) && (t.intentos_usados ?? 0) > 0).sort(porFechaLimite)
   const enCorreccion = ticketsIA.filter((t) => t.estado_registrado === 'Corrección').length
+  const validaciones = tickets.filter((t) => t.flujo === 'VALIDACION' && esperando(t)).sort(porFechaLimite)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      <Seccion
+        titulo="Solicitudes por validar"
+        tickets={validaciones}
+        vacio="No hay solicitudes esperando tu decisión"
+        detalle={() => null}
+      />
+
+      <Seccion
+        titulo="Afiches por revisar"
+        tickets={afiches}
+        vacio="No hay afiches esperando revisión"
+        extra={enCorreccion > 0 ? <> · {enCorreccion} esperando que el solicitante reenvíe</> : null}
+        detalle={(ticket) => (
+          <p>
+            Intento {ticket.intentos_usados ?? 0} de {INTENTOS_MAXIMOS_IA}
+          </p>
+        )}
+      />
+    </div>
+  )
+}
+
+function Seccion({
+  titulo,
+  tickets,
+  vacio,
+  extra = null,
+  detalle,
+}: {
+  titulo: string
+  tickets: TicketEstadoReal[]
+  vacio: string
+  extra?: ReactNode
+  detalle: (ticket: TicketEstadoReal) => ReactNode
+}) {
+  const vencidos = tickets.filter((t) => t.fuera_de_plazo).length
+
+  return (
+    <section className="space-y-3">
       <div>
-        <h1 className="text-xl font-bold text-azul-noche">Afiches por revisar</h1>
+        <h1 className="text-xl font-bold text-azul-noche">{titulo}</h1>
         <p className="text-sm text-tinta-suave">
-          {porRevisar.length} por revisar
+          {tickets.length} pendiente(s)
           {vencidos > 0 && <span className="font-semibold text-coral"> · {vencidos} fuera de plazo</span>}
-          {enCorreccion > 0 && <> · {enCorreccion} esperando que el solicitante reenvíe</>}
+          {extra}
         </p>
       </div>
 
-      {porRevisar.length === 0 ? (
-        <EmptyState titulo="No hay afiches esperando revisión" />
+      {tickets.length === 0 ? (
+        <EmptyState titulo={vacio} />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {porRevisar.map((ticket) => (
+          {tickets.map((ticket) => (
             <Link key={ticket.ticket_id} to={`/tickets/${ticket.ticket_id}`} className="block">
               <Card
                 className={`h-full space-y-2 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md ${
@@ -63,12 +103,10 @@ export function AprobadorIADashboard() {
                   {ticket.titulo || ticket.tipo_solicitud}
                 </p>
                 <p className="truncate text-sm text-tinta-suave">
-                  {ticket.solicitante} · {ticket.area}
+                  {ticket.tipo_solicitud} · {ticket.solicitante} · {ticket.area}
                 </p>
                 <div className="space-y-0.5 border-t border-azul-niebla/60 pt-2 text-xs text-tinta-suave">
-                  <p>
-                    Intento {ticket.intentos_usados ?? 0} de {INTENTOS_MAXIMOS_IA}
-                  </p>
+                  {detalle(ticket)}
                   <p className={ticket.fuera_de_plazo ? 'flex items-center gap-1 font-semibold text-coral' : undefined}>
                     {ticket.fuera_de_plazo && <AlertTriangle size={12} />}
                     Responder antes del {formatFecha(ticket.fecha_limite)}
@@ -81,6 +119,6 @@ export function AprobadorIADashboard() {
           ))}
         </div>
       )}
-    </div>
+    </section>
   )
 }

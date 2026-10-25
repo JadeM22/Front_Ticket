@@ -4,6 +4,7 @@ import { Campo, CLASE_INPUT } from '../ui/Campo'
 import { FechaEventoPicker } from '../ui/FechaEventoPicker'
 import { Skeleton } from '../ui/Skeleton'
 import { MAX_LONGITUD_GENERALIDAD, type Generalidades } from '../../lib/validacionFormularios'
+import type { EtiquetasGenerales } from '../../types/domain'
 
 interface GeneralidadesCamposProps {
   valor: Generalidades
@@ -11,10 +12,19 @@ interface GeneralidadesCamposProps {
   tipoId: number
   excepcional: boolean
   diasProduccion: number
+  /** Nombres visibles del tipo (`etiquetasGenerales()`). */
+  etiquetas: EtiquetasGenerales
 }
 
-/** Lo que toda solicitud lleva arriba, sea del tipo que sea. No es configurable. */
-export function GeneralidadesCampos({ valor, onCambiar, tipoId, excepcional, diasProduccion }: GeneralidadesCamposProps) {
+/** Lo que toda solicitud lleva arriba, sea del tipo que sea. Solo sus nombres visibles cambian por tipo. */
+export function GeneralidadesCampos({
+  valor,
+  onCambiar,
+  tipoId,
+  excepcional,
+  diasProduccion,
+  etiquetas,
+}: GeneralidadesCamposProps) {
   const { data: campus = [], isLoading } = useQuery({ queryKey: ['catalogos', 'campus'], queryFn: listarCampus })
   const activos = campus.filter((c) => c.estado)
   const todosMarcados = activos.length > 0 && activos.every((c) => valor.campus_ids.includes(c.id))
@@ -27,7 +37,7 @@ export function GeneralidadesCampos({ valor, onCambiar, tipoId, excepcional, dia
 
   return (
     <div className="space-y-4">
-      <Campo etiqueta="Título *">
+      <Campo etiqueta={`${etiquetas.titulo} *`}>
         <input
           className={CLASE_INPUT}
           maxLength={MAX_LONGITUD_GENERALIDAD}
@@ -36,7 +46,7 @@ export function GeneralidadesCampos({ valor, onCambiar, tipoId, excepcional, dia
         />
       </Campo>
 
-      <Campo etiqueta="Fecha del evento *">
+      <Campo etiqueta={`${etiquetas.fecha_evento} *`}>
         <FechaEventoPicker
           tipoId={tipoId}
           excepcional={excepcional}
@@ -46,7 +56,7 @@ export function GeneralidadesCampos({ valor, onCambiar, tipoId, excepcional, dia
         />
       </Campo>
 
-      <Campo etiqueta="Dirigido a *">
+      <Campo etiqueta={`${etiquetas.dirigido_a} *`}>
         <input
           className={CLASE_INPUT}
           placeholder="Estudiante, docente, personal administrativo"
@@ -58,7 +68,7 @@ export function GeneralidadesCampos({ valor, onCambiar, tipoId, excepcional, dia
 
       <fieldset>
         <div className="mb-1 flex items-center justify-between gap-2">
-          <legend className="text-sm font-medium text-tinta">Alcance *</legend>
+          <legend className="text-sm font-medium text-tinta">{etiquetas.alcance} *</legend>
           {activos.length > 1 && (
             <button
               type="button"

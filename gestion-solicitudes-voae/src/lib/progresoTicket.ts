@@ -88,7 +88,7 @@ export function pasosProgresoTicket(ticket: TicketEstadoReal): PasoStepper[] {
 
 /**
  * Etapas de un ticket de aprobación de afiches con IA: no hay diseñador ni dictamen, sino envíos del
- * solicitante y revisiones del Aprobador IA, con hasta `intentosMaximos` envíos.
+ * solicitante y revisiones del Validador, con hasta `intentosMaximos` envíos.
  */
 export function pasosProgresoIA(ticket: TicketEstadoReal, intentosMaximos: number): PasoStepper[] {
   const registrado = ticket.estado_registrado
@@ -136,9 +136,37 @@ export function pasosProgresoIA(ticket: TicketEstadoReal, intentosMaximos: numbe
         ? 'Fuera de plazo'
         : rechazos > 0
           ? `Intento ${intentosUsados} de ${intentosMaximos}`
-          : 'Esperando al Aprobador IA',
+          : 'Esperando al Validador',
     })
   }
   pasos.push({ etiqueta: 'Aprobada', estado: 'pendiente' })
   return pasos
+}
+
+/** Etapas de una solicitud de validación (Cobertura de evento): una sola decisión del Validador. */
+export function pasosProgresoValidacion(ticket: TicketEstadoReal, motivoRechazo: string | null): PasoStepper[] {
+  const registrado = ticket.estado_registrado
+  const enviada: PasoStepper = { etiqueta: 'Enviada', estado: 'completado' }
+
+  if (registrado === 'Aprobado') {
+    return [enviada, { etiqueta: 'Validación', estado: 'completado' }, { etiqueta: 'Aprobada', estado: 'completado' }]
+  }
+  if (registrado === 'Rechazado') {
+    return [
+      enviada,
+      { etiqueta: 'Validación', estado: 'completado' },
+      { etiqueta: 'Rechazada', estado: 'actual', alerta: true, descripcion: motivoRechazo ?? undefined },
+    ]
+  }
+  const retrasado = ticket.estado_real === 'Retrasado'
+  return [
+    enviada,
+    {
+      etiqueta: 'Validación',
+      estado: 'actual',
+      alerta: retrasado,
+      descripcion: retrasado ? 'Fuera de plazo' : 'Esperando al Validador',
+    },
+    { etiqueta: 'Aprobada', estado: 'pendiente' },
+  ]
 }

@@ -20,7 +20,7 @@ import { EmptyState } from '../../components/ui/EmptyState'
 import { EstadoChip } from '../../components/EstadoChip'
 import { CronometroDictamen } from '../../components/ui/CronometroDictamen'
 import { DictamenModal } from '../../components/DictamenModal'
-import { ETIQUETA_FLUJO, type DecisionJefe, type Flujo, type TicketEstadoReal } from '../../types/domain'
+import { ETIQUETA_FLUJO, TAG_FLUJO, type DecisionJefe, type Flujo, type TicketEstadoReal } from '../../types/domain'
 
 const DECISIONES = ['Aprobado', 'Corrección', 'Aprobado (Automático)', 'Rechazado', 'Retrasado']
 
@@ -28,9 +28,9 @@ function etiquetaFlujo(t: TicketEstadoReal): string {
   return ETIQUETA_FLUJO[t.flujo as Flujo] ?? t.flujo ?? '—'
 }
 
-/** Los tickets IA no tienen diseñador: "Sin asignar" daría a entender que falta asignarlos. */
+/** Solo los tickets de diseño tienen diseñador: "Sin asignar" daría a entender que falta asignarlos. */
 function textoDisenador(t: TicketEstadoReal): string {
-  if (t.flujo === 'APROBACION_IA') return '—'
+  if (t.flujo && t.flujo !== 'DISENO') return '—'
   return t.disenador ?? 'Sin asignar'
 }
 
@@ -59,8 +59,9 @@ export function JefeDashboard() {
     return () => document.removeEventListener('mousedown', alHacerClicFuera)
   }, [exportarAbierto])
 
-  // Los tickets IA nunca llegan a "Finalizado" ni los dictamina el jefe: los ve en el historial, solo en lectura.
-  const esPorDictaminar = (t: TicketEstadoReal) => t.estado_real === 'Finalizado' && t.flujo !== 'APROBACION_IA'
+  // Los tickets IA y de validación nunca llegan a "Finalizado" ni los dictamina el jefe: los ve en el
+  // historial, solo en lectura.
+  const esPorDictaminar = (t: TicketEstadoReal) => t.estado_real === 'Finalizado' && (t.flujo ?? 'DISENO') === 'DISENO'
   const porDictaminar = tickets.filter(esPorDictaminar)
   const historialCompleto = tickets.filter((t) => !esPorDictaminar(t))
 
@@ -225,8 +226,11 @@ export function JefeDashboard() {
             Flujo
             <select className={`${CLASE_INPUT} mt-1 w-auto`} value={flujoFiltro} onChange={(e) => setFlujoFiltro(e.target.value)}>
               <option value="">Todos</option>
-              <option value="DISENO">{ETIQUETA_FLUJO.DISENO}</option>
-              <option value="APROBACION_IA">{ETIQUETA_FLUJO.APROBACION_IA}</option>
+              {(Object.keys(ETIQUETA_FLUJO) as Flujo[]).map((valor) => (
+                <option key={valor} value={valor}>
+                  {ETIQUETA_FLUJO[valor]}
+                </option>
+              ))}
             </select>
           </label>
           <Button
@@ -286,8 +290,10 @@ export function JefeDashboard() {
                     </td>
                     <td className="px-4 py-2">
                       {ticket.tipo_solicitud}
-                      {ticket.flujo === 'APROBACION_IA' && (
-                        <span className="ml-1.5 rounded-full bg-indigo-bruma px-2 py-0.5 text-xs text-indigo-suave">IA</span>
+                      {TAG_FLUJO[ticket.flujo as Flujo] && (
+                        <span className="ml-1.5 rounded-full bg-indigo-bruma px-2 py-0.5 text-xs text-indigo-suave">
+                          {TAG_FLUJO[ticket.flujo as Flujo]}
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-2">{textoDisenador(ticket)}</td>

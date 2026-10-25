@@ -20,7 +20,7 @@ import { AdminCatalogosPage } from '../pages/admin/Catalogos'
 import { AdminBitacoraPage } from '../pages/admin/Bitacora'
 import { AdminFeriadosPage } from '../pages/admin/Feriados'
 import { AnalistaDashboard } from '../pages/analista/Dashboard'
-import { AprobadorIADashboard } from '../pages/aprobadorIA/Dashboard'
+import { ValidadorDashboard } from '../pages/validador/Dashboard'
 import { TicketDetailPage } from '../pages/TicketDetail'
 import { NotFoundPage } from '../pages/NotFound'
 
@@ -66,8 +66,8 @@ export const router = createBrowserRouter([
                 children: [{ path: '/asignador', element: <AsignadorDashboard /> }],
               },
               {
-                element: <RequireRole roles={['Aprobador IA']} />,
-                children: [{ path: '/aprobador-ia', element: <AprobadorIADashboard /> }],
+                element: <RequireRole roles={['Validador']} />,
+                children: [{ path: '/validador', element: <ValidadorDashboard /> }],
               },
               {
                 element: <RequireRole roles={['Analista', 'Administrador']} />,

@@ -25,7 +25,7 @@ import { formatFecha, hoyTegucigalpaISO, mesTegucigalpa } from '../../lib/date'
 import { coincideCodigo, coincideTexto } from '../../lib/buscar'
 import { exportarCSV, exportarPDF, type ColumnaExportar } from '../../lib/exportar'
 import { INTENTOS_MAXIMOS_IA } from '../../data/afichesIA'
-import { ETIQUETA_FLUJO, type Flujo } from '../../types/domain'
+import { ETIQUETA_FLUJO, TAG_FLUJO, type Flujo } from '../../types/domain'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { CLASE_INPUT } from '../../components/ui/Campo'
@@ -409,8 +409,11 @@ export function AnalistaDashboard() {
             onChange={(e) => actualizarFiltro('flujo', e.target.value)}
           >
             <option value="">Todos</option>
-            <option value="DISENO">{ETIQUETA_FLUJO.DISENO}</option>
-            <option value="APROBACION_IA">{ETIQUETA_FLUJO.APROBACION_IA}</option>
+            {(Object.keys(ETIQUETA_FLUJO) as Flujo[]).map((valor) => (
+              <option key={valor} value={valor}>
+                {ETIQUETA_FLUJO[valor]}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -674,8 +677,10 @@ export function AnalistaDashboard() {
                           </td>
                           <td className="px-3 py-2">
                             {fila.tipo_solicitud}
-                            {fila.flujo === 'APROBACION_IA' && (
-                              <span className="ml-1.5 rounded-full bg-indigo-bruma px-2 py-0.5 text-xs text-indigo-suave">IA</span>
+                            {TAG_FLUJO[fila.flujo as Flujo] && (
+                              <span className="ml-1.5 rounded-full bg-indigo-bruma px-2 py-0.5 text-xs text-indigo-suave">
+                                {TAG_FLUJO[fila.flujo as Flujo]}
+                              </span>
                             )}
                           </td>
                           <td className="px-3 py-2">{fila.area}</td>

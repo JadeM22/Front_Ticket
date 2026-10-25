@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { formatFecha, formatFechaLarga, formatHora } from '../../lib/date'
-import { estaVacio } from '../../lib/validacionFormularios'
-import type { DefinicionCampo, DetalleFormulario, ValorCampo } from '../../types/domain'
+import { estaVacio, etiquetasGenerales } from '../../lib/validacionFormularios'
+import type { DefinicionCampo, DetalleFormulario, EtiquetasGenerales, ValorCampo } from '../../types/domain'
 
 function renderValor(campo: DefinicionCampo | null, valor: ValorCampo | undefined): ReactNode {
   if (campo?.tipo_campo === 'BOOLEANO') return valor === true ? 'Sí' : 'No'
@@ -39,17 +39,24 @@ function Fila({ etiqueta, children }: { etiqueta: string; children: ReactNode })
  * para un ticket ya enviado es su `campos_snapshot`: si el Administrador cambia o desactiva un campo
  * después, el ticket se sigue viendo como se envió.
  */
-export function DetalleFormularioVista({ detalle }: { detalle: DetalleFormulario }) {
+export function DetalleFormularioVista({
+  detalle,
+  etiquetas = etiquetasGenerales(null),
+}: {
+  detalle: DetalleFormulario
+  /** Nombres visibles de las generalidades del tipo. */
+  etiquetas?: EtiquetasGenerales
+}) {
   const clavesConocidas = new Set(detalle.campos.map((c) => c.clave))
   // Respuestas sin definición en el snapshot (p. ej. tickets anteriores a los formularios configurables).
   const huerfanas = Object.entries(detalle.respuestas).filter(([clave]) => !clavesConocidas.has(clave))
 
   return (
     <dl className="space-y-2 text-sm">
-      <Fila etiqueta="Título">{detalle.titulo || '—'}</Fila>
-      <Fila etiqueta="Fecha del evento">{detalle.fecha_evento ? formatFechaLarga(detalle.fecha_evento) : '—'}</Fila>
-      <Fila etiqueta="Dirigido a">{detalle.dirigido_a || '—'}</Fila>
-      <Fila etiqueta="Alcance">{detalle.campus.length > 0 ? detalle.campus.join(', ') : '—'}</Fila>
+      <Fila etiqueta={etiquetas.titulo}>{detalle.titulo || '—'}</Fila>
+      <Fila etiqueta={etiquetas.fecha_evento}>{detalle.fecha_evento ? formatFechaLarga(detalle.fecha_evento) : '—'}</Fila>
+      <Fila etiqueta={etiquetas.dirigido_a}>{detalle.dirigido_a || '—'}</Fila>
+      <Fila etiqueta={etiquetas.alcance}>{detalle.campus.length > 0 ? detalle.campus.join(', ') : '—'}</Fila>
       {detalle.campos.map((campo) => (
         <Fila key={campo.clave} etiqueta={campo.etiqueta}>
           {renderValor(campo, detalle.respuestas[campo.clave])}

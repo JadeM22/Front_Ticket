@@ -5,11 +5,40 @@ import { Button } from './ui/Button'
 import { Campo, CLASE_INPUT } from './ui/Campo'
 import { crearTipoSolicitud, actualizarTipoSolicitud, type TipoSolicitud } from '../data/catalogos'
 import { mensajeError } from '../lib/errors'
-import { ETIQUETA_FLUJO, type Flujo } from '../types/domain'
+import { etiquetasGenerales } from '../lib/validacionFormularios'
+import type { Json } from '../types/database'
+import {
+  CATEGORIAS_TIPO,
+  ETIQUETA_FLUJO,
+  type CategoriaTipo,
+  type EtiquetasGenerales,
+  type Flujo,
+} from '../types/domain'
 
 const EXPLICACION_FLUJO: Record<Flujo, string> = {
   DISENO: 'El equipo de diseño toma la solicitud, entrega y el Jefe de Área dictamina.',
-  APROBACION_IA: 'El solicitante sube su afiche y un Aprobador IA lo aprueba o rechaza (hasta 5 intentos).',
+  APROBACION_IA: 'El solicitante sube su afiche y un Validador lo aprueba o rechaza (hasta 5 intentos).',
+  VALIDACION: 'Un Validador aprueba o rechaza la solicitud una sola vez, sin diseño (p. ej. Cobertura de evento).',
+}
+
+const NOMBRES_POR_DEFECTO = etiquetasGenerales(null)
+
+const GENERALIDADES: { clave: keyof EtiquetasGenerales; nombre: string }[] = [
+  { clave: 'titulo', nombre: 'Título' },
+  { clave: 'fecha_evento', nombre: 'Fecha del evento' },
+  { clave: 'dirigido_a', nombre: 'Dirigido a' },
+  { clave: 'alcance', nombre: 'Alcance' },
+]
+
+/** Solo las claves con texto: la base admite únicamente estas cuatro y vacío = nombre de siempre. */
+function etiquetasIniciales(json: Json | undefined): Record<keyof EtiquetasGenerales, string> {
+  const crudo = json && typeof json === 'object' && !Array.isArray(json) ? json : {}
+  const resultado = { titulo: '', fecha_evento: '', dirigido_a: '', alcance: '' }
+  for (const { clave } of GENERALIDADES) {
+    const valor = (crudo as Record<string, Json | undefined>)[clave]
+    if (typeof valor === 'string') resultado[clave] = valor
+  }
+  return resultado
 }
 
 interface TipoSolicitudModalProps {
@@ -21,7 +50,12 @@ interface TipoSolicitudModalProps {
 
 export function TipoSolicitudModal({ abierto, onCerrar, onGuardado, tipo }: TipoSolicitudModalProps) {
   return (
-    <Modal abierto={abierto} onCerrar={onCerrar} titulo={tipo ? 'Editar tipo de solicitud' : 'Crear tipo de solicitud'}>
+    <Modal
+      abierto={abierto}
+      onCerrar={onCerrar}
+      titulo={tipo ? 'Editar tipo de solicitud' : 'Crear tipo de solicitud'}
+      ancho="amplio"
+    >
       {abierto && <FormularioTipoSolicitud tipo={tipo} onCerrar={onCerrar} onGuardado={onGuardado} />}
     </Modal>
   )
@@ -43,6 +77,9 @@ function FormularioTipoSolicitud({
   // El flujo solo se elige al crear: cambiarlo después dejaría tickets abiertos en un flujo que ya no es el suyo.
   const [flujo, setFlujo] = useState<Flujo>((tipo?.flujo as Flujo | undefined) ?? 'DISENO')
   const [descripcion, setDescripcion] = useState(tipo?.descripcion ?? '')
+  const [categoria, setCategoria] = useState<CategoriaTipo>((tipo?.categoria as CategoriaTipo | undefined) ?? 'OTROS')
+  const [etiquetas, setEtiquetas] = useState(() => etiquetasIniciales(tipo?.etiquetas_generales))
+  const [aviso, setAviso] = useState(tipo?.aviso ?? '')
   const [estado, setEstado] = useState(tipo?.estado ?? true)
   const [enviando, setEnviando] = useState(false)
 
@@ -53,11 +90,18 @@ function FormularioTipoSolicitud({
     }
     setEnviando(true)
     try {
+      const etiquetasGuardar: Record<string, string> = {}
+      for (const { clave } of GENERALIDADES) {
+        if (etiquetas[clave].trim()) etiquetasGuardar[clave] = etiquetas[clave].trim()
+      }
       const payload = {
         nombre: nombre.trim(),
         dias_estimados: diasEstimados,
         dias_habiles: diasHabiles,
         descripcion: descripcion.trim() || null,
+        categoria,
+        etiquetas_generales: etiquetasGuardar,
+        aviso: aviso.trim() || null,
         estado,
       }
       if (tipo) {
@@ -108,15 +152,49 @@ function FormularioTipoSolicitud({
       ) : (
         <Campo etiqueta="Flujo" ayuda={`${EXPLICACION_FLUJO[flujo]} No se puede cambiar después.`}>
           <select className={CLASE_INPUT} value={flujo} onChange={(e) => setFlujo(e.target.value as Flujo)}>
-            <option value="DISENO">{ETIQUETA_FLUJO.DISENO}</option>
-            <option value="APROBACION_IA">{ETIQUETA_FLUJO.APROBACION_IA}</option>
+            {(Object.keys(ETIQUETA_FLUJO) as Flujo[]).map((valor) => (
+              <option key={valor} value={valor}>
+                {ETIQUETA_FLUJO[valor]}
+              </option>
+            ))}
           </select>
         </Campo>
       )}
 
+      <Campo etiqueta="Categoría" ayuda="Solo agrupa las tarjetas al elegir el tipo en &quot;Nueva solicitud&quot;.">
+        <select className={CLASE_INPUT} value={categoria} onChange={(e) => setCategoria(e.target.value as CategoriaTipo)}>
+          {CATEGORIAS_TIPO.map((c) => (
+            <option key={c.valor} value={c.valor}>
+              {c.etiqueta}
+            </option>
+          ))}
+        </select>
+      </Campo>
+
       <Campo etiqueta="Descripción (nota al elegir el tipo)">
         <textarea className={CLASE_INPUT} rows={2} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
       </Campo>
+
+      <Campo etiqueta="Aviso destacado (opcional)" ayuda="Se muestra resaltado arriba del formulario de este tipo.">
+        <textarea className={CLASE_INPUT} rows={2} value={aviso} onChange={(e) => setAviso(e.target.value)} />
+      </Campo>
+
+      <fieldset>
+        <legend className="mb-1 text-sm font-medium text-tinta">Nombres visibles de las generalidades</legend>
+        <p className="mb-2 text-xs text-tinta-suave">Déjalos vacíos para usar el nombre de siempre.</p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {GENERALIDADES.map(({ clave, nombre: nombreGeneralidad }) => (
+            <Campo key={clave} etiqueta={nombreGeneralidad}>
+              <input
+                className={CLASE_INPUT}
+                placeholder={NOMBRES_POR_DEFECTO[clave]}
+                value={etiquetas[clave]}
+                onChange={(e) => setEtiquetas({ ...etiquetas, [clave]: e.target.value })}
+              />
+            </Campo>
+          ))}
+        </div>
+      </fieldset>
 
       <label className="flex items-center gap-2 text-sm text-tinta">
         <input type="checkbox" checked={estado} onChange={(e) => setEstado(e.target.checked)} />

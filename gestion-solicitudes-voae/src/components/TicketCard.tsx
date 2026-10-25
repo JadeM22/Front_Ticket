@@ -86,7 +86,7 @@ export function TicketCard({ ticket, onClick, accion }: TicketCardProps) {
         <FilaCampo icono={Calendar} etiqueta="Creada" valor={formatFechaHora(ticket.fecha_registro)} />
         <FilaCampo icono={PartyPopper} etiqueta="Evento" valor={formatFecha(ticket.fecha_evento)} />
         <FilaCampo icono={Clock} etiqueta="Vence" valor={formatFecha(ticket.fecha_limite)} vencido={Boolean(ticket.fuera_de_plazo)} />
-        {muestraAsignacion && ticket.flujo !== 'APROBACION_IA' && (
+        {muestraAsignacion && (ticket.flujo ?? 'DISENO') === 'DISENO' && (
           <FilaCampo
             icono={User}
             etiqueta="Diseñador"

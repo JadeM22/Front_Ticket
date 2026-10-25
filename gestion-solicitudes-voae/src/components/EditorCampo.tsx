@@ -20,8 +20,8 @@ interface EditorCampoProps {
   onCancelar: () => void
 }
 
-const CON_OPCIONES = new Set<TipoCampo>(['SELECCION', 'SELECCION_MULTIPLE'])
-const CON_LONGITUD = new Set<TipoCampo>(['TEXTO', 'TEXTO_LARGO', 'URL'])
+const CON_OPCIONES = new Set<TipoCampo>(['SELECCION', 'SELECCION_MULTIPLE', 'ETIQUETAS'])
+const CON_LONGITUD = new Set<TipoCampo>(['TEXTO', 'TEXTO_LARGO', 'URL', 'ETIQUETAS'])
 
 function etiquetaTipo(tipo: string): string {
   return TIPOS_CAMPO.find((t) => t.valor === tipo)?.etiqueta ?? tipo
@@ -73,6 +73,8 @@ export function EditorCampo({ tipoSolicitudId, campo, existentes, onGuardado, on
     if (min.trim() !== '') validaciones.min = Number(min)
     if (max.trim() !== '') validaciones.max = Number(max)
   }
+  // En ETIQUETAS, `max` es la cantidad máxima de elementos.
+  if (tipoCampo === 'ETIQUETAS' && max.trim() !== '') validaciones.max = Number(max)
   if (CON_LONGITUD.has(tipoCampo) && maxLongitud.trim() !== '') validaciones.max_longitud = Number(maxLongitud)
 
   // Definición "en vivo" para el control del valor por defecto: el mismo control que verá el solicitante.
@@ -109,7 +111,8 @@ export function EditorCampo({ tipoSolicitudId, campo, existentes, onGuardado, on
       if (existentes.some((c) => c.clave === clave)) return `Ya existe un campo con la clave "${clave}" en este tipo.`
     }
     if (CON_OPCIONES.has(tipoCampo)) {
-      if (opciones.length === 0) return 'Agrega al menos una opción.'
+      // En ETIQUETAS las opciones son solo sugerencias, así que pueden faltar.
+      if (opciones.length === 0 && tipoCampo !== 'ETIQUETAS') return 'Agrega al menos una opción.'
       if (new Set(opciones).size !== opciones.length) return 'Hay opciones repetidas.'
     }
     for (const [nombre, valor] of [
@@ -119,8 +122,15 @@ export function EditorCampo({ tipoSolicitudId, campo, existentes, onGuardado, on
     ] as const) {
       if (valor.trim() !== '' && !Number.isFinite(Number(valor))) return `El ${nombre} debe ser un número.`
     }
+    // La base no admite mínimos ni máximos negativos (Parte 31).
+    if ((validaciones.min ?? 0) < 0 || (validaciones.max ?? 0) < 0) {
+      return 'El mínimo y el máximo no pueden ser negativos.'
+    }
     if (validaciones.min !== undefined && validaciones.max !== undefined && validaciones.min > validaciones.max) {
       return 'El mínimo no puede ser mayor que el máximo.'
+    }
+    if (tipoCampo === 'ETIQUETAS' && validaciones.max !== undefined && (!Number.isInteger(validaciones.max) || validaciones.max < 1)) {
+      return 'La cantidad máxima de elementos debe ser un número entero mayor o igual a 1.'
     }
     // La base la convierte a `int` al validar: un decimal haría fallar todos los envíos de este tipo.
     if (validaciones.max_longitud !== undefined && (!Number.isInteger(validaciones.max_longitud) || validaciones.max_longitud < 1)) {
@@ -226,7 +236,14 @@ export function EditorCampo({ tipoSolicitudId, campo, existentes, onGuardado, on
       </Campo>
 
       {CON_OPCIONES.has(tipoCampo) && (
-        <Campo etiqueta="Opciones *" ayuda="Una opción por línea, en el orden en que se mostrarán.">
+        <Campo
+          etiqueta={tipoCampo === 'ETIQUETAS' ? 'Sugerencias (opcional)' : 'Opciones *'}
+          ayuda={
+            tipoCampo === 'ETIQUETAS'
+              ? 'Una por línea. Se ofrecen como atajos; el solicitante puede escribir otras.'
+              : 'Una opción por línea, en el orden en que se mostrarán.'
+          }
+        >
           <textarea className={CLASE_INPUT} rows={4} value={opcionesTexto} onChange={(e) => setOpcionesTexto(e.target.value)} />
         </Campo>
       )}
@@ -234,16 +251,25 @@ export function EditorCampo({ tipoSolicitudId, campo, existentes, onGuardado, on
       {tipoCampo === 'NUMERO' && (
         <div className="grid grid-cols-2 gap-4">
           <Campo etiqueta="Mínimo">
-            <input type="number" className={CLASE_INPUT} value={min} onChange={(e) => setMin(e.target.value)} />
+            <input type="number" min={0} className={CLASE_INPUT} value={min} onChange={(e) => setMin(e.target.value)} />
           </Campo>
           <Campo etiqueta="Máximo">
-            <input type="number" className={CLASE_INPUT} value={max} onChange={(e) => setMax(e.target.value)} />
+            <input type="number" min={0} className={CLASE_INPUT} value={max} onChange={(e) => setMax(e.target.value)} />
           </Campo>
         </div>
       )}
 
+      {tipoCampo === 'ETIQUETAS' && (
+        <Campo etiqueta="Cantidad máxima de elementos (opcional)">
+          <input type="number" min={1} className={CLASE_INPUT} value={max} onChange={(e) => setMax(e.target.value)} />
+        </Campo>
+      )}
+
       {CON_LONGITUD.has(tipoCampo) && (
-        <Campo etiqueta="Longitud máxima (caracteres)">
+        <Campo
+          etiqueta={tipoCampo === 'ETIQUETAS' ? 'Longitud máxima de cada elemento' : 'Longitud máxima (caracteres)'}
+          ayuda={tipoCampo === 'ETIQUETAS' ? 'Si se deja vacía, 100 caracteres.' : undefined}
+        >
           <input
             type="number"
             min={1}
