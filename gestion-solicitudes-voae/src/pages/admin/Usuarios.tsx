@@ -7,6 +7,7 @@ import { listarAreas } from '../../data/catalogos'
 import { listarTicketsActivosDeDisenador, type TicketActivoResumen } from '../../data/tickets'
 import { mensajeError } from '../../lib/errors'
 import { CrearUsuarioModal } from '../../components/CrearUsuarioModal'
+import { JefaturasModal } from '../../components/JefaturasModal'
 import { Button } from '../../components/ui/Button'
 import { CLASE_INPUT } from '../../components/ui/Campo'
 import { Modal } from '../../components/ui/Modal'
@@ -25,10 +26,12 @@ export function AdminUsuariosPage() {
   const [cargandoConfirmacion, setCargandoConfirmacion] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
   const [soloIncompletos, setSoloIncompletos] = useState(false)
+  const [usuarioJefaturas, setUsuarioJefaturas] = useState<UsuarioAdmin | null>(null)
 
   const { data: usuarios = [], isLoading } = useQuery({ queryKey: ['admin', 'usuarios'], queryFn: listarUsuarios })
   const { data: areas = [] } = useQuery({ queryKey: ['catalogos', 'areas'], queryFn: listarAreas })
   const { data: roles = [] } = useQuery({ queryKey: ['admin', 'roles'], queryFn: listarRoles })
+  const coordinacionesActivas = areas.filter((a) => a.tipo === 'COORDINACION' && a.estado)
 
   function datosIncompletos(usuario: UsuarioAdmin): boolean {
     return !usuario.primer_apellido?.trim() || !usuario.segundo_apellido?.trim()
@@ -149,8 +152,9 @@ export function AdminUsuariosPage() {
             <tr>
               <th className="px-4 py-2">Nombre completo</th>
               <th className="px-4 py-2">Correo</th>
-              <th className="px-4 py-2">Área</th>
+              <th className="px-4 py-2">Área / Coordinación</th>
               <th className="px-4 py-2">Roles</th>
+              <th className="px-4 py-2">Jefaturas</th>
               <th className="px-4 py-2">Estado</th>
             </tr>
           </thead>
@@ -177,11 +181,24 @@ export function AdminUsuariosPage() {
                     <option value="" disabled>
                       Sin área
                     </option>
-                    {areas.map((area) => (
-                      <option key={area.id} value={area.id}>
-                        {area.nombre}
-                      </option>
-                    ))}
+                    <optgroup label="Áreas">
+                      {areas
+                        .filter((area) => area.tipo === 'AREA')
+                        .map((area) => (
+                          <option key={area.id} value={area.id}>
+                            {area.nombre}
+                          </option>
+                        ))}
+                    </optgroup>
+                    <optgroup label="Coordinaciones">
+                      {areas
+                        .filter((area) => area.tipo === 'COORDINACION')
+                        .map((area) => (
+                          <option key={area.id} value={area.id}>
+                            {area.nombre}
+                          </option>
+                        ))}
+                    </optgroup>
                   </select>
                 </td>
                 <td className="px-4 py-2">
@@ -231,6 +248,17 @@ export function AdminUsuariosPage() {
                         })}
                     </select>
                   </div>
+                </td>
+                <td className="px-4 py-2">
+                  {usuario.roles.some((r) => r.nombre === 'Jefe de Área') && usuario.area_tipo === 'COORDINACION' && (
+                    <button
+                      type="button"
+                      className="text-sm font-medium text-azul-institucional hover:underline"
+                      onClick={() => setUsuarioJefaturas(usuario)}
+                    >
+                      También es jefe de…
+                    </button>
+                  )}
                 </td>
                 <td className="px-4 py-2">
                   <button
@@ -328,6 +356,12 @@ export function AdminUsuariosPage() {
         onCreado={invalidar}
         areas={areas}
         roles={roles}
+      />
+
+      <JefaturasModal
+        usuario={usuarioJefaturas}
+        coordinaciones={coordinacionesActivas}
+        onCerrar={() => setUsuarioJefaturas(null)}
       />
     </div>
   )

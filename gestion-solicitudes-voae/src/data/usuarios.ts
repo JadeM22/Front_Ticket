@@ -25,6 +25,8 @@ export interface UsuarioAdmin {
   estado: boolean
   area_id: number | null
   area_nombre: string | null
+  /** 'AREA' | 'COORDINACION' del área propia; decide si se le pueden asignar jefaturas adicionales. */
+  area_tipo: string | null
   roles: { id: number; nombre: string }[]
 }
 
@@ -37,7 +39,7 @@ interface FilaUsuarioAdmin {
   correo: string
   estado: boolean
   area_id: number | null
-  Areas: { nombre: string } | null
+  Areas: { nombre: string; tipo: string } | null
   UsuariosRoles: { Roles: { id: number; nombre: string } | null }[] | null
 }
 
@@ -46,7 +48,7 @@ export async function listarUsuarios(): Promise<UsuarioAdmin[]> {
     .schema('Seguridad')
     .from('Usuarios')
     .select(
-      'id, nombre, nombre_completo, primer_apellido, segundo_apellido, correo, estado, area_id, Areas(nombre), UsuariosRoles(Roles(id, nombre))',
+      'id, nombre, nombre_completo, primer_apellido, segundo_apellido, correo, estado, area_id, Areas(nombre, tipo), UsuariosRoles(Roles(id, nombre))',
     )
     .order('nombre')
 
@@ -61,6 +63,7 @@ export async function listarUsuarios(): Promise<UsuarioAdmin[]> {
     estado: fila.estado,
     area_id: fila.area_id,
     area_nombre: fila.Areas?.nombre ?? null,
+    area_tipo: fila.Areas?.tipo ?? null,
     roles: (fila.UsuariosRoles ?? []).flatMap((relacion) => (relacion.Roles ? [relacion.Roles] : [])),
   }))
 }
@@ -110,4 +113,29 @@ export async function crearUsuario(input: CrearUsuarioInput): Promise<CrearUsuar
   if (error) throw error
   if (!data) throw new Error('La Edge Function no devolvió datos.')
   return data
+}
+
+export type JefaturaArea = Tables<{ schema: 'Seguridad' }, 'JefaturasArea'>
+
+/** Coordinaciones adicionales que dirige este usuario, aparte de la suya (Parte 39). */
+export async function listarJefaturasDeUsuario(usuarioId: number): Promise<JefaturaArea[]> {
+  const { data, error } = await supabase.schema('Seguridad').from('JefaturasArea').select('*').eq('usuario_id', usuarioId)
+  if (error) throw error
+  return data ?? []
+}
+
+/** Solo Administrador; la base rechaza áreas normales, la coordinación propia del usuario, y usuarios que no son de una coordinación. */
+export async function agregarJefatura(usuarioId: number, areaId: number) {
+  const { error } = await supabase.schema('Seguridad').from('JefaturasArea').insert({ usuario_id: usuarioId, area_id: areaId })
+  if (error) throw error
+}
+
+export async function quitarJefatura(usuarioId: number, areaId: number) {
+  const { error } = await supabase
+    .schema('Seguridad')
+    .from('JefaturasArea')
+    .delete()
+    .eq('usuario_id', usuarioId)
+    .eq('area_id', areaId)
+  if (error) throw error
 }
