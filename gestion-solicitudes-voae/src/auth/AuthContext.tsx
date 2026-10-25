@@ -4,6 +4,7 @@ import type { Session } from '@supabase/supabase-js'
 import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
 import { obtenerPerfilActual } from '../data/perfil'
+import { mensajeError } from '../lib/errors'
 import type { Perfil, RolNombre } from '../types/domain'
 import { AuthContext } from './contexto'
 import { MINUTOS_INACTIVIDAD, useCierrePorInactividad } from './useCierrePorInactividad'
@@ -12,6 +13,8 @@ export interface AuthContextValor {
   session: Session | null
   perfil: Perfil | null
   cargando: boolean
+  /** `true` si la última carga del perfil falló (p. ej. error de red o de la base). */
+  perfilConError: boolean
   tieneRol: (rol: RolNombre) => boolean
   recargarPerfil: () => Promise<void>
   cerrarSesion: () => Promise<void>
@@ -21,14 +24,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [perfil, setPerfil] = useState<Perfil | null>(null)
   const [cargando, setCargando] = useState(true)
+  const [perfilConError, setPerfilConError] = useState(false)
 
   const cargarPerfil = useCallback(async (authId: string | undefined) => {
     if (!authId) {
       setPerfil(null)
+      setPerfilConError(false)
       return
     }
-    const nuevoPerfil = await obtenerPerfilActual(authId)
-    setPerfil(nuevoPerfil)
+    try {
+      const nuevoPerfil = await obtenerPerfilActual(authId)
+      setPerfil(nuevoPerfil)
+      setPerfilConError(false)
+    } catch (error) {
+      // Nunca se queda la pantalla de carga para siempre: si falla, se avisa y se libera cargando
+      // (ver el `finally` de `sincronizar`), aunque el perfil quede en null.
+      setPerfil(null)
+      setPerfilConError(true)
+      toast.error(await mensajeError(error, 'No se pudo cargar tu perfil. Intenta recargar la página.'))
+    }
   }, [])
 
   // `undefined` = sin sesión; `null` = todavía no se ha resuelto la primera sesión.
@@ -91,8 +105,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const tieneRol = useCallback((rol: RolNombre) => perfil?.roles.includes(rol) ?? false, [perfil])
 
   const valor = useMemo<AuthContextValor>(
-    () => ({ session, perfil, cargando, tieneRol, recargarPerfil, cerrarSesion }),
-    [session, perfil, cargando, tieneRol, recargarPerfil, cerrarSesion],
+    () => ({ session, perfil, cargando, perfilConError, tieneRol, recargarPerfil, cerrarSesion }),
+    [session, perfil, cargando, perfilConError, tieneRol, recargarPerfil, cerrarSesion],
   )
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>

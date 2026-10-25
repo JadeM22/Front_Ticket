@@ -112,13 +112,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fkJefaturaArea_Area"
-            columns: null
-            isOneToOne: false
-            referencedRelation: "Areas"
-            referencedColumns: null
-          },
-          {
             foreignKeyName: "fkJefaturaArea_Usuario"
             columns: null
             isOneToOne: false
