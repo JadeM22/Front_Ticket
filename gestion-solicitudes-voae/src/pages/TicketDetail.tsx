@@ -324,8 +324,8 @@ export function TicketDetailPage() {
           {(puedeSubirPrimerAfiche || puedeReenviarAfiche) && (
             <Button onClick={() => setModalAfiche(true)}>{puedeReenviarAfiche ? 'Reenviar afiche' : 'Subir afiche'}</Button>
           )}
-          {puedeRevisarAfiche && <Button onClick={() => setModalRevision(true)}>Revisar afiche</Button>}
-          {puedeDecidirValidacion && <Button onClick={() => setModalValidacion(true)}>Aprobar o rechazar</Button>}
+          {puedeRevisarAfiche && <Button onClick={() => setModalRevision(true)}>Dictaminar</Button>}
+          {puedeDecidirValidacion && <Button onClick={() => setModalValidacion(true)}>Dictaminar</Button>}
           {puedeDictaminar && (
             <Button
               onClick={() => setModalDictamen(true)}

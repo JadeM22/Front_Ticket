@@ -89,7 +89,7 @@ export function DictamenModal({ abierto, onCerrar, onConfirmar, codigo, correcci
             disabled={decision === 'CORRECCION' && !comentario.trim()}
             onClick={manejarConfirmar}
           >
-            Confirmar
+            {decision === 'APROBADO' ? 'Aprobar' : 'Pedir corrección'}
           </Button>
         </div>
       </div>

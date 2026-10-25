@@ -38,7 +38,7 @@ export function AsignadorDashboard() {
   const [params, setParams] = useSearchParams()
   const pestana = params.get('tab') ?? 'sin-asignar'
 
-  const [respuesta, setRespuesta] = useState<{ ticket: TicketEstadoReal; modo: 'aceptar' | 'rechazar' } | null>(null)
+  const [respuesta, setRespuesta] = useState<TicketEstadoReal | null>(null)
   const [reasignacionPendiente, setReasignacionPendiente] = useState<{ ticket: TicketEstadoReal; disenador: DisenadorAsignable } | null>(null)
   const [tomando, setTomando] = useState<number | null>(null)
 
@@ -138,8 +138,7 @@ export function AsignadorDashboard() {
                 key={ticket.ticket_id}
                 ticket={ticket}
                 puedeResponder
-                onAceptar={() => setRespuesta({ ticket, modo: 'aceptar' })}
-                onRechazar={() => setRespuesta({ ticket, modo: 'rechazar' })}
+                onDictaminar={() => setRespuesta(ticket)}
               />
             ))}
           </div>
@@ -222,8 +221,7 @@ export function AsignadorDashboard() {
       )}
 
       <ResponderExcepcionalModal
-        ticket={respuesta?.ticket ?? null}
-        modo={respuesta?.modo ?? null}
+        ticket={respuesta}
         disenadores={disenadores}
         onCerrar={() => setRespuesta(null)}
         onRespondido={invalidar}

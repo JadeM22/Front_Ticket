@@ -6,10 +6,9 @@ import type { TicketEstadoReal } from '../types/domain'
 
 interface ExcepcionalPendienteCardProps {
   ticket: TicketEstadoReal
-  /** Solo el Asignador (y el Administrador) ve los botones; en cualquier otro tablero solo se ve la tarjeta. */
+  /** Solo el Asignador (y el Administrador) ve el botón; en cualquier otro tablero solo se ve la tarjeta. */
   puedeResponder: boolean
-  onAceptar?: () => void
-  onRechazar?: () => void
+  onDictaminar?: () => void
 }
 
 /** Un día después de la fecha del evento, la base rechaza sola la solicitud si nadie respondió. */
@@ -20,7 +19,7 @@ function fechaRechazoAutomatico(fechaEvento: string | null): string {
   return formatFecha(fecha.toISOString())
 }
 
-export function ExcepcionalPendienteCard({ ticket, puedeResponder, onAceptar, onRechazar }: ExcepcionalPendienteCardProps) {
+export function ExcepcionalPendienteCard({ ticket, puedeResponder, onDictaminar }: ExcepcionalPendienteCardProps) {
   return (
     <div className="rounded-lg border-2 border-ambar bg-ambar-bruma/40 p-3">
       <div className="flex items-center justify-between gap-2">
@@ -39,14 +38,9 @@ export function ExcepcionalPendienteCard({ ticket, puedeResponder, onAceptar, on
         Se rechaza automáticamente el {fechaRechazoAutomatico(ticket.fecha_evento)} si no respondes
       </p>
       {puedeResponder ? (
-        <div className="mt-2 flex gap-2">
-          <Button variante="secundario" className="flex-1" onClick={onAceptar}>
-            Aceptar
-          </Button>
-          <Button variante="peligro" className="flex-1" onClick={onRechazar}>
-            Rechazar
-          </Button>
-        </div>
+        <Button className="mt-2 w-full" onClick={onDictaminar}>
+          Dictaminar
+        </Button>
       ) : (
         <p className="mt-2 text-xs text-ambar">Excepcional · pendiente de aceptación</p>
       )}

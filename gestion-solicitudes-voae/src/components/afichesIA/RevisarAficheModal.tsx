@@ -105,7 +105,7 @@ function Formulario({ onCerrar, onConfirmar, intento }: Pick<RevisarAficheModalP
           disabled={faltaComentario}
           onClick={confirmar}
         >
-          Confirmar
+          {decision === 'APROBADO' ? 'Aprobar' : 'Rechazar'}
         </Button>
       </div>
     </div>

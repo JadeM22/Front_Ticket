@@ -11,20 +11,21 @@ import type { TicketEstadoReal } from '../types/domain'
 
 interface ResponderExcepcionalModalProps {
   ticket: TicketEstadoReal | null
-  modo: 'aceptar' | 'rechazar' | null
   disenadores: DisenadorAsignable[]
   onCerrar: () => void
   onRespondido: () => void
 }
 
 /** Solo el Asignador acepta o rechaza una solicitud excepcional pendiente (`fnSolicitudExcepcionalResponderEscalar`). */
-export function ResponderExcepcionalModal({ ticket, modo, disenadores, onCerrar, onRespondido }: ResponderExcepcionalModalProps) {
+export function ResponderExcepcionalModal({ ticket, disenadores, onCerrar, onRespondido }: ResponderExcepcionalModalProps) {
   const { perfil } = useAuth()
+  const [modo, setModo] = useState<'aceptar' | 'rechazar'>('aceptar')
   const [disenadorId, setDisenadorId] = useState<number | 'yo'>('yo')
   const [motivo, setMotivo] = useState('')
   const [enviando, setEnviando] = useState(false)
 
   function cerrarYLimpiar() {
+    setModo('aceptar')
     setDisenadorId('yo')
     setMotivo('')
     onCerrar()
@@ -57,13 +58,30 @@ export function ResponderExcepcionalModal({ ticket, modo, disenadores, onCerrar,
   }
 
   return (
-    <Modal
-      abierto={ticket !== null && modo !== null}
-      onCerrar={cerrarYLimpiar}
-      titulo={modo === 'aceptar' ? `Aceptar solicitud excepcional ${ticket?.codigo ?? ''}` : `Rechazar solicitud excepcional ${ticket?.codigo ?? ''}`}
-    >
-      {modo === 'aceptar' ? (
-        <div className="space-y-4">
+    <Modal abierto={ticket !== null} onCerrar={cerrarYLimpiar} titulo={`Dictaminar solicitud excepcional ${ticket?.codigo ?? ''}`}>
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setModo('aceptar')}
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors duration-150 ${
+              modo === 'aceptar' ? 'border-menta-profundo bg-menta-bruma text-menta-profundo' : 'border-azul-niebla text-tinta-suave'
+            }`}
+          >
+            Aceptar
+          </button>
+          <button
+            type="button"
+            onClick={() => setModo('rechazar')}
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors duration-150 ${
+              modo === 'rechazar' ? 'border-coral bg-coral-bruma text-coral' : 'border-azul-niebla text-tinta-suave'
+            }`}
+          >
+            Rechazar
+          </button>
+        </div>
+
+        {modo === 'aceptar' ? (
           <Campo etiqueta="Asignar a">
             <select
               className={CLASE_INPUT}
@@ -78,12 +96,7 @@ export function ResponderExcepcionalModal({ ticket, modo, disenadores, onCerrar,
               ))}
             </select>
           </Campo>
-          <Button className="w-full" cargando={enviando} onClick={manejarConfirmar}>
-            Aceptar y asignar
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-4">
+        ) : (
           <Campo etiqueta="Motivo del rechazo">
             <textarea
               className={CLASE_INPUT}
@@ -93,11 +106,18 @@ export function ResponderExcepcionalModal({ ticket, modo, disenadores, onCerrar,
               onChange={(e) => setMotivo(e.target.value)}
             />
           </Campo>
-          <Button variante="peligro" className="w-full" cargando={enviando} onClick={manejarConfirmar}>
-            Rechazar solicitud
-          </Button>
-        </div>
-      )}
+        )}
+
+        <Button
+          variante={modo === 'aceptar' ? 'primario' : 'peligro'}
+          className="w-full"
+          cargando={enviando}
+          disabled={modo === 'rechazar' && !motivo.trim()}
+          onClick={manejarConfirmar}
+        >
+          {modo === 'aceptar' ? 'Aceptar y asignar' : 'Rechazar solicitud'}
+        </Button>
+      </div>
     </Modal>
   )
 }
