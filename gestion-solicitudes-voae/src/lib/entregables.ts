@@ -13,5 +13,3 @@ export function inferirTipoEntregable(archivo: File): TipoEntregable {
 export function construirRutaEntregable(ticketId: number, nombreArchivo: string): string {
   return construirRutaArchivo(ticketId, nombreArchivo)
 }
-
-export { esUrlHttp } from './archivos'

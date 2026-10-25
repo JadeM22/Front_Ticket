@@ -33,7 +33,7 @@ import {
   validarSolicitud,
   type Generalidades,
 } from '../../lib/validacionFormularios'
-import { esUrlHttp } from '../../lib/archivos'
+import { normalizarEnlace } from '../../lib/enlaces'
 import { mensajeError } from '../../lib/errors'
 import { formatFechaLarga } from '../../lib/date'
 import { useAuth } from '../../auth/useAuth'
@@ -43,6 +43,7 @@ import { FormularioDinamico } from './FormularioDinamico'
 import { GeneralidadesCampos } from './Generalidades'
 import { AvisoEnvioModal } from './AvisoEnvioModal'
 import { MultiFileDrop } from '../ui/MultiFileDrop'
+import { VistaPreviaEnlace } from '../ui/VistaPreviaEnlace'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import { CLASE_INPUT } from '../ui/Campo'
@@ -223,15 +224,16 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
   }
 
   function agregarEnlace() {
-    if (!tituloEnlace.trim() || !esUrlHttp(urlEnlace)) {
-      toast.error('Completa el título y una URL que inicie con http:// o https://.')
+    const enlace = normalizarEnlace(urlEnlace)
+    if (!tituloEnlace.trim() || !enlace) {
+      toast.error('Completa el título y un enlace válido, por ejemplo drive.google.com/…')
       return
     }
     if (espacioDisponible <= 0) {
       toast.error('Llegaste al máximo de 10 adjuntos.')
       return
     }
-    setEnlaces([...enlaces, { titulo: tituloEnlace.trim(), url: urlEnlace.trim() }])
+    setEnlaces([...enlaces, { titulo: tituloEnlace.trim(), url: enlace }])
     setTituloEnlace('')
     setUrlEnlace('')
   }
@@ -465,19 +467,24 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
 
           <div className="mt-4 space-y-2">
             <p className="text-sm font-medium text-tinta">Agregar un enlace</p>
-            <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
               <input
                 className={CLASE_INPUT}
                 placeholder="Título (ej. Fotos del evento)"
                 value={tituloEnlace}
                 onChange={(e) => setTituloEnlace(e.target.value)}
               />
-              <input
-                className={CLASE_INPUT}
-                placeholder="https://drive.google.com/…"
-                value={urlEnlace}
-                onChange={(e) => setUrlEnlace(e.target.value)}
-              />
+              <div className="flex-1">
+                <input
+                  type="text"
+                  inputMode="url"
+                  className={CLASE_INPUT}
+                  placeholder="drive.google.com/…"
+                  value={urlEnlace}
+                  onChange={(e) => setUrlEnlace(e.target.value)}
+                />
+                <VistaPreviaEnlace valor={urlEnlace} />
+              </div>
               <Button variante="secundario" onClick={agregarEnlace} disabled={espacioDisponible <= 0}>
                 Agregar
               </Button>

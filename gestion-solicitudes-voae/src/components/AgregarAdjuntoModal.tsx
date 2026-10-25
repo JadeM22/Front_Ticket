@@ -4,8 +4,9 @@ import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { Campo, CLASE_INPUT } from './ui/Campo'
 import { FileDrop } from './ui/FileDrop'
+import { VistaPreviaEnlace } from './ui/VistaPreviaEnlace'
 import { subirAdjuntoArchivo, subirAdjuntoLink, LIMITE_BYTES_ADJUNTO } from '../data/adjuntos'
-import { esUrlHttp } from '../lib/archivos'
+import { normalizarEnlace } from '../lib/enlaces'
 import { mensajeError } from '../lib/errors'
 
 interface AgregarAdjuntoModalProps {
@@ -49,11 +50,12 @@ export function AgregarAdjuntoModal({ abierto, onCerrar, onAgregado, ticketId }:
           toast.error('Escribe un título para el enlace.')
           return
         }
-        if (!esUrlHttp(url)) {
-          toast.error('El enlace debe iniciar con http:// o https://.')
+        const enlace = normalizarEnlace(url)
+        if (!enlace) {
+          toast.error('Escribe un enlace válido, por ejemplo drive.google.com/…')
           return
         }
-        await subirAdjuntoLink({ ticketId, titulo: titulo.trim(), url, descripcion })
+        await subirAdjuntoLink({ ticketId, titulo: titulo.trim(), url: enlace, descripcion })
       }
 
       toast.success('Adjunto agregado.')
@@ -107,12 +109,14 @@ export function AgregarAdjuntoModal({ abierto, onCerrar, onAgregado, ticketId }:
             </Campo>
             <Campo etiqueta="URL">
               <input
-                type="url"
+                type="text"
+                inputMode="url"
                 className={CLASE_INPUT}
-                placeholder="https://…"
+                placeholder="drive.google.com/…"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
               />
+              <VistaPreviaEnlace valor={url} />
             </Campo>
           </>
         )}

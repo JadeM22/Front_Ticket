@@ -5,6 +5,7 @@ import { FechaInput } from '../ui/FechaInput'
 import { HoraInput } from '../ui/HoraInput'
 import { EtiquetasInput } from './EtiquetasInput'
 import { InputNumero } from '../form/InputNumero'
+import { VistaPreviaEnlace } from '../ui/VistaPreviaEnlace'
 import { hoyTegucigalpaISO } from '../../lib/date'
 import { esDiaHabil } from '../../lib/fechas'
 import { MAX_LONGITUD_ETIQUETA, validarCampo } from '../../lib/validacionFormularios'
@@ -118,13 +119,15 @@ function CampoDinamico({ campo, valor, error, feriados, onCambiar }: CampoDinami
       control = (
         <Campo etiqueta={etiquetaDe(campo)} ayuda={ayudaDe(campo, texto)}>
           <input
-            type="url"
+            type="text"
+            inputMode="url"
             className={claseInput}
             value={texto}
-            placeholder={placeholder ?? 'https://…'}
+            placeholder={placeholder ?? 'drive.google.com/…'}
             maxLength={max_longitud}
             onChange={(e) => onCambiar(e.target.value)}
           />
+          <VistaPreviaEnlace valor={texto} />
         </Campo>
       )
       break

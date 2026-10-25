@@ -1,5 +1,5 @@
 import { hoyTegucigalpaISO } from './date'
-import { esUrlHttp } from './archivos'
+import { normalizarEnlace } from './enlaces'
 import type { Json } from '../types/database'
 import type {
   DefinicionCampo,
@@ -164,6 +164,8 @@ export function respuestasParaEnviar(campos: DefinicionCampo[], respuestas: Resp
     if (estaVacio(valor)) continue
     if (campo.tipo_campo === 'NUMERO') {
       salida[campo.clave] = Number(valor)
+    } else if (campo.tipo_campo === 'URL' && typeof valor === 'string') {
+      salida[campo.clave] = normalizarEnlace(valor) ?? valor.trim()
     } else if (typeof valor === 'string') {
       salida[campo.clave] = valor.trim()
     } else {
@@ -191,8 +193,8 @@ export function validarCampo(campo: DefinicionCampo, valor: ValorCampo | undefin
       if (max_longitud !== undefined && texto.length > max_longitud) {
         return `"${etiqueta}" admite como máximo ${max_longitud} caracteres.`
       }
-      if (campo.tipo_campo === 'URL' && !esUrlHttp(texto)) {
-        return `"${etiqueta}" debe ser un enlace que inicie con http:// o https://.`
+      if (campo.tipo_campo === 'URL' && normalizarEnlace(texto) === null) {
+        return 'Escribe un enlace válido, por ejemplo drive.google.com/…'
       }
       return null
     }

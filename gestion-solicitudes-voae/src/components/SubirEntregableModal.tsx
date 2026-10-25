@@ -4,8 +4,10 @@ import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { Campo, CLASE_INPUT } from './ui/Campo'
 import { FileDrop } from './ui/FileDrop'
+import { VistaPreviaEnlace } from './ui/VistaPreviaEnlace'
 import { subirEntregableArchivo, subirEntregableLink } from '../data/entregables'
-import { inferirTipoEntregable, esUrlHttp, LIMITE_BYTES_ENTREGABLE } from '../lib/entregables'
+import { inferirTipoEntregable, LIMITE_BYTES_ENTREGABLE } from '../lib/entregables'
+import { normalizarEnlace } from '../lib/enlaces'
 import { mensajeError } from '../lib/errors'
 
 interface SubirEntregableModalProps {
@@ -50,11 +52,12 @@ export function SubirEntregableModal({ abierto, onCerrar, onSubido, ticketId, di
           descripcion,
         })
       } else {
-        if (!esUrlHttp(url)) {
-          toast.error('El enlace debe iniciar con http:// o https://.')
+        const enlace = normalizarEnlace(url)
+        if (!enlace) {
+          toast.error('Escribe un enlace válido, por ejemplo drive.google.com/…')
           return
         }
-        await subirEntregableLink({ ticketId, disenadorId, url, descripcion })
+        await subirEntregableLink({ ticketId, disenadorId, url: enlace, descripcion })
       }
 
       toast.success('Entregable subido.')
@@ -104,12 +107,14 @@ export function SubirEntregableModal({ abierto, onCerrar, onSubido, ticketId, di
         ) : (
           <Campo etiqueta="URL">
             <input
-              type="url"
+              type="text"
+              inputMode="url"
               className={CLASE_INPUT}
-              placeholder="https://…"
+              placeholder="drive.google.com/…"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
+            <VistaPreviaEnlace valor={url} />
           </Campo>
         )}
 
