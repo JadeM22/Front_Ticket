@@ -48,7 +48,7 @@ export async function listarUsuarios(): Promise<UsuarioAdmin[]> {
     .schema('Seguridad')
     .from('Usuarios')
     .select(
-      'id, nombre, nombre_completo, primer_apellido, segundo_apellido, correo, estado, area_id, Areas(nombre, tipo), UsuariosRoles(Roles(id, nombre))',
+      'id, nombre, nombre_completo, primer_apellido, segundo_apellido, correo, estado, area_id, Areas!fkUsuario_Area(nombre, tipo), UsuariosRoles(Roles(id, nombre))',
     )
     .order('nombre')
 

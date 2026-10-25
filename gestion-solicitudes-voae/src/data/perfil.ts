@@ -16,7 +16,9 @@ export async function obtenerPerfilActual(authId: string): Promise<Perfil | null
   const { data, error } = await supabase
     .schema('Seguridad')
     .from('Usuarios')
-    .select('id, nombre, nombre_completo, correo, area_id, debe_cambiar_password, Areas(nombre), UsuariosRoles(Roles(nombre))')
+    .select(
+      'id, nombre, nombre_completo, correo, area_id, debe_cambiar_password, Areas!fkUsuario_Area(nombre), UsuariosRoles(Roles(nombre))',
+    )
     .eq('auth_id', authId)
     .maybeSingle()
 
