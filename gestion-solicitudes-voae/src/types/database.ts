@@ -21,6 +21,7 @@ export type Database = {
           id: number
           nombre: string
           prefijo: string | null
+          tipo: string
           ultimo_consecutivo: number
         }
         Insert: {
@@ -29,6 +30,7 @@ export type Database = {
           id?: number
           nombre: string
           prefijo?: string | null
+          tipo?: string
           ultimo_consecutivo?: number
         }
         Update: {
@@ -37,6 +39,7 @@ export type Database = {
           id?: number
           nombre?: string
           prefijo?: string | null
+          tipo?: string
           ultimo_consecutivo?: number
         }
         Relationships: []
@@ -81,6 +84,49 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fkFeriadoLog_UsuarioRegistro"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "Usuarios"
+            referencedColumns: null
+          },
+        ]
+      }
+      JefaturasArea: {
+        Row: {
+          area_id: number
+          fecha_registro: string
+          usuario_id: number
+          usuario_registro: number | null
+        }
+        Insert: {
+          area_id: number
+          fecha_registro?: string
+          usuario_id: number
+          usuario_registro?: number | null
+        }
+        Update: {
+          area_id?: number
+          fecha_registro?: string
+          usuario_id?: number
+          usuario_registro?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fkJefaturaArea_Area"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "Areas"
+            referencedColumns: null
+          },
+          {
+            foreignKeyName: "fkJefaturaArea_Usuario"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "Usuarios"
+            referencedColumns: null
+          },
+          {
+            foreignKeyName: "fkJefaturaArea_UsuarioRegistro"
             columns: null
             isOneToOne: false
             referencedRelation: "Usuarios"
@@ -272,6 +318,10 @@ export type Database = {
         }[]
       }
       fnUsuarioActualAreaEscalar: { Args: never; Returns: number }
+      fnUsuarioActualEsJefeDeAreaEscalar: {
+        Args: { p_area_id: number }
+        Returns: boolean
+      }
       fnUsuarioActualIdEscalar: { Args: never; Returns: number }
       fnUsuarioActualTieneRolEscalar: {
         Args: { p_rol: string }
