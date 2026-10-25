@@ -230,8 +230,10 @@ Jefe de Área files excepcionales from `/jefe/excepcional`, which reuses `Asiste
 (`fnFechaEventoMinimaEscalar`, `p_excepcional`) and the `es_excepcional` flag on the ticket. Who can see a
 ticket's designer/assigner is decided in the DB (Parte 27 nulls those view columns);
 `lib/permisos.ts#puedeVerAsignacion` only stops the UI from rendering "Sin asignar" to roles that get nulls
-— currently Diseñador, Asignador, Administrador and the Jefe of the ticket's own area (`ROLES_CON_ASIGNACION`
-in that file; Parte 37, not yet applied here, drops Jefe de Área from this list).
+— `ROLES_CON_ASIGNACION` in that file is Diseñador, Asignador and Administrador only (Parte 37 dropped
+Jefe de Área from it); `jefe/Dashboard.tsx`'s own `textoDisenador()`/column/filter/CSV/PDF read the same
+helper, so a Jefe never sees a designer name or "Sin asignar" anywhere, including "Mis solicitudes
+excepcionales" (`jefe/SolicitudExcepcional.tsx`), which just says "Aceptada – en proceso".
 
 **Horario hábil**: business hours (Mon–Fri 8:00–16:00, excluding feriados) are decided by the DB
 (`fnEsHorarioHabilEscalar`), never the browser clock. Read it through `hooks/useHorarioHabil.ts` (shared
@@ -276,25 +278,35 @@ Google Fonts) — reuse those tokens (`bg-azul-noche`, `text-menta-profundo`, et
 new colors. `EstadoChip.tsx` is the single mapping from `estado_real` string to color/icon; update it there
 if a new status is ever added instead of duplicating the color logic elsewhere.
 
-## Cambios 25/10 (Partes 36–42)
+**Coordinaciones y jefaturas adicionales** (Partes 38–39): `Seguridad.Areas.tipo` is `'AREA' |
+'COORDINACION'` — `admin/Catalogos.tsx` renders them as two separate sections (Áreas / Coordinaciones)
+sharing one `AreaModal.tsx` (`tipo` fixed per section; `prefijo` is 2–6 uppercase letters and can't be
+edited after creation, since ticket codes depend on it). `Campus` is read-only from the app now (the DB
+rejects writes) — `listarCampus()` still backs the Alcance selector, but there's no admin UI for it.
+`Seguridad.JefaturasArea` lets one Jefe de Área direct coordinaciones beyond their own `area_id`;
+`admin/Usuarios.tsx` shows a "También es jefe de…" action (only when the user has that role and their area
+is a coordinación) opening `JefaturasModal.tsx`, which inserts/deletes jefaturas one checkbox at a time.
+`jefe/Dashboard.tsx` reads its own jefaturas (`data/usuarios.ts#listarJefaturasDeUsuario`) to show an
+Área/Coordinación filter (default "Todas") across "Por dictaminar" and "Historial", with an Área
+column/export field, only when the Jefe actually has more than one.
 
-`docs/cambios/cambios_bd_2026-10-25.sql` is already applied to Supabase; the frontend has **not** been
-updated for it yet (this is the next round of work). What it requires once applied:
+**Días hábiles en calendarios de solicitud**: `src/lib/fechas.ts#esDiaHabil`/`deshabilitarDia` is the one
+place that decides lunes–viernes + sin feriado activo; `FechaEventoPicker.tsx` (fecha del evento, incluidas
+excepcionales) and `FormularioDinamico.tsx`'s `FECHA` campos use it via `FechaInput`'s `diaInhabilitado`
+prop. Filtros de rango (Estadísticas, Bitácora, Historial del Jefe) and `FeriadoModal.tsx` are exempt on
+purpose. The DB validates the same rule again on submit.
 
-- Ningún texto visible nombra roles internos (Validador/Asignador); solo la Administración de usuarios y
-  roles los muestra.
-- Solo Diseñador/Asignador y Administrador ven el diseñador de un ticket —
-  `ROLES_CON_ASIGNACION` (`src/lib/permisos.ts`) sin Jefe de Área.
-- `Campus` es de solo lectura desde la app; no hay sección Campus en Catálogo.
-- `Seguridad.Areas.tipo` es `'AREA' | 'COORDINACION'`; `Seguridad.JefaturasArea` registra qué Jefes de Área
-  dirigen coordinaciones adicionales a la suya.
-- Fechas de solicitudes (evento, campos `FECHA`): solo días hábiles, regla centralizada en
-  `src/lib/fechas.ts` — la base también la valida.
-- Enlaces (adjuntos, entregables, campos `URL`): siempre normalizados con
-  `normalizarEnlace()` de `src/lib/enlaces.ts` antes de guardarse.
-- Inputs numéricos: siempre `InputNumero` (sin rueda, sin negativos), nunca `<input type="number">` a mano.
-- El tipo "Trifolio" existe de nuevo — viene enteramente de `TipoSolicitud`/`CampoFormulario`, nada
-  hardcodeado en el frontend.
+**Enlaces normalizados**: `src/lib/enlaces.ts#normalizarEnlace` trims, prepends `https://` when missing,
+rejects `javascript:`/`data:`/`file:`, and requires a host with a dot — used by every link input (adjuntos,
+entregables, `URL` campos, the excepcional/nueva-solicitud enlace adder) via `components/ui/
+VistaPreviaEnlace.tsx`, which shows the normalized preview or the invalid-link message live. What reaches
+the DB is always the normalized value, never the raw typed text.
+
+**`InputNumero`** (`src/components/form/InputNumero.tsx`) is the only numeric input in the app — never a
+raw `<input type="number">`. It blocks the mouse wheel with a native `wheel` listener (`{ passive: false
+}`, since React's synthetic `onWheel` can't reliably `preventDefault()` it), blocks `-`/`+`/`e`/`E` (and the
+decimal separator unless `permiteDecimales`) on keydown, strips anything else on paste/type, and clamps to
+`min` (default 0) on blur.
 
 ## Deployment
 
