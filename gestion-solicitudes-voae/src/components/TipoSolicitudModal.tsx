@@ -17,8 +17,8 @@ import {
 
 const EXPLICACION_FLUJO: Record<Flujo, string> = {
   DISENO: 'El equipo de diseño toma la solicitud, entrega y el Jefe de Área dictamina.',
-  APROBACION_IA: 'El solicitante sube su afiche y un Validador lo aprueba o rechaza (hasta 5 intentos).',
-  VALIDACION: 'Un Validador aprueba o rechaza la solicitud una sola vez, sin diseño (p. ej. Cobertura de evento).',
+  APROBACION_IA: 'El solicitante sube su afiche y se aprueba o rechaza con IA (hasta 5 intentos).',
+  VALIDACION: 'La solicitud se aprueba o rechaza una sola vez, sin diseño (p. ej. Cobertura de evento).',
 }
 
 const NOMBRES_POR_DEFECTO = etiquetasGenerales(null)

@@ -21,8 +21,8 @@ export function SolicitudExcepcionalPage() {
           <AlertTriangle size={16} className="mt-0.5 flex-none" />
           <p>
             Úsala solo para urgencias. Puedes enviarla cualquier día y a cualquier hora, con al menos 2 días
-            hábiles de anticipación al evento. El Asignador del equipo de diseño la acepta o la rechaza; si nadie
-            la atiende antes del evento, se rechaza automáticamente.
+            hábiles de anticipación al evento. Alguien del equipo la acepta o la rechaza; si nadie la atiende
+            antes del evento, se rechaza automáticamente.
           </p>
         </div>
       </div>

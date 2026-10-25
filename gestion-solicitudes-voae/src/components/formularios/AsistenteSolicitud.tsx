@@ -444,8 +444,8 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
             <>
               <h2 className="mb-1 font-semibold text-azul-noche">Afiche *</h2>
               <p className="mb-4 text-sm text-tinta-suave">
-                El afiche que revisará el Validador. Tienes hasta 5 intentos: si lo rechaza, podrás corregirlo y
-                reenviarlo desde el detalle de la solicitud.
+                El afiche será revisado. Tienes hasta 5 intentos y {tipoSeleccionado?.dias_estimados} día(s){' '}
+                {tipoSeleccionado?.dias_habiles ? 'hábiles' : 'corridos'} para que sea aprobado.
               </p>
               <SelectorAfiche valor={afiche} onCambiar={setAfiche} />
             </>
@@ -454,7 +454,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
           <h2 className="mb-1 font-semibold text-azul-noche">Adjuntos</h2>
           <p className="mb-4 text-sm text-tinta-suave">
             {esValidacion
-              ? 'Adjunta lo que el Validador necesite para decidir (programa, invitación, referencias).'
+              ? 'Adjunta lo que se necesite para decidir (programa, invitación, referencias).'
               : 'Adjunta logos, imágenes, textos o referencias que el diseñador necesite.'}{' '}
             Si son muchas fotos, comparte un enlace de Drive. ({totalAdjuntos} / {MAXIMO_ADJUNTOS_POR_TICKET})
           </p>

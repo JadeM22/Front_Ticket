@@ -48,7 +48,7 @@ export function ExcepcionalPendienteCard({ ticket, puedeResponder, onAceptar, on
           </Button>
         </div>
       ) : (
-        <p className="mt-2 text-xs text-ambar">Excepcional · esperando al Asignador</p>
+        <p className="mt-2 text-xs text-ambar">Excepcional · pendiente de aceptación</p>
       )}
     </div>
   )

@@ -20,7 +20,7 @@ export function SelectorAfiche({ valor, onCambiar }: SelectorAficheProps) {
         error={error}
         indicacion="Haz clic o arrastra el afiche (PNG, JPG, WEBP o PDF, máx. 10 MB)"
       />
-      <Campo etiqueta="Comentario para el aprobador (opcional)">
+      <Campo etiqueta="Comentario para quien revisa (opcional)">
         <textarea
           className={CLASE_INPUT}
           rows={2}

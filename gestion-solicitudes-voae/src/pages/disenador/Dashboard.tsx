@@ -154,7 +154,7 @@ export function DisenadorDashboard() {
                 className="flex items-center gap-1.5 text-sm font-semibold text-ambar hover:text-ambar/80"
               >
                 {excepcionalesAbierto ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                Excepcionales esperando al Asignador ({excepcionalesPendientes.length})
+                Excepcionales pendientes de aceptación ({excepcionalesPendientes.length})
               </button>
               {excepcionalesAbierto && (
                 <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

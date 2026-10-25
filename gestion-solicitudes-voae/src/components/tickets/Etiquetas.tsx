@@ -23,7 +23,7 @@ interface TagAsignadoProps {
 export function TagAsignado({ por, fecha }: TagAsignadoProps) {
   return (
     <span
-      title={por ? `Asignado por ${por}${fecha ? ` el ${formatFechaHora(fecha)}` : ''}` : 'Asignado por el Asignador'}
+      title={por ? `Asignado por ${por}${fecha ? ` el ${formatFechaHora(fecha)}` : ''}` : 'Asignado'}
       className="inline-flex items-center gap-1 rounded-full bg-indigo-bruma px-2 py-0.5 text-xs font-semibold text-indigo-suave"
     >
       <UserCheck size={12} /> Asignado

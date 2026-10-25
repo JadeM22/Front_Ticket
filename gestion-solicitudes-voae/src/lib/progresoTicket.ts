@@ -136,7 +136,7 @@ export function pasosProgresoIA(ticket: TicketEstadoReal, intentosMaximos: numbe
         ? 'Fuera de plazo'
         : rechazos > 0
           ? `Intento ${intentosUsados} de ${intentosMaximos}`
-          : 'Esperando al Validador',
+          : 'En revisión',
     })
   }
   pasos.push({ etiqueta: 'Aprobada', estado: 'pendiente' })
@@ -165,7 +165,7 @@ export function pasosProgresoValidacion(ticket: TicketEstadoReal, motivoRechazo:
       etiqueta: 'Validación',
       estado: 'actual',
       alerta: retrasado,
-      descripcion: retrasado ? 'Fuera de plazo' : 'Esperando al Validador',
+      descripcion: retrasado ? 'Fuera de plazo' : 'En revisión',
     },
     { etiqueta: 'Aprobada', estado: 'pendiente' },
   ]

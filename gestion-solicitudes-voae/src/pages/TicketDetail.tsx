@@ -224,8 +224,8 @@ export function TicketDetailPage() {
 
         {estadoReal.es_excepcional && (
           <div className="mt-3 rounded-lg bg-ambar-bruma/60 p-3 text-sm text-ambar">
-            {estadoReal.excepcional_estado === 'PENDIENTE' && 'Pendiente de aceptación por el Asignador.'}
-            {estadoReal.excepcional_estado === 'ACEPTADA' && `Aceptada por ${estadoReal.disenador ?? 'el equipo de diseño'}.`}
+            {estadoReal.excepcional_estado === 'PENDIENTE' && 'Pendiente de aceptación.'}
+            {estadoReal.excepcional_estado === 'ACEPTADA' && 'Aceptada – en proceso.'}
             {estadoReal.excepcional_estado === 'RECHAZADA' && (
               <>Rechazada: {estadoReal.excepcional_motivo_rechazo ?? 'sin motivo registrado'}</>
             )}
@@ -348,7 +348,7 @@ export function TicketDetailPage() {
 
       {esValidacion && decision && (
         <Card>
-          <h2 className="mb-3 font-semibold text-azul-noche">Decisión del Validador</h2>
+          <h2 className="mb-3 font-semibold text-azul-noche">Decisión de validación</h2>
           <div
             className={`rounded-lg p-3 text-sm ${
               decision.decision === 'APROBADO' ? 'bg-menta-bruma text-menta-profundo' : 'bg-coral-bruma text-coral'
