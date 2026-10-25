@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ChevronDown, Download, FileDown, Search, X } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { crearDictamen } from '../../data/dictamenes'
+import { listarJefaturasDeUsuario } from '../../data/usuarios'
 import { mensajeError } from '../../lib/errors'
 import { formatFecha } from '../../lib/date'
 import { coincideCodigo, coincideTexto } from '../../lib/buscar'
 import { exportarCSV, exportarPDF, type ColumnaExportar } from '../../lib/exportar'
+import { puedeVerAsignacion } from '../../lib/permisos'
 import { useAuth } from '../../auth/useAuth'
 import { useHorarioHabil } from '../../hooks/useHorarioHabil'
 import { Card } from '../../components/ui/Card'
@@ -28,25 +30,42 @@ function etiquetaFlujo(t: TicketEstadoReal): string {
   return ETIQUETA_FLUJO[t.flujo as Flujo] ?? t.flujo ?? '—'
 }
 
-/** Solo los tickets de diseño tienen diseñador: "Sin asignar" daría a entender que falta asignarlos. */
-function textoDisenador(t: TicketEstadoReal): string {
+/** Solo los tickets de diseño tienen diseñador, y solo para quien puede ver asignación (Parte 37: ya
+ * no incluye al Jefe de Área); "Sin asignar" daría a entender que falta asignarlos. */
+function textoDisenador(t: TicketEstadoReal, muestraAsignacion: boolean): string {
+  if (!muestraAsignacion) return '—'
   if (t.flujo && t.flujo !== 'DISENO') return '—'
   return t.disenador ?? 'Sin asignar'
 }
 
 export function JefeDashboard() {
   const { data: tickets = [], isLoading } = useTicketsEstadoReal()
-  const { tieneRol } = useAuth()
+  const { perfil, tieneRol } = useAuth()
   const horarioHabil = useHorarioHabil()
   const esAdmin = tieneRol('Administrador')
   const queryClient = useQueryClient()
   const [ticketDictamen, setTicketDictamen] = useState<TicketEstadoReal | null>(null)
+  // Parte 37: el Jefe de Área ya no ve quién diseña el ticket, ni la columna ni el filtro.
+  const muestraAsignacion = puedeVerAsignacion(perfil?.roles ?? [])
+
+  // Jefaturas adicionales (Parte 39): si dirige más de una coordinación, se ofrece el filtro por área.
+  const { data: jefaturas = [] } = useQuery({
+    queryKey: ['jefaturas', perfil?.id],
+    queryFn: () => listarJefaturasDeUsuario(perfil!.id),
+    enabled: perfil != null,
+  })
+  const tieneJefaturas = jefaturas.length > 0
+  const areasDisponibles = useMemo(
+    () => Array.from(new Set(tickets.map((t) => t.area).filter((a): a is string => Boolean(a)))).sort(),
+    [tickets],
+  )
 
   const [busqueda, setBusqueda] = useState('')
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
   const [decisionFiltro, setDecisionFiltro] = useState('')
   const [flujoFiltro, setFlujoFiltro] = useState('')
+  const [areaFiltro, setAreaFiltro] = useState('')
   const [exportarAbierto, setExportarAbierto] = useState(false)
   const exportarRef = useRef<HTMLDivElement>(null)
 
@@ -62,10 +81,11 @@ export function JefeDashboard() {
   // Los tickets IA y de validación nunca llegan a "Finalizado" ni los dictamina el jefe: los ve en el
   // historial, solo en lectura.
   const esPorDictaminar = (t: TicketEstadoReal) => t.estado_real === 'Finalizado' && (t.flujo ?? 'DISENO') === 'DISENO'
-  const porDictaminar = tickets.filter(esPorDictaminar)
+  const porArea = (t: TicketEstadoReal) => !areaFiltro || t.area === areaFiltro
+  const porDictaminar = tickets.filter((t) => esPorDictaminar(t) && porArea(t))
   const historialCompleto = tickets.filter((t) => !esPorDictaminar(t))
 
-  const hayFiltrosActivos = Boolean(busqueda || desde || hasta || decisionFiltro || flujoFiltro)
+  const hayFiltrosActivos = Boolean(busqueda || desde || hasta || decisionFiltro || flujoFiltro || areaFiltro)
 
   function limpiarFiltros() {
     setBusqueda('')
@@ -73,15 +93,17 @@ export function JefeDashboard() {
     setHasta('')
     setDecisionFiltro('')
     setFlujoFiltro('')
+    setAreaFiltro('')
   }
 
   const historial = useMemo(
     () =>
       historialCompleto.filter((t) => {
         if (busqueda) {
-          const coincide =
-            coincideCodigo(t.codigo, busqueda) ||
-            [t.tipo_solicitud, t.disenador, t.solicitante, t.estado_real].some((campo) => coincideTexto(campo, busqueda))
+          const campos = muestraAsignacion
+            ? [t.tipo_solicitud, t.disenador, t.solicitante, t.estado_real]
+            : [t.tipo_solicitud, t.solicitante, t.estado_real]
+          const coincide = coincideCodigo(t.codigo, busqueda) || campos.some((campo) => coincideTexto(campo, busqueda))
           if (!coincide) return false
         }
         const fecha = (t.fecha_registro ?? '').slice(0, 10)
@@ -89,16 +111,20 @@ export function JefeDashboard() {
         if (hasta && fecha > hasta) return false
         if (decisionFiltro && t.estado_real !== decisionFiltro) return false
         if (flujoFiltro && t.flujo !== flujoFiltro) return false
+        if (areaFiltro && t.area !== areaFiltro) return false
         return true
       }),
-    [historialCompleto, busqueda, desde, hasta, decisionFiltro, flujoFiltro],
+    [historialCompleto, busqueda, desde, hasta, decisionFiltro, flujoFiltro, areaFiltro, muestraAsignacion],
   )
 
   const columnasExportar: ColumnaExportar<TicketEstadoReal>[] = [
     { etiqueta: 'Código', valor: (t) => t.codigo },
     { etiqueta: 'Tipo', valor: (t) => t.tipo_solicitud },
     { etiqueta: 'Flujo', valor: etiquetaFlujo },
-    { etiqueta: 'Diseñador', valor: textoDisenador },
+    ...(tieneJefaturas ? [{ etiqueta: 'Área', valor: (t: TicketEstadoReal) => t.area ?? '—' }] : []),
+    ...(muestraAsignacion
+      ? [{ etiqueta: 'Diseñador', valor: (t: TicketEstadoReal) => textoDisenador(t, muestraAsignacion) }]
+      : []),
     { etiqueta: 'Estado', valor: (t) => t.estado_real },
     { etiqueta: 'Registrado', valor: (t) => formatFecha(t.fecha_registro) },
     { etiqueta: 'Fecha límite', valor: (t) => formatFecha(t.fecha_limite) },
@@ -111,8 +137,9 @@ export function JefeDashboard() {
 
   function exportarPdf() {
     setExportarAbierto(false)
-    const area = tickets[0]?.area ?? ''
+    const area = tieneJefaturas ? 'Varias coordinaciones' : tickets[0]?.area ?? ''
     const filtrosTexto = [
+      areaFiltro ? `Área: ${areaFiltro}` : null,
       desde || hasta ? `Rango: ${desde || '—'} a ${hasta || '—'}` : null,
       decisionFiltro ? `Decisión: ${decisionFiltro}` : null,
       flujoFiltro ? `Flujo: ${ETIQUETA_FLUJO[flujoFiltro as Flujo]}` : null,
@@ -143,9 +170,24 @@ export function JefeDashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-xl font-bold text-azul-noche">Por dictaminar</h1>
-        <p className="text-sm text-tinta-suave">Tienes 24 horas hábiles desde la entrega para aprobar o pedir corrección.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-azul-noche">Por dictaminar</h1>
+          <p className="text-sm text-tinta-suave">Tienes 24 horas hábiles desde la entrega para aprobar o pedir corrección.</p>
+        </div>
+        {tieneJefaturas && (
+          <label className="text-xs text-tinta-suave">
+            Área / Coordinación
+            <select className={`${CLASE_INPUT} mt-1 w-auto`} value={areaFiltro} onChange={(e) => setAreaFiltro(e.target.value)}>
+              <option value="">Todas</option>
+              {areasDisponibles.map((area) => (
+                <option key={area} value={area}>
+                  {area}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       {porDictaminar.length === 0 ? (
@@ -160,7 +202,8 @@ export function JefeDashboard() {
                   <Link to={`/tickets/${ticket.ticket_id}`} className="font-semibold text-azul-noche hover:underline">
                     {ticket.codigo} · {ticket.tipo_solicitud}
                   </Link>
-                  <p className="text-xs text-tinta-suave">{ticket.disenador ?? 'Sin diseñador'}</p>
+                  {tieneJefaturas && <p className="text-xs text-tinta-suave">{ticket.area}</p>}
+                  {muestraAsignacion && <p className="text-xs text-tinta-suave">{ticket.disenador ?? 'Sin diseñador'}</p>}
                   <p className="text-xs text-tinta-suave">
                     Correcciones {ticket.correcciones_usadas ?? 0}/{ticket.correcciones_maximas ?? 5}
                   </p>
@@ -184,7 +227,9 @@ export function JefeDashboard() {
       )}
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-tinta-suave">Historial del área</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-tinta-suave">
+          {tieneJefaturas ? 'Historial de varias coordinaciones' : 'Historial del área'}
+        </h2>
 
         <Card className="mb-3 flex flex-wrap items-end gap-3">
           <label className="text-xs text-tinta-suave">
@@ -275,7 +320,8 @@ export function JefeDashboard() {
                 <tr>
                   <th className="px-4 py-2">Ticket</th>
                   <th className="px-4 py-2">Tipo</th>
-                  <th className="px-4 py-2">Diseñador</th>
+                  {tieneJefaturas && <th className="px-4 py-2">Área</th>}
+                  {muestraAsignacion && <th className="px-4 py-2">Diseñador</th>}
                   <th className="px-4 py-2">Estado</th>
                   <th className="px-4 py-2">Fecha límite</th>
                 </tr>
@@ -296,7 +342,8 @@ export function JefeDashboard() {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-2">{textoDisenador(ticket)}</td>
+                    {tieneJefaturas && <td className="px-4 py-2">{ticket.area}</td>}
+                    {muestraAsignacion && <td className="px-4 py-2">{textoDisenador(ticket, muestraAsignacion)}</td>}
                     <td className="px-4 py-2">
                       <EstadoChip estado={ticket.estado_real ?? ''} />
                     </td>
