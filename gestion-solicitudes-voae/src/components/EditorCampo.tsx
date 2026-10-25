@@ -24,6 +24,17 @@ interface EditorCampoProps {
 const CON_OPCIONES = new Set<TipoCampo>(['SELECCION', 'SELECCION_MULTIPLE', 'ETIQUETAS'])
 const CON_LONGITUD = new Set<TipoCampo>(['TEXTO', 'TEXTO_LARGO', 'URL', 'ETIQUETAS'])
 
+/** Longitud máxima predeterminada por tipo, visible y editable en el editor de campos. */
+const LONGITUD_PREDETERMINADA: Partial<Record<TipoCampo, number>> = {
+  TEXTO: 200,
+  TEXTO_LARGO: 1000,
+  URL: 500,
+  ETIQUETAS: 100,
+}
+
+const AYUDA_LONGITUD_MAXIMA =
+  'Número máximo de caracteres que van a poder escribir al llenar este campo. Se cuentan los espacios y símbolos. Es buena práctica no exagerar.'
+
 function etiquetaTipo(tipo: string): string {
   return TIPOS_CAMPO.find((t) => t.valor === tipo)?.etiqueta ?? tipo
 }
@@ -60,7 +71,13 @@ export function EditorCampo({ tipoSolicitudId, campo, existentes, onGuardado, on
   const [opcionesTexto, setOpcionesTexto] = useState((inicial?.opciones ?? []).join('\n'))
   const [min, setMin] = useState(numeroOVacio(inicial?.validaciones.min))
   const [max, setMax] = useState(numeroOVacio(inicial?.validaciones.max))
-  const [maxLongitud, setMaxLongitud] = useState(numeroOVacio(inicial?.validaciones.max_longitud))
+  const [maxLongitud, setMaxLongitud] = useState(
+    numeroOVacio(inicial?.validaciones.max_longitud) ||
+      (esNuevo ? numeroOVacio(LONGITUD_PREDETERMINADA[inicial?.tipo_campo ?? 'TEXTO']) : ''),
+  )
+  // Solo importa al crear: tipo_campo ya no se puede cambiar al editar. Mientras el admin no toque el
+  // campo a mano, cambiar el tipo actualiza la longitud máxima a la predeterminada de ese tipo.
+  const [maxLongitudManual, setMaxLongitudManual] = useState(!esNuevo)
   const [valorDefecto, setValorDefecto] = useState<ValorCampo>(inicial?.valor_defecto ?? null)
   const [guardando, setGuardando] = useState(false)
 
@@ -101,6 +118,17 @@ export function EditorCampo({ tipoSolicitudId, campo, existentes, onGuardado, on
     setTipoCampo(valor)
     // El valor por defecto de un tipo no sirve para otro (p. ej. un texto en un BOOLEANO).
     setValorDefecto(null)
+    if (!maxLongitudManual) setMaxLongitud(numeroOVacio(LONGITUD_PREDETERMINADA[valor]))
+  }
+
+  function cambiarMaxLongitud(valor: string) {
+    setMaxLongitudManual(true)
+    setMaxLongitud(valor)
+  }
+
+  function restablecerMaxLongitud() {
+    setMaxLongitudManual(false)
+    setMaxLongitud(numeroOVacio(LONGITUD_PREDETERMINADA[tipoCampo]))
   }
 
   function validar(): string | null {
@@ -269,9 +297,16 @@ export function EditorCampo({ tipoSolicitudId, campo, existentes, onGuardado, on
       {CON_LONGITUD.has(tipoCampo) && (
         <Campo
           etiqueta={tipoCampo === 'ETIQUETAS' ? 'Longitud máxima de cada elemento' : 'Longitud máxima (caracteres)'}
-          ayuda={tipoCampo === 'ETIQUETAS' ? 'Si se deja vacía, 100 caracteres.' : undefined}
+          ayuda={AYUDA_LONGITUD_MAXIMA}
         >
-          <InputNumero min={1} className={CLASE_INPUT} value={maxLongitud} onChange={setMaxLongitud} />
+          <InputNumero min={1} className={CLASE_INPUT} value={maxLongitud} onChange={cambiarMaxLongitud} />
+          <p className="mt-1 text-xs text-tinta-suave">
+            Predeterminado: {LONGITUD_PREDETERMINADA[tipoCampo]}
+            {' · '}
+            <button type="button" className="font-medium text-azul-institucional hover:underline" onClick={restablecerMaxLongitud}>
+              Restablecer
+            </button>
+          </p>
         </Campo>
       )}
 
