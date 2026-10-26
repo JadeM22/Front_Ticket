@@ -40,7 +40,7 @@ La primera vez entras con una **contraseña temporal**. iTickets te pide crear u
 - **Campana**: te avisa de los cambios en tus propias solicitudes. Al hacer clic en una notificación se abre el ticket.
 - **Tu nombre y tu área**, y el botón para **cerrar sesión**.
 
-![Barra superior: campana, nombre, área y botón para cerrar sesión](capturas/comunes/07_cerrar_sesion.png)
+![Barra superior: campana, nombre, área y botón para cerrar sesión](capturas/comunes/06_cerrar_sesion.png)
 
 > Por seguridad, la sesión se cierra sola después de **20 minutos** sin actividad.
 

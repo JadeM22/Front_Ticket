@@ -138,7 +138,7 @@ async function comunes(browser, prefijos) {
         await ir(page, '/empleado')
         await capturar(page, C, n)
       }],
-      ['06_notificaciones', async (n) => {
+      ['05_notificaciones', async (n) => {
         const page = await sesion('empleada')
         await ir(page, '/empleado')
         await page.click('[aria-label="Notificaciones"]')
@@ -146,17 +146,10 @@ async function comunes(browser, prefijos) {
         await capturar(page, C, n)
         await page.click('[aria-label="Notificaciones"]')
       }],
-      ['07_cerrar_sesion', async (n) => {
+      ['06_cerrar_sesion', async (n) => {
         const page = await sesion('empleada')
         await ir(page, '/empleado')
         await capturar(page, C, n, { selector: 'header', margen: 0 })
-      }],
-      ['08_menu_movil', async (n) => {
-        const page = await sesion('empleada', { movil: true })
-        await ir(page, '/empleado')
-        await page.click('[aria-label="Abrir menú"]')
-        await esperar(500)
-        await capturar(page, C, n)
       }],
     ],
     prefijos,
@@ -288,12 +281,12 @@ async function empleado(browser, prefijos) {
         await esperar(500)
         await capturar(page, E, n, { clip: { x: 256, y: 64, width: 1184, height: 340 } })
       }],
-      ['18_entregables', async (n) => {
+      ['17_entregables', async (n) => {
         const page = await sesion('empleada')
         await ir(page, '/tickets/10')
         await tarjeta(page, E, n, 'Entregables')
       }],
-      ['19_agregar_adjunto', async (n) => {
+      ['18_agregar_adjunto', async (n) => {
         const page = await sesion('empleada')
         await ir(page, '/tickets/5')
         await clicTexto(page, 'Agregar', { selector: 'button', exacto: true })
@@ -301,60 +294,77 @@ async function empleado(browser, prefijos) {
         await capturar(page, E, n, { modal: true })
         await page.keyboard.press('Escape')
       }],
-      // 20 → 23: afiche con IA nuevo. Igual que el video: solo se envía con MANUALES_ENVIAR=1.
-      ['20_ia', async () => {
+      // 19 → 22: afiche con IA nuevo. Igual que el video: solo se envía con MANUALES_ENVIAR=1.
+      ['19_ia', async () => {
         const page = await sesion('empleada')
         await nuevaSolicitud(page)
         await elegirTipo(page, 'Aprobación de afiches con IA')
         await llenarGeneralidades(page, '[DEMO] Feria de voluntariado')
-        await capturar(page, E, '20_ia_formulario', { clip: { x: 500, y: 80, width: 700, height: 560 } })
+        await capturar(page, E, '19_ia_formulario', { clip: { x: 500, y: 80, width: 700, height: 560 } })
         await clicTexto(page, 'Continuar', { selector: 'button' })
         await esperarListo(page)
         const input = await page.$('input[type="file"]')
         await input.uploadFile(await afichePng(browser))
         await esperarListo(page, { extra: 800 })
-        await tarjeta(page, E, '21_ia_subir_afiche', 'Comentario para quien revisa')
+        await tarjeta(page, E, '20_ia_subir_afiche', 'Comentario para quien revisa')
         await clicTexto(page, 'Continuar', { selector: 'button' })
         await esperarListo(page)
-        await tarjeta(page, E, '22_ia_revisar', 'Revisa tu solicitud')
+        await tarjeta(page, E, '21_ia_revisar', 'Revisa tu solicitud')
         if (process.env.MANUALES_ENVIAR !== '1') {
-          console.log('  · Sin MANUALES_ENVIAR=1: no se envía (23_ia_enviada queda como estaba).')
+          console.log('  · Sin MANUALES_ENVIAR=1: no se envía (22_ia_enviada queda como estaba).')
           return
         }
         await clicTexto(page, 'Enviar solicitud', { selector: 'button' })
         await page.waitForFunction(() => location.pathname.startsWith('/tickets/'), { timeout: 60000 })
         await esperarListo(page, { extra: 800 })
         console.log(`  · Ticket IA creado: ${page.url()}`)
-        await tarjeta(page, E, '23_ia_enviada', 'Envíos y revisiones')
+        await tarjeta(page, E, '22_ia_enviada', 'Envíos y revisiones')
       }],
-      ['24_ia_rechazado', async (n) => {
+      // 23 y 24: AOAA-0023 (id 24) quedó en Corrección tras el rechazo de `acciones`. El reenvío se cancela.
+      ['23_ia_correccion', async (n) => {
+        const page = await sesion('empleada')
+        await ir(page, '/tickets/24')
+        await capturar(page, E, n, { selector: ENCABEZADO_TICKET })
+      }],
+      ['24_ia_reenviar_afiche', async (n) => {
+        const page = await sesion('empleada')
+        await ir(page, '/tickets/24')
+        await clicTexto(page, 'Reenviar afiche', { selector: 'button', exacto: true })
+        await esperar(400)
+        const input = await page.$('[role="dialog"] input[type="file"]')
+        await input.uploadFile(await afichePng(browser))
+        await esperar(600)
+        await capturar(page, E, n, { modal: true })
+        await page.keyboard.press('Escape')
+      }],
+      ['25_ia_rechazado', async (n) => {
         const page = await sesion('empleada')
         await ir(page, '/tickets/21')
         await tarjeta(page, E, n, 'Envíos y revisiones')
       }],
-      ['25_ia_aprobado', async (n) => {
+      ['26_ia_aprobado', async (n) => {
         const page = await sesion('empleada')
         await ir(page, '/tickets/22')
         await tarjeta(page, E, n, 'Progreso de la solicitud')
       }],
-      ['26_cobertura_formulario', async (n) => {
+      ['27_cobertura_formulario', async (n) => {
         const page = await sesion('empleada')
         await nuevaSolicitud(page)
         await elegirTipo(page, 'Cobertura de evento')
         await verTexto(page, 'Hora', { margen: 380 })
         await capturar(page, E, n)
       }],
-      ['27_cobertura_aprobada', async (n) => {
+      ['28_cobertura_aprobada', async (n) => {
         const page = await sesion('empleada')
         await ir(page, '/tickets/18')
         await tarjeta(page, E, n, 'Decisión de validación')
       }],
-      ['28_cobertura_rechazada', async (n) => {
+      ['29_cobertura_rechazada', async (n) => {
         const page = await sesion('empleada')
         await ir(page, '/tickets/19')
         await tarjeta(page, E, n, 'Decisión de validación')
       }],
-      ['29_movil_mis_solicitudes', async (n) => {
+      ['30_movil_mis_solicitudes', async (n) => {
         const page = await sesion('empleada', { movil: true })
         await ir(page, '/empleado/solicitudes')
         await capturar(page, E, n)
@@ -799,12 +809,12 @@ async function administrador(browser, prefijos) {
         await capturar(page, AD, n, { modal: true })
         await page.keyboard.press('Escape')
       }],
-      ['04_roles_asignador', async (n) => {
+      ['05_roles_asignador', async (n) => {
         const page = await abrir('/admin/usuarios')
         await marcar(page, 'asignadora.demo@voae.test', 'tr')
         await capturar(page, AD, n, { selector: '[data-captura]', margen: 0 })
       }],
-      ['05_tambien_es_jefe', async (n) => {
+      ['06_tambien_es_jefe', async (n) => {
         const page = await abrir('/admin/usuarios')
         await marcar(page, 'coordinador.demo@voae.test', 'tr')
         await page.evaluate(() => [...document.querySelector('[data-captura]').querySelectorAll('button')].find((b) => b.textContent.includes('También es jefe de'))?.click())
@@ -812,7 +822,7 @@ async function administrador(browser, prefijos) {
         await capturar(page, AD, n, { modal: true })
         await page.keyboard.press('Escape')
       }],
-      ['06_desactivar_disenador', async (n) => {
+      ['07_desactivar_disenador', async (n) => {
         const page = await abrir('/admin/usuarios')
         await marcar(page, 'disenador2.demo@voae.test', 'tr')
         await page.evaluate(() => [...document.querySelector('[data-captura]').querySelectorAll('button')].find((b) => b.textContent.trim() === 'Activo')?.click())
@@ -821,42 +831,42 @@ async function administrador(browser, prefijos) {
         await capturar(page, AD, n, { modal: true })
         await clicTexto(page, 'Cancelar', { selector: '[role="dialog"] button', exacto: true })
       }],
-      ['07_catalogos', async (n) => {
+      ['08_catalogos', async (n) => {
         const page = await abrir('/admin/catalogos')
         await capturar(page, AD, n)
       }],
-      ['08_tipos_solicitud', async (n) => {
+      ['09_tipos_solicitud', async (n) => {
         const page = await abrir('/admin/catalogos')
         await verTexto(page, 'Tipos de solicitud')
         await privacidad(page)
         await capturar(page, AD, n)
       }],
-      ['09_crear_tipo', async (n) => {
+      ['10_crear_tipo', async (n) => {
         const page = await abrir('/admin/catalogos')
         await clicTexto(page, 'Crear tipo', { selector: 'button' })
         await esperar(400)
         await capturar(page, AD, n, { modal: true })
         await page.keyboard.press('Escape')
       }],
-      ['10_campos', async () => {
+      ['11_campos', async () => {
         const page = await abrir('/admin/catalogos')
         await marcar(page, 'Diseño de trifolio informativo', 'tr')
         await page.evaluate(() => [...document.querySelector('[data-captura]').querySelectorAll('button')].find((b) => b.textContent.trim() === 'Campos')?.click())
         await esperarListo(page, { extra: 600 })
-        await capturar(page, AD, '10_campos_tipo', { modal: true })
-        // 11: el editor de un campo nuevo de tipo texto, con la "Longitud máxima" predeterminada (se cancela).
+        await capturar(page, AD, '11_campos_tipo', { modal: true })
+        // 12: el editor de un campo nuevo de tipo texto, con la "Longitud máxima" predeterminada (se cancela).
         await clicTexto(page, 'Agregar campo', { selector: '[role="dialog"] button' })
         await esperar(400)
         await escribir(page, 'Etiqueta', 'Nombre del expositor')
         await esperar(300)
-        await capturar(page, AD, '11_editor_campo', { modal: true })
+        await capturar(page, AD, '12_editor_campo', { modal: true })
         await page.keyboard.press('Escape')
       }],
-      ['12_feriados', async (n) => {
+      ['13_feriados', async (n) => {
         const page = await abrir('/admin/feriados')
         await capturar(page, AD, n)
       }],
-      ['13_crear_feriado', async (n) => {
+      ['14_crear_feriado', async (n) => {
         const page = await abrir('/admin/feriados')
         await clicTexto(page, 'Crear feriado', { selector: 'button' })
         await esperar(400)
@@ -864,21 +874,21 @@ async function administrador(browser, prefijos) {
         await capturar(page, AD, n, { modal: true })
         await page.keyboard.press('Escape')
       }],
-      ['14_bitacora_roles', async (n) => {
+      ['15_bitacora_roles', async (n) => {
         const page = await abrir('/admin/bitacora')
         await capturar(page, AD, n)
       }],
-      ['15_bitacora_feriados', async (n) => {
+      ['16_bitacora_feriados', async (n) => {
         const page = await abrir('/admin/bitacora?tab=feriados')
         await capturar(page, AD, n)
       }],
-      ['16_bitacora_asignaciones', async (n) => {
+      ['17_bitacora_asignaciones', async (n) => {
         const page = await abrir('/admin/bitacora?tab=asignaciones')
         await page.type('input[placeholder^="Buscar por código"]', 'AOAA-0007')
         await esperar(500)
         await capturar(page, AD, n)
       }],
-      ['17_estadisticas', async (n) => {
+      ['18_estadisticas', async (n) => {
         const page = await abrir('/analista')
         await capturar(page, AD, n)
       }],
@@ -887,4 +897,59 @@ async function administrador(browser, prefijos) {
   )
 }
 
-export const GUIONES = { comunes, empleado, jefe, disenador, asignador, validador, analista, administrador }
+// ------------------------------------------------------------------------------- acciones irreversibles
+// Pasos que cambian datos y no se pueden deshacer, autorizados una vez (26/10/2026). Solo corren con
+// MANUALES_ACCIONES=1 para que no se repitan por accidente:
+// - crear la cuenta temporal.demo@voae.test y capturar la contraseña temporal (difuminada, nunca se imprime);
+// - rechazar AOAA-0023 (id 24, afiche con IA [DEMO] creado para el manual) para mostrar "Reenviar afiche".
+async function acciones(browser, prefijos) {
+  if (process.env.MANUALES_ACCIONES !== '1') throw new Error('Estos pasos cambian datos: corre con MANUALES_ACCIONES=1.')
+  const sesion = sesiones(browser)
+  return correrPasos(
+    [
+      ['crear_usuario', async () => {
+        const page = await sesion('admin')
+        await ir(page, '/admin/usuarios')
+        await clicTexto(page, 'Crear usuario', { selector: 'button' })
+        await esperar(400)
+        await escribir(page, 'Nombres', 'Prueba Contraseña')
+        await escribir(page, 'Primer apellido', 'Temporal')
+        await escribir(page, 'Segundo apellido', 'Demo')
+        await escribir(page, 'Correo institucional', 'temporal.demo@voae.test')
+        await seleccionar(page, 'Área', 'Área de Orientación')
+        await seleccionar(page, 'Rol inicial', 'Empleado')
+        await clicTexto(page, 'Crear usuario', { selector: '[role="dialog"] button', exacto: true })
+        await page.waitForSelector('[role="dialog"] code', { timeout: 30000 })
+        await difuminarSelector(page, '[role="dialog"] code')
+        await esperarSinToasts(page)
+        await capturar(page, 'administrador', '04_contrasena_temporal', { modal: true })
+      }],
+      ['rechazar_afiche', async () => {
+        const page = await sesion('validadora')
+        await ir(page, '/tickets/24')
+        await clicTexto(page, 'Dictaminar', { selector: 'button', exacto: true })
+        await esperar(400)
+        await clicTexto(page, 'Rechazar', { selector: '[role="dialog"] button', exacto: true })
+        await page.type('[role="dialog"] textarea', 'La fecha del evento no coincide con la solicitud. Corrígela y vuelve a enviarlo.')
+        const botones = await page.$$('[role="dialog"] button')
+        let confirmado = false
+        for (const b of botones) {
+          const texto = await b.evaluate((el) => el.textContent.trim())
+          const clase = await b.evaluate((el) => el.className)
+          // El botón de confirmar es el rojo (variante peligro), no la pestaña "Rechazar".
+          if (texto === 'Rechazar' && clase.includes('text-white')) {
+            await b.click()
+            confirmado = true
+            break
+          }
+        }
+        if (!confirmado) throw new Error('No encontré el botón para confirmar el rechazo.')
+        await page.waitForSelector('[data-sonner-toast]', { timeout: 30000 })
+        console.log(`  · ${await page.$eval('[data-sonner-toast]', (el) => el.textContent)}`)
+      }],
+    ],
+    prefijos,
+  )
+}
+
+export const GUIONES = { comunes, empleado, jefe, disenador, asignador, validador, analista, administrador, acciones }

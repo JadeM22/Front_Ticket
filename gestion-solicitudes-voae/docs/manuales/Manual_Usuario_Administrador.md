@@ -66,7 +66,9 @@ La primera vez entras con una **contraseña temporal**. iTickets te pide crear u
 
 ![Ventana "Crear usuario" con los datos de una cuenta de ejemplo](capturas/administrador/03_crear_usuario.png)
 
-Al crearla, iTickets muestra la **contraseña temporal** de la cuenta **una sola vez**. Cópiala y entrégasela a la persona por un medio seguro. En su primer ingreso, el sistema le pedirá cambiarla.
+Al crearla, iTickets muestra la **contraseña temporal** de la cuenta **una sola vez**. Cópiala con el botón de copiar y entrégasela a la persona por un medio seguro. Pulsa **Cerrar**. En su primer ingreso, el sistema le pedirá cambiarla.
+
+![Usuario creado: la contraseña temporal (difuminada en esta captura) y el botón para copiarla](capturas/administrador/04_contrasena_temporal.png)
 
 > Si cierras la ventana sin copiar la contraseña temporal, no podrás volver a verla.
 
@@ -89,7 +91,7 @@ En la columna **Área / Coordinación**, elige la nueva opción en el selector d
 | **Analista** | Consulta las estadísticas y envía solicitudes. |
 | **Administrador** | Configura el sistema. |
 
-![Fila de una cuenta con los roles Diseñador y Asignador](capturas/administrador/04_roles_asignador.png)
+![Fila de una cuenta con los roles Diseñador y Asignador](capturas/administrador/05_roles_asignador.png)
 
 > Si quitas el rol **Diseñador** a alguien que tiene tickets activos, la ventana de confirmación lista esos tickets: al confirmar, vuelven a la cola **sin asignar**.
 
@@ -101,7 +103,7 @@ Un jefe de coordinación puede dirigir otras coordinaciones además de la suya:
 2. Marca las coordinaciones que también dirige. Cada casilla se guarda en cuanto la marcas o desmarcas, y aparece un aviso de confirmación.
 3. Cierra la ventana.
 
-![Ventana "También es jefe de" con dos coordinaciones marcadas](capturas/administrador/05_tambien_es_jefe.png)
+![Ventana "También es jefe de" con dos coordinaciones marcadas](capturas/administrador/06_tambien_es_jefe.png)
 
 Esa persona verá y dictaminará los tickets de todas esas coordinaciones.
 
@@ -111,7 +113,7 @@ En la columna **Estado**, pulsa **Activo** para desactivar una cuenta o **Inacti
 
 Si la cuenta es de alguien del equipo de diseño con tickets activos, la ventana los lista. Al pulsar **Desactivar y liberar tickets**, esos tickets vuelven a la cola **sin asignar** con la etiqueta **Liberado**, y se avisa a quien distribuye el trabajo. Los tickets finalizados que esperan dictamen se quedan como están.
 
-![Ventana "Inhabilitar usuario" de una cuenta con un ticket activo](capturas/administrador/06_desactivar_disenador.png)
+![Ventana "Inhabilitar usuario" de una cuenta con un ticket activo](capturas/administrador/07_desactivar_disenador.png)
 
 # 5. Catálogos
 
@@ -124,7 +126,7 @@ Cada área o coordinación tiene un nombre y un **prefijo** (por ejemplo `AOAA` 
 - **Crear área** o **Crear coordinación**: escribe el **Nombre**, el **Prefijo** (de 2 a 6 letras mayúsculas) y, si quieres, una descripción.
 - **Editar**: cambia el nombre o la descripción, o desactívala.
 
-![Catálogos: áreas y coordinaciones](capturas/administrador/07_catalogos.png)
+![Catálogos: áreas y coordinaciones](capturas/administrador/08_catalogos.png)
 
 > El prefijo **no se puede cambiar** después de crearlo, y no puede repetirse ("Ese prefijo ya está en uso.").
 
@@ -132,7 +134,7 @@ Cada área o coordinación tiene un nombre y un **prefijo** (por ejemplo `AOAA` 
 
 La tabla muestra cada tipo con sus días, su categoría, su flujo, si está activo y quién lo creó. Desde cada fila puedes abrir sus **Campos** o **Editar** el tipo.
 
-![Tipos de solicitud](capturas/administrador/08_tipos_solicitud.png)
+![Tipos de solicitud](capturas/administrador/09_tipos_solicitud.png)
 
 Para crear un tipo, pulsa **Crear tipo** y llena:
 
@@ -144,7 +146,7 @@ Para crear un tipo, pulsa **Crear tipo** y llena:
 - **Aviso destacado (opcional)**: se muestra resaltado arriba del formulario y, al enviar, en la ventana **Antes de enviar**.
 - **Nombres visibles de las generalidades**: cambia, solo para este tipo, el nombre de **Título**, **Fecha del evento**, **Dirigido a** o **Alcance**. Por ejemplo, Trifolio usa "Fecha de entrega".
 
-![Ventana "Crear tipo de solicitud"](capturas/administrador/09_crear_tipo.png)
+![Ventana "Crear tipo de solicitud"](capturas/administrador/10_crear_tipo.png)
 
 ## 5.3 Campos del formulario
 
@@ -155,11 +157,11 @@ Cada tipo tiene, además de las generalidades, sus propios campos. Pulsa **Campo
 - **Copiar campos de otro tipo…** trae los campos de otro tipo.
 - **Vista previa** muestra cómo verá el formulario el solicitante.
 
-![Campos del tipo "Trifolio"](capturas/administrador/10_campos_tipo.png)
+![Campos del tipo "Trifolio"](capturas/administrador/11_campos_tipo.png)
 
 En el editor de un campo defines la **Etiqueta** (lo que ve el solicitante), el **Tipo de campo**, si es **Obligatorio**, un texto de ejemplo, una ayuda y, en los campos de texto, la **Longitud máxima (caracteres)**. Ese valor viene con un **predeterminado** que puedes cambiar o volver a poner con **Restablecer**.
 
-![Editor de un campo nuevo: etiqueta, clave, tipo y longitud máxima predeterminada](capturas/administrador/11_editor_campo.png)
+![Editor de un campo nuevo: etiqueta, clave, tipo y longitud máxima predeterminada](capturas/administrador/12_editor_campo.png)
 
 > La **Clave** se genera sola desde la etiqueta. La clave y el tipo de campo **no se pueden cambiar** después de guardar. Los campos no se borran: se desactivan. Los cambios solo afectan a las solicitudes nuevas.
 
@@ -169,14 +171,14 @@ En el editor de un campo defines la **Etiqueta** (lo que ve el solicitante), el 
 
 Los feriados son rangos de días que **no cuentan** como días hábiles para calcular las fechas límite y el calendario de las solicitudes.
 
-![Feriados: aviso y lista](capturas/administrador/12_feriados.png)
+![Feriados: aviso y lista](capturas/administrador/13_feriados.png)
 
 1. Pulsa **Crear feriado**.
 2. Escribe el **Nombre** (por ejemplo, Semana Morazánica).
 3. Elige las fechas **Desde** y **Hasta**.
 4. Guarda.
 
-![Ventana "Crear feriado"](capturas/administrador/13_crear_feriado.png)
+![Ventana "Crear feriado"](capturas/administrador/14_crear_feriado.png)
 
 > Los feriados **solo afectan a las solicitudes creadas después de registrarlos**. Regístralos con anticipación.
 
@@ -190,11 +192,11 @@ Los feriados son rangos de días que **no cuentan** como días hábiles para cal
 
 En todas puedes **Buscar**, filtrar por **Rango**, **Acción** y **Realizado por** (en Asignaciones, también por **Diseñador** y **Área**), **Limpiar filtros** y **Exportar CSV**.
 
-![Bitácora, pestaña Roles](capturas/administrador/14_bitacora_roles.png)
+![Bitácora, pestaña Roles](capturas/administrador/15_bitacora_roles.png)
 
-![Bitácora, pestaña Feriados](capturas/administrador/15_bitacora_feriados.png)
+![Bitácora, pestaña Feriados](capturas/administrador/16_bitacora_feriados.png)
 
-![Bitácora, pestaña Asignaciones, buscando AOAA-0007](capturas/administrador/16_bitacora_asignaciones.png)
+![Bitácora, pestaña Asignaciones, buscando AOAA-0007](capturas/administrador/17_bitacora_asignaciones.png)
 
 > Cuando un cambio lo hace el propio sistema (por ejemplo, una aprobación automática), aparece como **Sistema**.
 
@@ -202,7 +204,7 @@ En todas puedes **Buscar**, filtrar por **Rango**, **Acción** y **Realizado por
 
 **Estadísticas** muestra indicadores, gráficas y una tabla de detalle de todas las solicitudes, con filtros por rango, área, tipo, flujo, estado y diseñador, y exportación a PDF y CSV. Como administrador, también ves la columna **Diseñador** y la gráfica **Carga por diseñador**.
 
-![Estadísticas](capturas/administrador/17_estadisticas.png)
+![Estadísticas](capturas/administrador/18_estadisticas.png)
 
 Para el detalle de cada filtro, indicador y gráfica, consulta el **Manual de Usuario – Rol: Analista**.
 

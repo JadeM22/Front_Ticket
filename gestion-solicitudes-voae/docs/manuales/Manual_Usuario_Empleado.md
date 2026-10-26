@@ -51,13 +51,11 @@ La primera vez que entras, usas la **contraseña temporal** que te dio el admini
 
 Si necesitas más espacio, pliega el menú con el botón que está junto a la palabra iTickets; quedan solo los íconos. Vuelve a pulsarlo para desplegarlo.
 
-![Campana de notificaciones abierta](capturas/comunes/06_notificaciones.png)
+![Campana de notificaciones abierta](capturas/comunes/05_notificaciones.png)
 
-![Barra superior: campana, nombre, área y botón para cerrar sesión](capturas/comunes/07_cerrar_sesion.png)
+![Barra superior: campana, nombre, área y botón para cerrar sesión](capturas/comunes/06_cerrar_sesion.png)
 
-En el celular, el menú se abre con el botón de tres rayas de la esquina superior izquierda.
-
-![Menú abierto en un celular](capturas/comunes/08_menu_movil.png)
+En el celular, el menú se abre con el botón de tres rayas de la esquina superior izquierda (ver la sección 8).
 
 > Por seguridad, si pasas **20 minutos** sin usar iTickets, la sesión se cierra sola. Vuelve a iniciar sesión para continuar.
 
@@ -194,7 +192,7 @@ Pulsa un boleto para abrir el detalle. Ahí ves:
 - **Entregables**: los diseños que entregó el equipo, agrupados por versión. Pulsa **Ver** para abrirlos o descargarlos.
 - **Progreso de la solicitud**: en qué paso va.
 
-![Entregables de AOAA-0010: versión 1 y versión 2, cada una con "Ver"](capturas/empleado/18_entregables.png)
+![Entregables de AOAA-0010: versión 1 y versión 2, cada una con "Ver"](capturas/empleado/17_entregables.png)
 
 > En el detalle ves el estado y los entregables, pero no quién trabaja tu solicitud ni los comentarios internos de la revisión.
 
@@ -202,7 +200,7 @@ Pulsa un boleto para abrir el detalle. Ahí ves:
 
 Si olvidaste algo, abre el ticket y pulsa **Agregar** en **Adjuntos del solicitante**. Puedes subir un archivo o pegar un enlace. No se puede agregar adjuntos cuando el ticket ya está **Aprobado**, ni pasar de 10 en total.
 
-![Ventana "Agregar adjunto"](capturas/empleado/19_agregar_adjunto.png)
+![Ventana "Agregar adjunto"](capturas/empleado/18_agregar_adjunto.png)
 
 # 6. Pedir la aprobación de un afiche hecho con IA
 
@@ -215,31 +213,38 @@ Si tú preparaste un afiche (por ejemplo, con una herramienta de inteligencia ar
 1. En **Nueva solicitud**, elige **Aprobación de afiches con IA** (en **Otros**).
 2. Llena el título, la fecha del evento, a quién va dirigido y el alcance. Pulsa **Continuar**.
 
-![Formulario de "Aprobación de afiches con IA"](capturas/empleado/20_ia_formulario.png)
+![Formulario de "Aprobación de afiches con IA"](capturas/empleado/19_ia_formulario.png)
 
 3. En el paso **3. Afiche**, sube tu afiche (PNG, JPG, WEBP o PDF, de 10 MB como máximo). Si quieres, escribe un **Comentario para quien revisa**. Pulsa **Continuar**.
 
-![Paso 3: afiche seleccionado y comentario opcional](capturas/empleado/21_ia_subir_afiche.png)
+![Paso 3: afiche seleccionado y comentario opcional](capturas/empleado/20_ia_subir_afiche.png)
 
 4. Revisa y pulsa **Enviar solicitud**.
 
-![Paso 4: resumen con el nombre del archivo del afiche](capturas/empleado/22_ia_revisar.png)
+![Paso 4: resumen con el nombre del archivo del afiche](capturas/empleado/21_ia_revisar.png)
 
 Se abre el detalle con tu afiche, el intento en curso y **Intentos restantes**:
 
-![Afiche enviado: intento 1, "Pendiente de revisión"](capturas/empleado/23_ia_enviada.png)
+![Afiche enviado: intento 1, "Pendiente de revisión"](capturas/empleado/22_ia_enviada.png)
 
 ## 6.2 Si tu afiche es rechazado
 
 Si el área encargada rechaza el afiche, la campana te avisa con el motivo, y en el detalle, bajo **Envíos y revisiones**, ves cada intento con su resultado y el comentario.
 
-1. Abre el ticket. Su estado es **Corrección**.
+1. Abre el ticket. Su estado es **Corrección** y aparece el botón **Reenviar afiche**.
 2. Corrige el afiche según el comentario.
-3. Pulsa **Reenviar afiche**, sube la nueva versión y confirma.
+3. Pulsa **Reenviar afiche**.
 
-El ticket vuelve a **Enviado** y la revisión empieza de nuevo con el siguiente intento.
+![AOAA-0023 en "Corrección", con "Intentos restantes 4 de 5" y el botón "Reenviar afiche"](capturas/empleado/23_ia_correccion.png)
 
-![Historial de intentos: el intento 1 rechazado con su comentario y el intento 2 pendiente](capturas/empleado/24_ia_rechazado.png)
+4. Sube la nueva versión y, si quieres, escribe un **Comentario para quien revisa**.
+5. Pulsa **Enviar afiche**.
+
+![Ventana "Reenviar afiche" con la nueva versión seleccionada](capturas/empleado/24_ia_reenviar_afiche.png)
+
+El ticket vuelve a **Enviado** y la revisión empieza de nuevo con el siguiente intento. En **Envíos y revisiones** queda el historial de todos los intentos:
+
+![Historial de intentos: el intento 1 rechazado con su comentario y el intento 2 pendiente](capturas/empleado/25_ia_rechazado.png)
 
 > Si el quinto intento también se rechaza, la solicitud queda **Rechazada** de forma definitiva.
 
@@ -247,7 +252,7 @@ El ticket vuelve a **Enviado** y la revisión empieza de nuevo con el siguiente 
 
 Cuando lo aprueban, el ticket queda **Aprobado** y el progreso se completa:
 
-![Afiche con IA aprobado](capturas/empleado/25_ia_aprobado.png)
+![Afiche con IA aprobado](capturas/empleado/26_ia_aprobado.png)
 
 # 7. Pedir la cobertura de un evento
 
@@ -257,19 +262,19 @@ Cuando lo aprueban, el ticket queda **Aprobado** y el progreso se completa:
 2. Llena el **Título**, la **Fecha**, **Dirigido a**, el **Alcance**, la **Hora**, el **Lugar** y la **Descripción** (di si necesitas fotos, video o ambos).
 3. Adjunta lo que ayude a decidir (programa, invitación) y envíala.
 
-![Formulario de "Cobertura de evento"](capturas/empleado/26_cobertura_formulario.png)
+![Formulario de "Cobertura de evento"](capturas/empleado/27_cobertura_formulario.png)
 
 En el detalle verás la **Decisión de validación**:
 
-![Cobertura aprobada](capturas/empleado/27_cobertura_aprobada.png)
+![Cobertura aprobada](capturas/empleado/28_cobertura_aprobada.png)
 
-![Cobertura rechazada, con el motivo](capturas/empleado/28_cobertura_rechazada.png)
+![Cobertura rechazada, con el motivo](capturas/empleado/29_cobertura_rechazada.png)
 
 # 8. iTickets en el celular
 
 Puedes usar iTickets desde el navegador de tu celular. Los boletos se acomodan en una sola columna y el menú se abre con el botón de tres rayas.
 
-![Mis solicitudes en un celular](capturas/empleado/29_movil_mis_solicitudes.png)
+![Mis solicitudes en un celular](capturas/empleado/30_movil_mis_solicitudes.png)
 
 # 9. Reglas importantes
 

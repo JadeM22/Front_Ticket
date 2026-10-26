@@ -314,15 +314,13 @@ hábil. Se recargó la página antes de cada captura, como pidió.
 | Captura | Por qué falta | Cómo completarla |
 |---|---|---|
 | Aviso de **fuera de horario** al enviar una solicitud, y el botón **Dictaminar** bloqueado | La sesión fue en horario hábil. | Después de las 4:00 p. m.: `node scripts/manuales/capturas.mjs …` con un paso nuevo (no hay que crear datos). El manual ya explica la regla con texto. |
-| **Contraseña temporal** al crear un usuario (borrosa) | Obliga a crear una cuenta real, que no se puede borrar. | Si se autoriza, crear una cuenta `@voae.test` y difuminar la contraseña. |
-| **Reenviar afiche** (ticket IA en Corrección) | Ningún ticket IA está en Corrección; habría que **rechazar** AOAA-0023 como Validador (acción irreversible). | Si se autoriza, rechazar AOAA-0023 y capturar el botón y la ventana **Reenviar afiche** (cancelando). |
 
 ## Tickets `[DEMO]` nuevos creados en esta sesión
 
 | Código | Id | Tipo | Estado |
 |---|---|---|---|
 | AOAA-0022 | 23 | Grabación y edición de videos, spots o cortinas institucionales | Enviado |
-| AOAA-0023 | 24 | Aprobación de afiches con IA (afiche de ejemplo generado, sin datos personales) | Enviado, intento 1 |
+| AOAA-0023 | 24 | Aprobación de afiches con IA (afiche de ejemplo generado, sin datos personales) | **Corrección**: intento 1 rechazado por la Validadora demo (autorizado) |
 
 Ningún ticket `[DEMO]` existente cambió de estado: todos los diálogos (Dictaminar, Aceptar,
 Rechazar, Pedir corrección, Reasignar, Inhabilitar, Crear usuario, Crear tipo, Crear feriado,
@@ -332,12 +330,32 @@ Agregar campo) se abrieron, se llenaron, se capturaron y se cancelaron.
 
 | Manual | Páginas | Capturas |
 |---|---|---|
-| Empleado | 25 | 35 |
+| Empleado | 25 | 36 |
 | Jefe de Área | 18 | 22 |
 | Diseñador | 13 | 14 |
 | Asignador | 12 | 12 |
 | Validador | 12 | 14 |
 | Analista | 13 | 14 |
-| Administrador | 18 | 19 |
+| Administrador | 19 | 20 |
 
 0 "[Falta la imagen" en los 7 PDF.
+
+## Acciones autorizadas después de la primera entrega (26/10/2026)
+
+La responsable autorizó las dos acciones irreversibles que estaban pendientes. Se hicieron con
+`MANUALES_ACCIONES=1 node scripts/manuales/capturas.mjs acciones`:
+
+- **Cuenta nueva `temporal.demo@voae.test`** ("Prueba Contraseña Temporal Demo", Área de Orientación
+  y Asesoría Académica, rol Empleado), creada desde Usuarios por el admin demo. La contraseña
+  temporal se difuminó antes de capturarla (`administrador/04_contrasena_temporal.png`) y no se
+  imprimió ni se guardó: **nadie la conoce**. Si se quiere usar la cuenta, hay que restablecer su
+  contraseña; si no, se puede inhabilitar.
+- **AOAA-0023 rechazado** por la Validadora demo (intento 1, comentario "La fecha del evento no
+  coincide con la solicitud…"). Quedó en **Corrección** para capturar el botón y la ventana
+  **Reenviar afiche** (`empleado/23` y `24`). El reenvío se canceló: el ticket sigue en Corrección.
+
+Con esto solo queda pendiente la captura del **aviso de fuera de horario** (y el botón Dictaminar
+bloqueado), que se toma después de las 4:00 p. m.
+
+Las capturas se renumeraron para seguir el orden de los manuales (Empleado 01–30, Administrador
+01–18, comunes 01–06).
