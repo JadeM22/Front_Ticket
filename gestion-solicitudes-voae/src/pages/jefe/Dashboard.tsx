@@ -6,6 +6,7 @@ import { ChevronDown, Download, FileDown, Search, X } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { crearDictamen } from '../../data/dictamenes'
 import { listarJefaturasDeUsuario } from '../../data/usuarios'
+import { listarAreas } from '../../data/catalogos'
 import { mensajeError } from '../../lib/errors'
 import { formatFecha } from '../../lib/date'
 import { coincideCodigo, coincideTexto } from '../../lib/buscar'
@@ -48,17 +49,22 @@ export function JefeDashboard() {
   // Parte 37: el Jefe de Área ya no ve quién diseña el ticket, ni la columna ni el filtro.
   const muestraAsignacion = puedeVerAsignacion(perfil?.roles ?? [])
 
-  // Jefaturas adicionales (Parte 39): si dirige más de una coordinación, se ofrece el filtro por área.
+  // Jefaturas adicionales (Parte 39): el filtro ofrece su propia área o coordinación más las que dirige,
+  // aunque alguna todavía no tenga tickets (E-07), y solo aparece si en total son 2 o más.
   const { data: jefaturas = [] } = useQuery({
     queryKey: ['jefaturas', perfil?.id],
     queryFn: () => listarJefaturasDeUsuario(perfil!.id),
     enabled: perfil != null,
   })
-  const tieneJefaturas = jefaturas.length > 0
-  const areasDisponibles = useMemo(
-    () => Array.from(new Set(tickets.map((t) => t.area).filter((a): a is string => Boolean(a)))).sort(),
-    [tickets],
-  )
+  const { data: areas = [] } = useQuery({ queryKey: ['catalogos', 'areas'], queryFn: listarAreas })
+  const areasDisponibles = useMemo(() => {
+    const ids = new Set([perfil?.area_id, ...jefaturas.map((j) => j.area_id)])
+    return areas
+      .filter((a) => ids.has(a.id))
+      .map((a) => a.nombre)
+      .sort()
+  }, [areas, jefaturas, perfil?.area_id])
+  const tieneJefaturas = areasDisponibles.length >= 2
 
   const [busqueda, setBusqueda] = useState('')
   const [desde, setDesde] = useState('')

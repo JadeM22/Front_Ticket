@@ -88,12 +88,15 @@ export function ResponderExcepcionalModal({ ticket, disenadores, onCerrar, onRes
               value={disenadorId}
               onChange={(e) => setDisenadorId(e.target.value === 'yo' ? 'yo' : Number(e.target.value))}
             >
-              <option value="yo">Yo ({perfil?.nombre})</option>
-              {disenadores.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.nombre}
-                </option>
-              ))}
+              <option value="yo">Yo</option>
+              {/* El propio Asignador ya está como "Yo": no se repite con su nombre. */}
+              {disenadores
+                .filter((d) => d.id !== perfil?.id)
+                .map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.nombre}
+                  </option>
+                ))}
             </select>
           </Campo>
         ) : (

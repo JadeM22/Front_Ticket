@@ -8,8 +8,13 @@ export const CLAVE_CONTEO_SIN_ASIGNAR = ['tickets', 'sin-asignar-count']
  * calcula la base, así que las pantallas que lo muestran (tableros, "Por dictaminar") necesitan
  * refrescar la vista con esa misma cadencia mientras estén abiertas.
  */
-export function useTicketsEstadoReal() {
-  return useQuery({ queryKey: ['tickets', 'estado-real'], queryFn: listarTicketsEstadoReal, refetchInterval: 60_000 })
+export function useTicketsEstadoReal(habilitado = true) {
+  return useQuery({
+    queryKey: ['tickets', 'estado-real'],
+    queryFn: listarTicketsEstadoReal,
+    refetchInterval: 60_000,
+    enabled: habilitado,
+  })
 }
 
 /**

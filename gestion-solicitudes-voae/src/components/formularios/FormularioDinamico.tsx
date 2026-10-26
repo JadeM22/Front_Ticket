@@ -141,6 +141,7 @@ function CampoDinamico({ campo, valor, error, feriados, onCambiar }: CampoDinami
             placeholder={placeholder}
             min={min}
             max={max}
+            mostrarError={!error}
             onChange={onCambiar}
           />
         </Campo>

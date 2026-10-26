@@ -4,6 +4,7 @@ import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { Campo, CLASE_INPUT } from './ui/Campo'
 import { InputNumero } from './form/InputNumero'
+import { errorRangoNumero } from '../lib/inputNumero'
 import { crearTipoSolicitud, actualizarTipoSolicitud, type TipoSolicitud } from '../data/catalogos'
 import { mensajeError } from '../lib/errors'
 import { etiquetasGenerales } from '../lib/validacionFormularios'
@@ -21,6 +22,8 @@ const EXPLICACION_FLUJO: Record<Flujo, string> = {
   APROBACION_IA: 'El solicitante sube su afiche y se aprueba o rechaza con IA (hasta 5 intentos).',
   VALIDACION: 'La solicitud se aprueba o rechaza una sola vez, sin diseño (p. ej. Cobertura de evento).',
 }
+
+const DIAS_MINIMOS = 10
 
 const NOMBRES_POR_DEFECTO = etiquetasGenerales(null)
 
@@ -73,7 +76,8 @@ function FormularioTipoSolicitud({
   onGuardado: () => void
 }) {
   const [nombre, setNombre] = useState(tipo?.nombre ?? '')
-  const [diasEstimados, setDiasEstimados] = useState(tipo?.dias_estimados ?? 10)
+  // Como texto (igual que en EditorCampo): un campo vaciado se ve vacío, no "0" (E-04).
+  const [diasEstimados, setDiasEstimados] = useState(String(tipo?.dias_estimados ?? 10))
   const [diasHabiles, setDiasHabiles] = useState(tipo?.dias_habiles ?? true)
   // El flujo solo se elige al crear: cambiarlo después dejaría tickets abiertos en un flujo que ya no es el suyo.
   const [flujo, setFlujo] = useState<Flujo>((tipo?.flujo as Flujo | undefined) ?? 'DISENO')
@@ -84,8 +88,10 @@ function FormularioTipoSolicitud({
   const [estado, setEstado] = useState(tipo?.estado ?? true)
   const [enviando, setEnviando] = useState(false)
 
+  const diasInvalidos = diasEstimados.trim() === '' || errorRangoNumero(diasEstimados, DIAS_MINIMOS) !== null
+
   async function manejarGuardar() {
-    if (!nombre.trim() || diasEstimados < 10) {
+    if (!nombre.trim() || diasInvalidos) {
       toast.error('Completa el nombre; los días estimados deben ser al menos 10.')
       return
     }
@@ -97,7 +103,7 @@ function FormularioTipoSolicitud({
       }
       const payload = {
         nombre: nombre.trim(),
-        dias_estimados: diasEstimados,
+        dias_estimados: Number(diasEstimados),
         dias_habiles: diasHabiles,
         descripcion: descripcion.trim() || null,
         categoria,
@@ -129,10 +135,10 @@ function FormularioTipoSolicitud({
       <div className="grid grid-cols-2 gap-4">
         <Campo etiqueta="Días estimados" ayuda="Mínimo 10 días hábiles">
           <InputNumero
-            min={10}
+            min={DIAS_MINIMOS}
             className={CLASE_INPUT}
-            value={String(diasEstimados)}
-            onChange={(valor) => setDiasEstimados(Number(valor) || 0)}
+            value={diasEstimados}
+            onChange={setDiasEstimados}
           />
         </Campo>
         <Campo etiqueta="¿Días hábiles?">
@@ -201,7 +207,7 @@ function FormularioTipoSolicitud({
         Activo
       </label>
 
-      <Button className="w-full" cargando={enviando} onClick={manejarGuardar}>
+      <Button className="w-full" cargando={enviando} disabled={diasInvalidos} onClick={manejarGuardar}>
         Guardar
       </Button>
     </div>

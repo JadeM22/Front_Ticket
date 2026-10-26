@@ -62,8 +62,8 @@ see them), `cambios_bd_2026-10-23.sql` (28–35: rol "Aprobador IA" → "Validad
 `DecisionValidacion`), plus `analista_ver_tickets.sql`. The formularios-configurables/afiches-IA changes
 before Parte 28 were applied from chat and have no file here. `cambios_bd_2026-10-25.sql` (Partes 36–42:
 role-name-free messages, Jefe de Área loses designer visibility, `Campus` read-only, `Areas.tipo`
-COORDINACION + `JefaturasArea`, días-hábiles-only event/FECHA dates, tipo "Trifolio") is the latest and has
-not been applied to the frontend yet. Code comments cite these by number ("Parte 27"), so grep
+COORDINACION + `JefaturasArea`, días-hábiles-only event/FECHA dates, tipo "Trifolio") is the latest; its
+frontend side is described under Architecture below. Code comments cite these by number ("Parte 27"), so grep
 `docs/cambios/` for `PARTE <n>` to find the rule a comment refers to. `docs/semilla_datos_prueba.sql` is
 test seed data. All of these are kept here for reference only — `src/types/database.ts` is the authoritative, generated API
 surface and is already regenerated against the live schema. Do not hand-edit `database.ts`; regenerate it
@@ -145,11 +145,12 @@ Creating a request is `fnSolicitudCrearEscalar(p_tipo_solicitud_id, p_detalle, p
 are omitted so the DB applies `valor_defecto`. The DB stores `campos_snapshot` (the active fields at send
 time, same columns as `CampoFormulario`), and `DetalleFormularioVista.tsx` renders a sent ticket **from the
 snapshot, never from current `CampoFormulario`**. Admins manage fields per type (`CamposTipoModal` +
-`EditorCampo`: `clave`/`tipo_campo` are immutable after insert, nothing is ever deleted — `estado = false`)
-and the `Campus` catalog from `pages/admin/Catalogos.tsx`. `TipoSolicitud.flujo`
+`EditorCampo`: `clave`/`tipo_campo` are immutable after insert, nothing is ever deleted — `estado = false`).
+`TipoSolicitud.flujo`
 (`'DISENO'|'APROBACION_IA'|'VALIDACION'`) is chosen only on create; only DISENO types can be excepcional.
-Validation `min`/`max` can't be negative and `max_longitud` must be > 0 (DB check, Parte 31). Dates in forms are plain `date`/`time` — only `hoyTegucigalpaISO()`
-(`lib/date.ts`) is needed as the `min` and for the "not in the past" check.
+Validation `min`/`max` can't be negative and `max_longitud` must be > 0 (DB check, Parte 31). Form dates
+use `hoyTegucigalpaISO()` (`lib/date.ts`) as the `min` / "not in the past" check, plus the días-hábiles
+rule described below.
 
 **Aprobación de afiches con IA** (`flujo = 'APROBACION_IA'`): no designer, entregables, dictamen,
 excepcional or `Adjuntos` (the DB rejects them — only the poster). The requester uploads the poster to the
@@ -291,7 +292,7 @@ is a coordinación) opening `JefaturasModal.tsx`, which inserts/deletes jefatura
 column/export field, only when the Jefe actually has more than one.
 
 **Días hábiles en calendarios de solicitud**: `src/lib/fechas.ts#esDiaHabil`/`deshabilitarDia` is the one
-place that decides lunes–viernes + sin feriado activo; `FechaEventoPicker.tsx` (fecha del evento, incluidas
+place that decides lunes–viernes + sin feriado activo; `components/ui/FechaEventoPicker.tsx` (fecha del evento, incluidas
 excepcionales) and `FormularioDinamico.tsx`'s `FECHA` campos use it via `FechaInput`'s `diaInhabilitado`
 prop. Filtros de rango (Estadísticas, Bitácora, Historial del Jefe) and `FeriadoModal.tsx` are exempt on
 purpose. The DB validates the same rule again on submit.
@@ -305,8 +306,9 @@ the DB is always the normalized value, never the raw typed text.
 **`InputNumero`** (`src/components/form/InputNumero.tsx`) is the only numeric input in the app — never a
 raw `<input type="number">`. It blocks the mouse wheel with a native `wheel` listener (`{ passive: false
 }`, since React's synthetic `onWheel` can't reliably `preventDefault()` it), blocks `-`/`+`/`e`/`E` (and the
-decimal separator unless `permiteDecimales`) on keydown, strips anything else on paste/type, and clamps to
-`min` (default 0) on blur.
+decimal separator unless `permiteDecimales`) on keydown, and strips anything else on paste/type. It never
+clamps silently: a value outside `min` (default 0)/`max` shows "El mínimo es N" in red under the field, and the
+form blocks saving with `lib/inputNumero.ts#errorRangoNumero` (same text).
 
 ## Deployment
 

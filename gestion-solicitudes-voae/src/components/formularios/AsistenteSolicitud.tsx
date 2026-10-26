@@ -15,6 +15,7 @@ import {
   Loader2,
   Megaphone,
   Palette,
+  Search,
   XCircle,
 } from 'lucide-react'
 import { listarCampus, listarTiposSolicitud, type TipoSolicitud } from '../../data/catalogos'
@@ -34,6 +35,7 @@ import {
   type Generalidades,
 } from '../../lib/validacionFormularios'
 import { normalizarEnlace } from '../../lib/enlaces'
+import { coincideTexto } from '../../lib/buscar'
 import { mensajeError } from '../../lib/errors'
 import { formatFechaLarga } from '../../lib/date'
 import { useAuth } from '../../auth/useAuth'
@@ -94,6 +96,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
   const { data: campus = [] } = useQuery({ queryKey: ['catalogos', 'campus'], queryFn: listarCampus })
 
   const [paso, setPaso] = useState(1)
+  const [busquedaTipo, setBusquedaTipo] = useState('')
   const [tipoSeleccionado, setTipoSeleccionado] = useState<TipoSolicitud | null>(null)
   const [cargandoTipoId, setCargandoTipoId] = useState<number | null>(null)
   const [fechaEstimada, setFechaEstimada] = useState<string | null>(null)
@@ -313,7 +316,12 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
   }
 
   // Solo las solicitudes de diseño pueden ser excepcionales (la base también rechaza las demás).
-  const tiposVisibles = tipos.filter((t) => t.estado && (!excepcional || t.flujo === 'DISENO'))
+  const tiposVisibles = tipos.filter(
+    (t) =>
+      t.estado &&
+      (!excepcional || t.flujo === 'DISENO') &&
+      (coincideTexto(t.nombre, busquedaTipo) || coincideTexto(t.descripcion, busquedaTipo)),
+  )
   const categoriaDe = (t: TipoSolicitud): CategoriaTipo =>
     CATEGORIAS_TIPO.some((c) => c.valor === t.categoria) ? (t.categoria as CategoriaTipo) : 'OTROS'
   const gruposTipo = CATEGORIAS_TIPO.map((categoria) => ({
@@ -344,6 +352,19 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
           <SkeletonLista />
         ) : (
           <div className="space-y-6">
+            <div className="relative">
+              <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-tinta-suave" />
+              <input
+                className={`${CLASE_INPUT} pl-9`}
+                placeholder="Buscar tipo de solicitud…"
+                aria-label="Buscar tipo de solicitud"
+                value={busquedaTipo}
+                onChange={(e) => setBusquedaTipo(e.target.value)}
+              />
+            </div>
+            {gruposTipo.length === 0 && (
+              <EmptyState titulo="Sin resultados" descripcion="Ningún tipo de solicitud coincide con la búsqueda." />
+            )}
             {gruposTipo.map((grupo) => {
               const Icono = ICONO_POR_CATEGORIA[grupo.valor]
               return (
@@ -391,7 +412,13 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
       {paso === 2 && tipoSeleccionado && (
         <Card>
           <h2 className="font-semibold text-azul-noche">{tipoSeleccionado.nombre}</h2>
-          {!excepcional && (
+          {!excepcional && (esIA || esValidacion) && (
+            // Sin diseño no hay entrega: lo que corre es el plazo para responder la solicitud.
+            <p className="mb-4 text-sm text-tinta-suave">
+              Plazo de respuesta: {tipoSeleccionado.dias_estimados} día(s) {tipoSeleccionado.dias_habiles ? 'hábiles' : 'corridos'}
+            </p>
+          )}
+          {!excepcional && !esIA && !esValidacion && (
             <p className="mb-4 text-sm text-tinta-suave">
               {cargandoFecha
                 ? 'Calculando fecha estimada…'
@@ -421,6 +448,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
             tipoId={tipoSeleccionado.id}
             excepcional={excepcional}
             diasProduccion={excepcional ? DIAS_PRODUCCION_EXCEPCIONAL : tipoSeleccionado.dias_estimados}
+            conProduccion={!esIA && !esValidacion}
             etiquetas={etiquetas}
           />
 
@@ -459,7 +487,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
           <p className="mb-4 text-sm text-tinta-suave">
             {esValidacion
               ? 'Adjunta lo que se necesite para decidir (programa, invitación, referencias).'
-              : 'Adjunta logos, imágenes, textos o referencias que el diseñador necesite.'}{' '}
+              : 'Adjunta logos, imágenes, textos o referencias que sirvan para tu solicitud.'}{' '}
             Si son muchas fotos, comparte un enlace de Drive. ({totalAdjuntos} / {MAXIMO_ADJUNTOS_POR_TICKET})
           </p>
 

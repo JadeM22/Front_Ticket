@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { X } from 'lucide-react'
 import { CLASE_INPUT } from '../ui/Campo'
 
@@ -32,7 +33,11 @@ export function EtiquetasInput({
 
   function agregar(etiqueta: string) {
     const limpia = etiqueta.trim()
-    if (!limpia || yaEsta(limpia) || lleno) return
+    if (!limpia || lleno) return
+    if (yaEsta(limpia)) {
+      toast.info('Ya está agregado.')
+      return
+    }
     onCambiar([...valores, limpia])
   }
 

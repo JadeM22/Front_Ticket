@@ -29,12 +29,17 @@ export function JefaturasModal({ usuario, coordinaciones, onCerrar }: JefaturasM
 
   const otras = coordinaciones.filter((c) => c.id !== usuario?.area_id)
 
-  async function alternar(areaId: number, marcar: boolean) {
+  async function alternar(coordinacion: Area, marcar: boolean) {
     if (!usuario) return
     try {
-      if (marcar) await agregarJefatura(usuario.id, areaId)
-      else await quitarJefatura(usuario.id, areaId)
+      if (marcar) await agregarJefatura(usuario.id, coordinacion.id)
+      else await quitarJefatura(usuario.id, coordinacion.id)
+      toast.success(
+        marcar ? `Ahora también es jefe de ${coordinacion.nombre}.` : `Ya no es jefe de ${coordinacion.nombre}.`,
+      )
       void queryClient.invalidateQueries({ queryKey: clave })
+      // La columna "Jefaturas" de la tabla de usuarios lee lo mismo.
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'jefaturas-todas'] })
     } catch (error) {
       toast.error(await mensajeError(error, 'No se pudo actualizar la jefatura.'))
     }
@@ -58,7 +63,7 @@ export function JefaturasModal({ usuario, coordinaciones, onCerrar }: JefaturasM
                     <input
                       type="checkbox"
                       checked={marcada}
-                      onChange={(e) => alternar(coordinacion.id, e.target.checked)}
+                      onChange={(e) => alternar(coordinacion, e.target.checked)}
                     />
                     {coordinacion.nombre}
                   </label>

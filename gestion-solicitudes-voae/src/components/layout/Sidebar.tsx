@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom'
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
-import { NAV_POR_ROL } from './navegacion'
+import { NAV_POR_ROL, TITULO_SECCION } from './navegacion'
 import { JERARQUIA_ROLES } from '../../types/domain'
 import type { Perfil } from '../../types/domain'
-import { useConteoSinAsignar } from '../../hooks/useTickets'
+import { useConteoSinAsignar, useTicketsEstadoReal } from '../../hooks/useTickets'
+import { afichesPorRevisar, validacionesPendientes } from '../../lib/bandejaValidador'
 import { MarcaITickets } from '../MarcaITickets'
 
 interface SidebarProps {
@@ -23,7 +24,15 @@ export function Sidebar({ perfil, onNavegar, plegado = false, onTogglePlegado }:
   const esDisenador = perfil.roles.includes('Diseñador')
   const { data: conteoSinAsignar } = useConteoSinAsignar(esDisenador)
   const pendientesDisenador = esDisenador ? (conteoSinAsignar ?? 0) : 0
-  const textoPendientes = pendientesDisenador > 99 ? '99+' : String(pendientesDisenador)
+
+  // Validador: un contador por cada página de su bandeja, con los mismos filtros que la bandeja (misma caché).
+  const esValidador = perfil.roles.includes('Validador')
+  const { data: tickets = [] } = useTicketsEstadoReal(esValidador)
+  const contadores: Record<string, number> = {
+    '/disenador': pendientesDisenador,
+    '/validador': esValidador ? afichesPorRevisar(tickets).length : 0,
+    '/validador/solicitudes': esValidador ? validacionesPendientes(tickets).length : 0,
+  }
 
   return (
     <nav
@@ -57,7 +66,9 @@ export function Sidebar({ perfil, onNavegar, plegado = false, onTogglePlegado }:
 
       {rolesOrdenados.map((rol) => (
         <div key={rol} className="mb-6">
-          {!plegado && <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-white/40">{rol}</p>}
+          {!plegado && (
+            <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-white/40">{TITULO_SECCION[rol]}</p>
+          )}
           <ul className="space-y-1">
             {NAV_POR_ROL[rol].map((item) => (
               <li key={item.ruta}>
@@ -77,13 +88,13 @@ export function Sidebar({ perfil, onNavegar, plegado = false, onTogglePlegado }:
                       {isActive && <span className="absolute left-0 h-5 w-1 rounded-full bg-menta" />}
                       <item.icono size={16} />
                       {!plegado && item.etiqueta}
-                      {item.ruta === '/disenador' && pendientesDisenador > 0 && (
+                      {(contadores[item.ruta] ?? 0) > 0 && (
                         <span
                           className={`flex h-5 min-w-5 items-center justify-center rounded-full bg-ambar px-1 text-[10px] font-bold text-azul-noche ${
                             plegado ? 'absolute -right-1 -top-1' : 'ml-auto'
                           }`}
                         >
-                          {textoPendientes}
+                          {contadores[item.ruta] > 99 ? '99+' : contadores[item.ruta]}
                         </span>
                       )}
                     </>

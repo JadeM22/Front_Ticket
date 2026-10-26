@@ -59,9 +59,10 @@ export function AsignadorDashboard() {
     if (!perfil) return
     setTomando(ticket.ticket_id)
     try {
-      const tomado = await tomarTicket(ticket, perfil.id)
-      if (tomado) toast.success(`Tomaste ${ticket.codigo}.`)
-      else toast.error(`Otro diseñador ya tomó ${ticket.codigo}.`)
+      const resultado = await tomarTicket(ticket, perfil.id)
+      if (resultado === 'tomado') toast.success(`Tomaste ${ticket.codigo}.`)
+      else if (resultado === 'ocupado') toast.error(`Otro diseñador ya tomó ${ticket.codigo}.`)
+      else toast.error('No se pudo tomar el ticket.')
       invalidar()
     } catch (error) {
       toast.error(await mensajeError(error, 'No se pudo tomar el ticket.'))

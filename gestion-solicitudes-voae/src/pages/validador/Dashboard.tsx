@@ -1,17 +1,18 @@
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, Building2, User } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
-import { INTENTOS_MAXIMOS_IA } from '../../data/afichesIA'
+import { INTENTOS_MAXIMOS_IA, listarUltimosEnviosIA } from '../../data/afichesIA'
 import { formatFecha, formatFechaHora } from '../../lib/date'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { EstadoChip } from '../../components/EstadoChip'
+import { MiniaturaAfiche } from '../../components/afichesIA/HistorialEnviosIA'
+import { afichesPorRevisar, validacionesPendientes } from '../../lib/bandejaValidador'
 import type { TicketEstadoReal } from '../../types/domain'
-
-const ESTADOS_POR_REVISAR = ['Enviado', 'Retrasado']
 
 /** El más urgente primero; los que no tienen fecha límite al final. */
 function porFechaLimite(a: TicketEstadoReal, b: TicketEstadoReal): number {
@@ -19,43 +20,53 @@ function porFechaLimite(a: TicketEstadoReal, b: TicketEstadoReal): number {
 }
 
 /**
- * Bandeja del Validador: afiches con IA que esperan revisión y solicitudes de validación (Cobertura
- * de evento) que esperan su decisión. RLS ya limita qué tickets recibe; aquí solo se filtra por flujo
- * y estado (un afiche sin envío todavía no tiene qué revisar). La decisión se toma desde el detalle.
+ * Bandeja del Validador, en dos páginas con su propio ítem de menú (E-09): `afiches` (con IA, esperando
+ * revisión) y `solicitudes` (validación, p. ej. Cobertura de evento, esperando su decisión). RLS ya
+ * limita qué tickets recibe; aquí solo se filtra por flujo y estado. La decisión se toma desde el detalle.
  */
-export function ValidadorDashboard() {
+export function ValidadorDashboard({ vista }: { vista: 'afiches' | 'solicitudes' }) {
   const { data: tickets = [], isLoading } = useTicketsEstadoReal()
+  const afiches = afichesPorRevisar(tickets).sort(porFechaLimite)
+  const idsAfiches = afiches.map((t) => t.ticket_id!)
+
+  // Miniaturas: el último envío de cada afiche, en una sola consulta (E-08).
+  const { data: ultimosEnvios } = useQuery({
+    queryKey: ['afiches-ia', 'ultimos-envios', idsAfiches],
+    queryFn: () => listarUltimosEnviosIA(idsAfiches),
+    enabled: vista === 'afiches' && idsAfiches.length > 0,
+  })
 
   if (isLoading) return <SkeletonLista filas={4} />
 
-  const esperando = (t: TicketEstadoReal) => ESTADOS_POR_REVISAR.includes(t.estado_registrado ?? '')
-
-  const ticketsIA = tickets.filter((t) => t.flujo === 'APROBACION_IA')
-  const afiches = ticketsIA.filter((t) => esperando(t) && (t.intentos_usados ?? 0) > 0).sort(porFechaLimite)
-  const enCorreccion = ticketsIA.filter((t) => t.estado_registrado === 'Corrección').length
-  const validaciones = tickets.filter((t) => t.flujo === 'VALIDACION' && esperando(t)).sort(porFechaLimite)
-
-  return (
-    <div className="space-y-8">
+  if (vista === 'solicitudes') {
+    return (
       <Seccion
         titulo="Solicitudes pendientes"
-        tickets={validaciones}
-        vacio="No hay solicitudes esperando tu decisión"
+        tickets={validacionesPendientes(tickets).sort(porFechaLimite)}
+        vacio="No hay solicitudes pendientes"
         detalle={() => null}
       />
+    )
+  }
 
-      <Seccion
-        titulo="Afiches por revisar"
-        tickets={afiches}
-        vacio="No hay afiches esperando revisión"
-        extra={enCorreccion > 0 ? <> · {enCorreccion} esperando que el solicitante reenvíe</> : null}
-        detalle={(ticket) => (
-          <p>
-            Intento {ticket.intentos_usados ?? 0} de {INTENTOS_MAXIMOS_IA}
-          </p>
-        )}
-      />
-    </div>
+  const enCorreccion = tickets.filter((t) => t.flujo === 'APROBACION_IA' && t.estado_registrado === 'Corrección').length
+
+  return (
+    <Seccion
+      titulo="Afiches pendientes"
+      tickets={afiches}
+      vacio="No hay afiches pendientes"
+      extra={enCorreccion > 0 ? <> · {enCorreccion} esperando que el solicitante reenvíe</> : null}
+      miniatura={(ticket) => {
+        const envio = ultimosEnvios?.get(ticket.ticket_id!)
+        return envio ? <MiniaturaAfiche envio={envio} /> : null
+      }}
+      detalle={(ticket) => (
+        <p>
+          Intento {ticket.intentos_usados ?? 0} de {INTENTOS_MAXIMOS_IA}
+        </p>
+      )}
+    />
   )
 }
 
@@ -64,12 +75,14 @@ function Seccion({
   tickets,
   vacio,
   extra = null,
+  miniatura,
   detalle,
 }: {
   titulo: string
   tickets: TicketEstadoReal[]
   vacio: string
   extra?: ReactNode
+  miniatura?: (ticket: TicketEstadoReal) => ReactNode
   detalle: (ticket: TicketEstadoReal) => ReactNode
 }) {
   const navigate = useNavigate()
@@ -113,6 +126,7 @@ function Seccion({
                   ticket.fuera_de_plazo ? 'border-2 border-coral!' : ''
                 }`}
               >
+                {miniatura?.(ticket)}
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-mono text-sm text-tinta-suave">{ticket.codigo}</p>
                   <EstadoChip estado={ticket.estado_real ?? ''} />

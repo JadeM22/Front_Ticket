@@ -1,6 +1,7 @@
 import {
   BarChart3,
   CalendarOff,
+  ClipboardCheck,
   Gavel,
   History,
   Kanban,
@@ -21,6 +22,20 @@ export interface ItemNav {
   icono: typeof LayoutDashboard
 }
 
+/**
+ * Título de cada sección del menú. Nunca el nombre del rol (E-18): el menú no debe decirle a nadie qué
+ * rol tiene ni cómo se llama el de los demás.
+ */
+export const TITULO_SECCION: Record<RolNombre, string> = {
+  Administrador: 'Administración',
+  'Jefe de Área': 'Mi área',
+  Asignador: 'Distribución',
+  Validador: 'Revisión',
+  Diseñador: 'Producción',
+  Analista: 'Análisis',
+  Empleado: 'Mis solicitudes',
+}
+
 export const NAV_POR_ROL: Record<RolNombre, ItemNav[]> = {
   Administrador: [
     { etiqueta: 'KPIs', ruta: '/admin', icono: BarChart3 },
@@ -37,7 +52,10 @@ export const NAV_POR_ROL: Record<RolNombre, ItemNav[]> = {
     { etiqueta: 'Mis solicitudes', ruta: '/empleado/solicitudes', icono: ListChecks },
   ],
   Asignador: [{ etiqueta: 'Asignación', ruta: '/asignador', icono: Shuffle }],
-  Validador: [{ etiqueta: 'Solicitudes pendientes', ruta: '/validador', icono: Sparkles }],
+  Validador: [
+    { etiqueta: 'Afiches pendientes', ruta: '/validador', icono: Sparkles },
+    { etiqueta: 'Solicitudes pendientes', ruta: '/validador/solicitudes', icono: ClipboardCheck },
+  ],
   Diseñador: [{ etiqueta: 'Mi tablero', ruta: '/disenador', icono: Kanban }],
   Analista: [
     { etiqueta: 'Estadísticas', ruta: '/analista', icono: BarChart3 },

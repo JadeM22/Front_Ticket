@@ -17,7 +17,7 @@ import {
 } from '../data/camposFormulario'
 import type { TipoSolicitud } from '../data/catalogos'
 import { mensajeError } from '../lib/errors'
-import { normalizarCampos, respuestasIniciales } from '../lib/validacionFormularios'
+import { etiquetasGenerales, normalizarCampos, respuestasIniciales } from '../lib/validacionFormularios'
 import { TIPOS_CAMPO, type Respuestas } from '../types/domain'
 
 interface CamposTipoModalProps {
@@ -39,6 +39,9 @@ type Vista = { modo: 'lista' } | { modo: 'editar'; campo: CampoFormulario | null
 function ContenidoCampos({ tipo, tipos }: { tipo: TipoSolicitud; tipos: TipoSolicitud[] }) {
   const queryClient = useQueryClient()
   const clave = ['catalogos', 'campos', tipo.id]
+  // Con los nombres propios del tipo ("Fecha de entrega"…), no siempre los de por defecto.
+  const g = etiquetasGenerales(tipo.etiquetas_generales)
+  const nombresGenerales = `${g.titulo}, ${g.fecha_evento}, ${g.dirigido_a} y ${g.alcance}`.toLowerCase()
   const { data: campos = [], isLoading } = useQuery({ queryKey: clave, queryFn: () => listarCamposPorTipo(tipo.id) })
 
   const [vista, setVista] = useState<Vista>({ modo: 'lista' })
@@ -123,7 +126,7 @@ function ContenidoCampos({ tipo, tipos }: { tipo: TipoSolicitud; tipos: TipoSoli
     return (
       <div>
         {pestanas}
-        <VistaPrevia campos={campos} />
+        <VistaPrevia campos={campos} nombresGenerales={nombresGenerales} />
       </div>
     )
   }
@@ -135,7 +138,7 @@ function ContenidoCampos({ tipo, tipos }: { tipo: TipoSolicitud; tipos: TipoSoli
       {pestanas}
 
       <p className="mb-3 text-sm text-tinta-suave">
-        Estos campos aparecen debajo de las generalidades (título, fecha del evento, dirigido a y alcance), que todas las
+        Estos campos aparecen debajo de las generalidades ({nombresGenerales}), que todas las
         solicitudes llevan siempre. Los cambios solo afectan a las solicitudes nuevas.
       </p>
 
@@ -226,7 +229,7 @@ function ContenidoCampos({ tipo, tipos }: { tipo: TipoSolicitud; tipos: TipoSoli
 }
 
 /** El formulario tal como lo verá el solicitante: solo campos activos, en orden. No envía nada. */
-function VistaPrevia({ campos }: { campos: CampoFormulario[] }) {
+function VistaPrevia({ campos, nombresGenerales }: { campos: CampoFormulario[]; nombresGenerales: string }) {
   const definiciones = normalizarCampos(campos.filter((c) => c.estado))
   const [respuestas, setRespuestas] = useState<Respuestas>(() => respuestasIniciales(definiciones))
   const [mostrarErrores, setMostrarErrores] = useState(false)
@@ -238,7 +241,7 @@ function VistaPrevia({ campos }: { campos: CampoFormulario[] }) {
   return (
     <div className="space-y-4">
       <p className="rounded-lg bg-azul-niebla/30 p-3 text-xs text-tinta-suave">
-        Vista previa: arriba de estos campos el solicitante también llena título, fecha del evento, dirigido a y alcance.
+        Vista previa: arriba de estos campos el solicitante también llena {nombresGenerales}.
       </p>
       <FormularioDinamico campos={definiciones} respuestas={respuestas} onCambiar={setRespuestas} mostrarErrores={mostrarErrores} />
       <div className="flex justify-end">

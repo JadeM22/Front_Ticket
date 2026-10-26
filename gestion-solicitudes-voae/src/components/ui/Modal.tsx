@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { X } from 'lucide-react'
 
@@ -11,6 +12,21 @@ interface ModalProps {
 }
 
 export function Modal({ abierto, onCerrar, titulo, children, ancho = 'normal' }: ModalProps) {
+  // Esc cierra igual que la X, en todos los modales (E-13). Los calendarios y selectores de hora cierran
+  // primero su propio desplegable con `stopPropagation`, así que ese Esc no llega hasta aquí.
+  const onCerrarRef = useRef(onCerrar)
+  useEffect(() => {
+    onCerrarRef.current = onCerrar
+  })
+  useEffect(() => {
+    if (!abierto) return
+    function alTeclear(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !e.defaultPrevented) onCerrarRef.current()
+    }
+    document.addEventListener('keydown', alTeclear)
+    return () => document.removeEventListener('keydown', alTeclear)
+  }, [abierto])
+
   if (!abierto) return null
 
   return (

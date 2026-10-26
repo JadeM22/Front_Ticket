@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { Button } from './ui/Button'
 import { Campo, CLASE_INPUT } from './ui/Campo'
 import { InputNumero } from './form/InputNumero'
+import { errorRangoNumero } from '../lib/inputNumero'
 import { FormularioDinamico } from './formularios/FormularioDinamico'
 import { actualizarCampo, crearCampo, type CampoFormulario } from '../data/camposFormulario'
 import { claveDesdeEtiqueta, REGEX_CLAVE_CAMPO } from '../lib/claveCampo'
@@ -34,6 +35,8 @@ const LONGITUD_PREDETERMINADA: Partial<Record<TipoCampo, number>> = {
 
 const AYUDA_LONGITUD_MAXIMA =
   'Número máximo de caracteres que van a poder escribir al llenar este campo. Se cuentan los espacios y símbolos. Es buena práctica no exagerar.'
+const AYUDA_LONGITUD_ETIQUETAS =
+  'Número máximo de caracteres que van a poder escribir al escribir cada elemento. Se cuentan los espacios y símbolos.'
 
 function etiquetaTipo(tipo: string): string {
   return TIPOS_CAMPO.find((t) => t.valor === tipo)?.etiqueta ?? tipo
@@ -130,6 +133,11 @@ export function EditorCampo({ tipoSolicitudId, campo, existentes, onGuardado, on
     setMaxLongitudManual(false)
     setMaxLongitud(numeroOVacio(LONGITUD_PREDETERMINADA[tipoCampo]))
   }
+
+  // Los campos con mínimo 1 avisan en rojo bajo el input; mientras tanto no se guarda (E-03).
+  const rangoInvalido =
+    (tipoCampo === 'ETIQUETAS' && errorRangoNumero(max, 1) !== null) ||
+    (CON_LONGITUD.has(tipoCampo) && errorRangoNumero(maxLongitud, 1) !== null)
 
   function validar(): string | null {
     if (!etiqueta.trim()) return 'Escribe la etiqueta del campo.'
@@ -297,7 +305,7 @@ export function EditorCampo({ tipoSolicitudId, campo, existentes, onGuardado, on
       {CON_LONGITUD.has(tipoCampo) && (
         <Campo
           etiqueta={tipoCampo === 'ETIQUETAS' ? 'Longitud máxima de cada elemento' : 'Longitud máxima (caracteres)'}
-          ayuda={AYUDA_LONGITUD_MAXIMA}
+          ayuda={tipoCampo === 'ETIQUETAS' ? AYUDA_LONGITUD_ETIQUETAS : AYUDA_LONGITUD_MAXIMA}
         >
           <InputNumero min={1} className={CLASE_INPUT} value={maxLongitud} onChange={cambiarMaxLongitud} />
           <p className="mt-1 text-xs text-tinta-suave">
@@ -323,7 +331,7 @@ export function EditorCampo({ tipoSolicitudId, campo, existentes, onGuardado, on
         <Button variante="secundario" onClick={onCancelar} disabled={guardando}>
           Cancelar
         </Button>
-        <Button onClick={guardar} cargando={guardando}>
+        <Button onClick={guardar} cargando={guardando} disabled={rangoInvalido}>
           {esNuevo ? 'Crear campo' : 'Guardar cambios'}
         </Button>
       </div>

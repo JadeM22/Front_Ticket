@@ -124,6 +124,13 @@ export async function listarJefaturasDeUsuario(usuarioId: number): Promise<Jefat
   return data ?? []
 }
 
+/** Todas las jefaturas adicionales, para la columna "Jefaturas" de la tabla de usuarios (Administrador). */
+export async function listarTodasLasJefaturas(): Promise<JefaturaArea[]> {
+  const { data, error } = await supabase.schema('Seguridad').from('JefaturasArea').select('*')
+  if (error) throw error
+  return data ?? []
+}
+
 /** Solo Administrador; la base rechaza áreas normales, la coordinación propia del usuario, y usuarios que no son de una coordinación. */
 export async function agregarJefatura(usuarioId: number, areaId: number) {
   const { error } = await supabase.schema('Seguridad').from('JefaturasArea').insert({ usuario_id: usuarioId, area_id: areaId })

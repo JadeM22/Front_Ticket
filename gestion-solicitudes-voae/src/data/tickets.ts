@@ -9,7 +9,13 @@ import { listarAdjuntosPorTicket, type Adjunto } from './adjuntos'
 import { listarEnviosIA, listarRevisionesIA, type EnvioIA, type RevisionIA } from './afichesIA'
 import { obtenerDecisionValidacion, type DecisionValidacion } from './validacion'
 
-export type TicketBase = Tables<{ schema: 'Solicitudes' }, 'Ticket'>
+/**
+ * Lo único que el detalle necesita de la tabla `Ticket` (lo demás sale de la vista). Nunca `*`: la
+ * tabla trae `disenador_id`/`asignado_por`/`fecha_asignacion`/`excepcional_respondido_por`, que la
+ * vista sí oculta a quien no debe ver la asignación (E-01).
+ */
+const COLUMNAS_TICKET_BASE = 'id, formulario_id, tipo_solicitud_id'
+export type TicketBase = Pick<Tables<{ schema: 'Solicitudes' }, 'Ticket'>, 'id' | 'formulario_id' | 'tipo_solicitud_id'>
 export type TicketLog = Tables<{ schema: 'Solicitudes' }, 'TicketLog'>
 
 export interface TicketCompleto {
@@ -65,7 +71,7 @@ export async function obtenerTicketBase(ticketId: number): Promise<TicketBase | 
   const { data, error } = await supabase
     .schema('Solicitudes')
     .from('Ticket')
-    .select('*')
+    .select(COLUMNAS_TICKET_BASE)
     .eq('id', ticketId)
     .maybeSingle()
   if (error) throw error
@@ -136,17 +142,20 @@ export async function obtenerTicketCompleto(
   }
 }
 
+/** `ocupado`: otro diseñador se adelantó. `fallo`: sigue sin diseñador, pero no se pudo tomar. */
+export type ResultadoTomar = 'tomado' | 'ocupado' | 'fallo'
+
 /**
  * "Tomar" un ticket asigna el diseñador. Solo fuerza la transición a "En proceso" cuando el
  * ticket viene de "Enviado"/"En revisión": si ya está "Retrasado" la única transición válida
  * es a "Finalizado" (la pone el entregable), así que aquí solo se actualiza el diseñador.
  *
- * El `update` lleva `.is('disenador_id', null)`: así se detecta si otro diseñador se adelantó entre
- * que se cargó la lista y que se hizo clic en "Tomar" — si la condición ya no se cumple, Supabase
- * actualiza cero filas (`data` vacío) en vez de lanzar un error. Devuelve `true` solo si de verdad
- * quedó asignado a `disenadorId`.
+ * El `update` lleva `.is('disenador_id', null)` para detectar si otro diseñador se adelantó entre
+ * que se cargó la lista y que se hizo clic en "Tomar". Supabase no lanza error cuando la condición
+ * (o RLS) deja fuera la fila: actualiza cero filas. En ese caso se vuelve a consultar el ticket y
+ * solo se reporta `ocupado` si de verdad ya tiene diseñador (E-02).
  */
-export async function tomarTicket(ticket: TicketEstadoReal, disenadorId: number): Promise<boolean> {
+export async function tomarTicket(ticket: TicketEstadoReal, disenadorId: number): Promise<ResultadoTomar> {
   const payload: { disenador_id: number; estado_id?: number } = { disenador_id: disenadorId }
 
   if (ticket.estado_registrado === 'Enviado' || ticket.estado_registrado === 'En revisión') {
@@ -161,12 +170,15 @@ export async function tomarTicket(ticket: TicketEstadoReal, disenadorId: number)
     .is('disenador_id', null)
     .select('id')
   if (error) throw error
-  return (data?.length ?? 0) > 0
+  if ((data?.length ?? 0) > 0) return 'tomado'
+
+  const actual = await obtenerTicketEstadoReal(ticket.ticket_id!)
+  return actual?.disenador_id != null ? 'ocupado' : 'fallo'
 }
 
 /**
- * Cuenta ligera (sin traer filas) de los tickets que un diseñador puede tomar: sin asignar, no
- * excepcionales y en un estado no final. La usan el badge de "Mi tablero" en el sidebar y la pestaña
+ * Cuenta ligera (sin traer filas) de los tickets que un diseñador puede tomar: sin asignar, en un
+ * estado no final y, si son excepcionales, ya aceptadas (las PENDIENTE las decide el Asignador; Parte 46). La usan el badge de "Mi tablero" en el sidebar y la pestaña
  * "Tickets sin asignación" para mostrar el mismo número.
  */
 export async function contarTicketsSinAsignar(): Promise<number> {
@@ -175,7 +187,7 @@ export async function contarTicketsSinAsignar(): Promise<number> {
     .from('vw_TicketsEstadoReal')
     .select('ticket_id', { count: 'exact', head: true })
     .is('disenador_id', null)
-    .eq('es_excepcional', false)
+    .or('es_excepcional.eq.false,excepcional_estado.eq.ACEPTADA')
     // Los tickets IA nunca tienen diseñador: RLS ya se los oculta al Diseñador, pero alguien que además
     // sea Administrador sí los recibe y no deben contar como "sin asignar".
     .eq('flujo', 'DISENO')

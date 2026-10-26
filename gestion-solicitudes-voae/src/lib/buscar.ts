@@ -16,12 +16,14 @@ export function coincideTexto(texto: string | null | undefined, busqueda: string
 }
 
 /**
- * Los códigos de ticket llevan guion (`ADH-0001`): esto deja solo letras/números, así que
- * "adh1", "ADH-0001", "adh 1" y "0001" comparan igual sin importar cómo se haya escrito el guion
- * o los espacios.
+ * Los códigos de ticket llevan guion y ceros (`AOAA-0020`): esto deja solo letras/números y quita los
+ * ceros a la izquierda de cada número, así que "aoaa20", "aoaa-20", "aoaa 20" y "AOAA-0020" comparan
+ * igual sin importar cómo se hayan escrito el guion, los espacios o los ceros (E-14).
  */
 export function soloCodigo(valor: string): string {
-  return normalizar(valor).replace(/[\s-]/g, '')
+  return normalizar(valor)
+    .replace(/[\s-]/g, '')
+    .replace(/\d+/g, (numero) => numero.replace(/^0+(?=\d)/, ''))
 }
 
 /** Igual que `coincideTexto`, pero compara códigos con `soloCodigo` en vez de `normalizar`. */

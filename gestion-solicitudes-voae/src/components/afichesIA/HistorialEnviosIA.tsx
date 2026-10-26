@@ -47,6 +47,33 @@ export function VistaAfiche({ envio }: { envio: EnvioIA }) {
   )
 }
 
+/** Miniatura 4:3 para las tarjetas de la bandeja; un PDF se muestra como ícono de documento. */
+export function MiniaturaAfiche({ envio }: { envio: EnvioIA }) {
+  const esImagen = (envio.tipo_mime ?? '').startsWith('image/')
+  const { data: url, isLoading } = useQuery({
+    queryKey: ['afiche-ia', envio.ruta_archivo],
+    queryFn: () => crearUrlFirmadaAfiche(envio.ruta_archivo),
+    staleTime: VIGENCIA_URL_MS,
+    gcTime: VIGENCIA_URL_MS,
+    enabled: esImagen,
+  })
+
+  if (esImagen && isLoading) return <Skeleton className="aspect-[4/3] w-full" />
+
+  return (
+    <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-lg border border-azul-niebla bg-azul-niebla/20">
+      {esImagen && url ? (
+        <img src={url} alt={`Afiche, intento ${envio.intento}`} className="h-full w-full object-cover" />
+      ) : (
+        <span className="flex flex-col items-center gap-1 text-xs text-tinta-suave">
+          <FileText size={28} />
+          {esImagen ? 'Vista previa no disponible' : 'PDF'}
+        </span>
+      )}
+    </div>
+  )
+}
+
 interface HistorialEnviosIAProps {
   envios: EnvioIA[]
   revisiones: RevisionIA[]

@@ -7,6 +7,7 @@ import { formatFecha } from '../../lib/date'
 import { Card } from '../../components/ui/Card'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { EstadoChip } from '../../components/EstadoChip'
+import { textoRespuestaExcepcional } from '../../lib/excepcional'
 
 export function SolicitudExcepcionalPage() {
   const { perfil } = useAuth()
@@ -52,9 +53,7 @@ export function SolicitudExcepcionalPage() {
                 <div className="flex flex-col items-end gap-1 text-right">
                   <EstadoChip estado={ticket.estado_real ?? ''} />
                   <p className="text-xs text-tinta-suave">
-                    {ticket.excepcional_estado === 'PENDIENTE' && 'Pendiente de aceptación'}
-                    {ticket.excepcional_estado === 'ACEPTADA' && 'Aceptada – en proceso'}
-                    {ticket.excepcional_estado === 'RECHAZADA' && `Rechazada: ${ticket.excepcional_motivo_rechazo ?? 'sin motivo registrado'}`}
+                    {textoRespuestaExcepcional(ticket)}
                   </p>
                 </div>
               </Card>

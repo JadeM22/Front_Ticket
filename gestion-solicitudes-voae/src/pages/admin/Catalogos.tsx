@@ -11,6 +11,7 @@ import { CamposTipoModal } from '../../components/CamposTipoModal'
 import { AreaModal } from '../../components/AreaModal'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
+import { Modal } from '../../components/ui/Modal'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 import { CATEGORIAS_TIPO, ETIQUETA_FLUJO, type Flujo } from '../../types/domain'
 
@@ -29,6 +30,9 @@ export function AdminCatalogosPage() {
   })
   const [tipoCampos, setTipoCampos] = useState<TipoSolicitud | null>(null)
   const [modalArea, setModalArea] = useState<ModalArea>({ abierto: false, area: null, tipo: 'AREA' })
+  // Desactivar un área o coordinación se confirma antes; activarla no.
+  const [areaPorDesactivar, setAreaPorDesactivar] = useState<Area | null>(null)
+  const [desactivando, setDesactivando] = useState(false)
 
   const { data: areas = [], isLoading: cargandoAreas } = useQuery({ queryKey: ['catalogos', 'areas'], queryFn: listarAreas })
   const { data: tipos = [], isLoading: cargandoTipos } = useQuery({
@@ -36,13 +40,28 @@ export function AdminCatalogosPage() {
     queryFn: listarTiposSolicitud,
   })
 
-  async function manejarGuardarArea(id: number, estado: boolean) {
+  async function manejarGuardarArea(area: Area, estado: boolean) {
+    const nombreTipo = area.tipo === 'COORDINACION' ? 'Coordinación' : 'Área'
     try {
-      await actualizarArea(id, { estado })
+      await actualizarArea(area.id, { estado })
+      toast.success(`${nombreTipo} "${area.nombre}" ${estado ? 'activada' : 'desactivada'}.`)
       void queryClient.invalidateQueries({ queryKey: ['catalogos', 'areas'] })
     } catch (error) {
-      toast.error(await mensajeError(error, 'No se pudo actualizar el área.'))
+      toast.error(await mensajeError(error, `No se pudo actualizar ${area.tipo === 'COORDINACION' ? 'la coordinación' : 'el área'}.`))
     }
+  }
+
+  function alternarEstadoArea(area: Area) {
+    if (area.estado) setAreaPorDesactivar(area)
+    else void manejarGuardarArea(area, true)
+  }
+
+  async function confirmarDesactivar() {
+    if (!areaPorDesactivar) return
+    setDesactivando(true)
+    await manejarGuardarArea(areaPorDesactivar, false)
+    setDesactivando(false)
+    setAreaPorDesactivar(null)
   }
 
   function invalidarTipos() {
@@ -76,7 +95,7 @@ export function AdminCatalogosPage() {
           areas={soloAreas}
           vacio="Todavía no hay áreas registradas."
           onEditar={(area) => setModalArea({ abierto: true, area, tipo: 'AREA' })}
-          onToggleEstado={(area) => manejarGuardarArea(area.id, !area.estado)}
+          onToggleEstado={alternarEstadoArea}
         />
       </Card>
 
@@ -91,7 +110,7 @@ export function AdminCatalogosPage() {
           areas={coordinaciones}
           vacio="Todavía no hay coordinaciones registradas."
           onEditar={(area) => setModalArea({ abierto: true, area, tipo: 'COORDINACION' })}
-          onToggleEstado={(area) => manejarGuardarArea(area.id, !area.estado)}
+          onToggleEstado={alternarEstadoArea}
         />
       </Card>
 
@@ -186,6 +205,25 @@ export function AdminCatalogosPage() {
         onCerrar={() => setModalArea({ abierto: false, area: null, tipo: 'AREA' })}
         onGuardado={invalidarAreas}
       />
+
+      <Modal
+        abierto={areaPorDesactivar !== null}
+        onCerrar={() => !desactivando && setAreaPorDesactivar(null)}
+        titulo={areaPorDesactivar?.tipo === 'COORDINACION' ? 'Desactivar coordinación' : 'Desactivar área'}
+      >
+        <p className="text-sm text-tinta-suave">
+          ¿Desactivar <strong className="text-tinta">{areaPorDesactivar?.nombre}</strong>? Dejará de ofrecerse al crear o
+          editar usuarios. Puedes volver a activarla cuando quieras.
+        </p>
+        <div className="mt-6 flex justify-end gap-2">
+          <Button variante="secundario" onClick={() => setAreaPorDesactivar(null)} disabled={desactivando}>
+            Cancelar
+          </Button>
+          <Button variante="peligro" cargando={desactivando} onClick={() => void confirmarDesactivar()}>
+            Desactivar
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }

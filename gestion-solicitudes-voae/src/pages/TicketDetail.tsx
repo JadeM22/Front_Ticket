@@ -11,6 +11,7 @@ import { mensajeError } from '../lib/errors'
 import { formatFecha, formatFechaHora } from '../lib/date'
 import { TagAsignado, TagExcepcional } from '../components/tickets/Etiquetas'
 import { puedeVerAsignacion } from '../lib/permisos'
+import { textoRespuestaExcepcional } from '../lib/excepcional'
 import { useAuth } from '../auth/useAuth'
 import { useHorarioHabil } from '../hooks/useHorarioHabil'
 import { useNombresUsuarios } from '../hooks/useNombresUsuarios'
@@ -112,9 +113,10 @@ export function TicketDetailPage() {
     if (!ticket || !perfil) return
     setTomando(true)
     try {
-      const tomado = await tomarTicket(ticket.estadoReal, perfil.id)
-      if (tomado) toast.success('Tomaste el ticket.')
-      else toast.error(`Otro diseñador ya tomó ${ticket.estadoReal.codigo}.`)
+      const resultado = await tomarTicket(ticket.estadoReal, perfil.id)
+      if (resultado === 'tomado') toast.success('Tomaste el ticket.')
+      else if (resultado === 'ocupado') toast.error(`Otro diseñador ya tomó ${ticket.estadoReal.codigo}.`)
+      else toast.error('No se pudo tomar el ticket.')
       invalidar()
     } catch (error) {
       toast.error(await mensajeError(error, 'No se pudo tomar el ticket.'))
@@ -170,8 +172,12 @@ export function TicketDetailPage() {
     const desdeNotificacion = Boolean((location.state as { desdeNotificacion?: boolean } | null)?.desdeNotificacion)
     return (
       <EmptyState
-        titulo={desdeNotificacion ? 'Este ticket ya no está asignado a ti' : 'Ticket no encontrado'}
-        descripcion={desdeNotificacion ? undefined : 'No existe o no tienes permiso para verlo.'}
+        titulo={desdeNotificacion ? 'Ya no tienes acceso a este ticket' : 'Ticket no encontrado'}
+        descripcion={
+          desdeNotificacion
+            ? 'Puede que se haya reasignado o que hayas cambiado de área.'
+            : 'No existe o no tienes permiso para verlo.'
+        }
       />
     )
   }
@@ -252,11 +258,7 @@ export function TicketDetailPage() {
 
         {estadoReal.es_excepcional && (
           <div className="mt-3 rounded-lg bg-ambar-bruma/60 p-3 text-sm text-ambar">
-            {estadoReal.excepcional_estado === 'PENDIENTE' && 'Pendiente de aceptación.'}
-            {estadoReal.excepcional_estado === 'ACEPTADA' && 'Aceptada – en proceso.'}
-            {estadoReal.excepcional_estado === 'RECHAZADA' && (
-              <>Rechazada: {estadoReal.excepcional_motivo_rechazo ?? 'sin motivo registrado'}</>
-            )}
+            {textoRespuestaExcepcional(estadoReal)}
           </div>
         )}
 

@@ -2,7 +2,15 @@ import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Plus, TriangleAlert, X } from 'lucide-react'
-import { listarUsuarios, listarRoles, actualizarUsuario, asignarRol, revocarRol, type UsuarioAdmin } from '../../data/usuarios'
+import {
+  listarUsuarios,
+  listarRoles,
+  listarTodasLasJefaturas,
+  actualizarUsuario,
+  asignarRol,
+  revocarRol,
+  type UsuarioAdmin,
+} from '../../data/usuarios'
 import { listarAreas } from '../../data/catalogos'
 import { listarTicketsActivosDeDisenador, type TicketActivoResumen } from '../../data/tickets'
 import { mensajeError } from '../../lib/errors'
@@ -31,7 +39,12 @@ export function AdminUsuariosPage() {
   const { data: usuarios = [], isLoading } = useQuery({ queryKey: ['admin', 'usuarios'], queryFn: listarUsuarios })
   const { data: areas = [] } = useQuery({ queryKey: ['catalogos', 'areas'], queryFn: listarAreas })
   const { data: roles = [] } = useQuery({ queryKey: ['admin', 'roles'], queryFn: listarRoles })
+  const { data: jefaturas = [] } = useQuery({ queryKey: ['admin', 'jefaturas-todas'], queryFn: listarTodasLasJefaturas })
   const coordinacionesActivas = areas.filter((a) => a.tipo === 'COORDINACION' && a.estado)
+  // Las inactivas no se ofrecen; solo se deja la que el usuario ya tiene, marcada, para que el select la muestre.
+  const opcionesArea = (usuario: UsuarioAdmin, tipo: 'AREA' | 'COORDINACION') =>
+    areas.filter((a) => a.tipo === tipo && (a.estado || a.id === usuario.area_id))
+  const nombreArea = (id: number) => areas.find((a) => a.id === id)?.nombre ?? `#${id}`
 
   function datosIncompletos(usuario: UsuarioAdmin): boolean {
     return !usuario.primer_apellido?.trim() || !usuario.segundo_apellido?.trim()
@@ -182,22 +195,20 @@ export function AdminUsuariosPage() {
                       Sin área
                     </option>
                     <optgroup label="Áreas">
-                      {areas
-                        .filter((area) => area.tipo === 'AREA')
-                        .map((area) => (
-                          <option key={area.id} value={area.id}>
-                            {area.nombre}
-                          </option>
-                        ))}
+                      {opcionesArea(usuario, 'AREA').map((area) => (
+                        <option key={area.id} value={area.id}>
+                          {area.nombre}
+                          {area.estado ? '' : ' (inactiva)'}
+                        </option>
+                      ))}
                     </optgroup>
                     <optgroup label="Coordinaciones">
-                      {areas
-                        .filter((area) => area.tipo === 'COORDINACION')
-                        .map((area) => (
-                          <option key={area.id} value={area.id}>
-                            {area.nombre}
-                          </option>
-                        ))}
+                      {opcionesArea(usuario, 'COORDINACION').map((area) => (
+                        <option key={area.id} value={area.id}>
+                          {area.nombre}
+                          {area.estado ? '' : ' (inactiva)'}
+                        </option>
+                      ))}
                     </optgroup>
                   </select>
                 </td>
@@ -250,6 +261,15 @@ export function AdminUsuariosPage() {
                   </div>
                 </td>
                 <td className="px-4 py-2">
+                  {jefaturas.some((j) => j.usuario_id === usuario.id) && (
+                    <p className="mb-1 text-xs text-tinta">
+                      {jefaturas
+                        .filter((j) => j.usuario_id === usuario.id)
+                        .map((j) => nombreArea(j.area_id))
+                        .sort()
+                        .join(', ')}
+                    </p>
+                  )}
                   {usuario.roles.some((r) => r.nombre === 'Jefe de Área') && usuario.area_tipo === 'COORDINACION' && (
                     <button
                       type="button"
@@ -297,8 +317,8 @@ export function AdminUsuariosPage() {
               <strong className="text-tinta">{confirmacion.usuario.nombre_completo}</strong> tiene{' '}
               {confirmacion.ticketsActivos.length} ticket{confirmacion.ticketsActivos.length === 1 ? '' : 's'} activo
               {confirmacion.ticketsActivos.length === 1 ? '' : 's'} (
-              {confirmacion.ticketsActivos.map((t) => t.codigo).join(', ')}). Al desactivar esta cuenta, esos tickets volverán a{' '}
-              <strong className="text-tinta">Sin asignar</strong> y se avisará a los Asignadores y a los solicitantes. Sus tickets
+              {confirmacion.ticketsActivos.map((t) => t.codigo).join(', ')}). Al desactivar esta cuenta, los tickets activos volverán a
+              la cola <strong className="text-tinta">sin asignar</strong> y se avisará a quien asigna el trabajo. Sus tickets
               finalizados esperando dictamen se quedan con ella.
             </p>
           ) : (
@@ -320,8 +340,8 @@ export function AdminUsuariosPage() {
               {confirmacion.ticketsActivos.length} ticket{confirmacion.ticketsActivos.length === 1 ? '' : 's'} activo
               {confirmacion.ticketsActivos.length === 1 ? '' : 's'} (
               {confirmacion.ticketsActivos.map((t) => t.codigo).join(', ')}). Al quitarle el rol{' '}
-              <strong className="text-tinta">Diseñador</strong>, esos tickets volverán a <strong className="text-tinta">Sin asignar</strong>{' '}
-              y se avisará a los Asignadores y a los solicitantes.
+              <strong className="text-tinta">Diseñador</strong>, los tickets activos volverán a la cola{' '}
+              <strong className="text-tinta">sin asignar</strong> y se avisará a quien asigna el trabajo.
             </p>
           ) : (
             <p className="text-sm text-tinta-suave">
@@ -354,7 +374,7 @@ export function AdminUsuariosPage() {
         abierto={modalAbierto}
         onCerrar={() => setModalAbierto(false)}
         onCreado={invalidar}
-        areas={areas}
+        areas={areas.filter((a) => a.estado)}
         roles={roles}
       />
 

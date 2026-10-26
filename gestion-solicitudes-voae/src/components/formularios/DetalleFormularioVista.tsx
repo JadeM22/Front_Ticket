@@ -4,7 +4,8 @@ import { estaVacio, etiquetasGenerales } from '../../lib/validacionFormularios'
 import type { DefinicionCampo, DetalleFormulario, EtiquetasGenerales, ValorCampo } from '../../types/domain'
 
 function renderValor(campo: DefinicionCampo | null, valor: ValorCampo | undefined): ReactNode {
-  if (campo?.tipo_campo === 'BOOLEANO') return valor === true ? 'Sí' : 'No'
+  // Sin responder es "—", no "No": no marcar la casilla no es lo mismo que contestar que no.
+  if (campo?.tipo_campo === 'BOOLEANO') return valor === true ? 'Sí' : valor === false ? 'No' : '—'
   if (valor == null || estaVacio(valor)) return '—'
   if (typeof valor === 'boolean') return valor ? 'Sí' : 'No'
   if (Array.isArray(valor)) return valor.join(', ')

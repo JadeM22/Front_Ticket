@@ -35,14 +35,14 @@ export function ExcepcionalPendienteCard({ ticket, puedeResponder, onDictaminar 
       <p className="text-xs text-tinta-suave">{ticket.solicitante}</p>
       <p className="text-xs text-tinta-suave">Evento: {formatFecha(ticket.fecha_evento)}</p>
       <p className="mt-1 text-xs font-medium text-ambar">
-        Se rechaza automáticamente el {fechaRechazoAutomatico(ticket.fecha_evento)} si no respondes
+        {puedeResponder
+          ? `Se rechaza automáticamente el ${fechaRechazoAutomatico(ticket.fecha_evento)} si no respondes`
+          : `Pendiente de aceptación; se rechaza automáticamente si no se acepta antes del ${fechaRechazoAutomatico(ticket.fecha_evento)}`}
       </p>
-      {puedeResponder ? (
+      {puedeResponder && (
         <Button className="mt-2 w-full" onClick={onDictaminar}>
           Dictaminar
         </Button>
-      ) : (
-        <p className="mt-2 text-xs text-ambar">Excepcional · pendiente de aceptación</p>
       )}
     </div>
   )

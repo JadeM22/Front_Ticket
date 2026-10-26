@@ -12,6 +12,8 @@ interface GeneralidadesCamposProps {
   tipoId: number
   excepcional: boolean
   diasProduccion: number
+  /** `false` en IA y Validación: no hay producción, solo plazo de respuesta. */
+  conProduccion: boolean
   /** Nombres visibles del tipo (`etiquetasGenerales()`). */
   etiquetas: EtiquetasGenerales
 }
@@ -23,6 +25,7 @@ export function GeneralidadesCampos({
   tipoId,
   excepcional,
   diasProduccion,
+  conProduccion,
   etiquetas,
 }: GeneralidadesCamposProps) {
   const { data: campus = [], isLoading } = useQuery({ queryKey: ['catalogos', 'campus'], queryFn: listarCampus })
@@ -51,6 +54,8 @@ export function GeneralidadesCampos({
           tipoId={tipoId}
           excepcional={excepcional}
           diasProduccion={diasProduccion}
+          etiqueta={etiquetas.fecha_evento}
+          conProduccion={conProduccion}
           value={valor.fecha_evento}
           onChange={(fecha_evento) => onCambiar({ ...valor, fecha_evento })}
         />

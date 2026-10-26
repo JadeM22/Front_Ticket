@@ -55,11 +55,13 @@ export function DisenadorDashboard() {
     if (!perfil) return
     setTomando(ticket.ticket_id)
     try {
-      const tomado = await tomarTicket(ticket, perfil.id)
-      if (tomado) {
+      const resultado = await tomarTicket(ticket, perfil.id)
+      if (resultado === 'tomado') {
         toast.success(`Tomaste ${ticket.codigo}.`)
-      } else {
+      } else if (resultado === 'ocupado') {
         toast.error(`Otro diseñador ya tomó ${ticket.codigo}.`)
+      } else {
+        toast.error('No se pudo tomar el ticket.')
       }
       void queryClient.invalidateQueries({ queryKey: ['tickets', 'estado-real'] })
       void queryClient.invalidateQueries({ queryKey: ['tickets', 'sin-asignar-count'] })
@@ -80,7 +82,14 @@ export function DisenadorDashboard() {
   )
 
   const excepcionalesPendientes = ticketsFifo.filter((t) => t.es_excepcional && t.excepcional_estado === 'PENDIENTE')
-  const sinAsignar = ticketsFifo.filter((t) => !t.disenador_id && !t.es_excepcional && !ESTADOS_FINALES_TICKET.includes(t.estado_real ?? ''))
+  // Las excepcionales PENDIENTE las decide el Asignador; una ya ACEPTADA sin diseñador (p. ej. liberada) se
+  // toma como cualquier otra (Parte 46).
+  const sinAsignar = ticketsFifo.filter(
+    (t) =>
+      !t.disenador_id &&
+      (!t.es_excepcional || t.excepcional_estado === 'ACEPTADA') &&
+      !ESTADOS_FINALES_TICKET.includes(t.estado_real ?? ''),
+  )
   const misTickets = ticketsFifo.filter((t) => t.disenador_id === perfil.id && !ESTADOS_FINALES_TICKET.includes(t.estado_real ?? ''))
   const historial = ticketsFifo.filter(
     (t) => ESTADOS_FINALES_TICKET.includes(t.estado_real ?? '') && (t.disenador_id === perfil.id || (!t.disenador_id && t.es_excepcional)),

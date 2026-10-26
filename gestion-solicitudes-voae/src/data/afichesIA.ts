@@ -40,6 +40,26 @@ export async function listarEnviosIA(ticketId: number): Promise<EnvioIA[]> {
   return data ?? []
 }
 
+/**
+ * El envío más reciente de cada ticket, para las miniaturas de la bandeja del Validador: una sola
+ * consulta para todas las tarjetas en vez de una por ticket.
+ */
+export async function listarUltimosEnviosIA(ticketIds: number[]): Promise<Map<number, EnvioIA>> {
+  const ultimos = new Map<number, EnvioIA>()
+  if (ticketIds.length === 0) return ultimos
+  const { data, error } = await supabase
+    .schema('Solicitudes')
+    .from('EnvioIA')
+    .select('*')
+    .in('ticket_id', ticketIds)
+    .order('intento', { ascending: false })
+  if (error) throw error
+  for (const envio of data ?? []) {
+    if (!ultimos.has(envio.ticket_id)) ultimos.set(envio.ticket_id, envio)
+  }
+  return ultimos
+}
+
 export async function listarRevisionesIA(ticketId: number): Promise<RevisionIA[]> {
   const { data, error } = await supabase
     .schema('Solicitudes')

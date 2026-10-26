@@ -16,6 +16,13 @@ interface FechaEventoPickerProps {
   excepcional: boolean
   /** Días hábiles de producción que se muestran en la ayuda y el tooltip del periodo (2 si es excepcional). */
   diasProduccion: number
+  /** Nombre visible de la fecha en este tipo (`etiquetas_generales.fecha_evento`, p. ej. "Fecha de entrega"). */
+  etiqueta: string
+  /**
+   * `true` en los tipos de diseño: los días son de producción. En IA y Validación no hay producción, así que
+   * la ayuda habla del plazo de respuesta.
+   */
+  conProduccion: boolean
   value: string
   onChange: (value: string) => void
   id?: string
@@ -37,7 +44,19 @@ const pad = (n: number) => String(n).padStart(2, '0')
  * reimplementa el cálculo del mínimo en el cliente — solo lo consulta y lo refresca cada 5 minutos
  * (y al abrir el calendario), porque la ventana se mueve con el tiempo.
  */
-export function FechaEventoPicker({ tipoId, excepcional, diasProduccion, value, onChange, id }: FechaEventoPickerProps) {
+export function FechaEventoPicker({
+  tipoId,
+  excepcional,
+  diasProduccion,
+  etiqueta,
+  conProduccion,
+  value,
+  onChange,
+  id,
+}: FechaEventoPickerProps) {
+  const textoPeriodo = conProduccion
+    ? `Periodo de producción: ${diasProduccion} día(s) hábiles`
+    : `Plazo de respuesta: ${diasProduccion} día(s) hábiles`
   const [abierto, setAbierto] = useState(false)
   const [mesElegido, setMesElegido] = useState<string | null>(null)
   const [posicion, setPosicion] = useState({ arriba: false, derecha: false })
@@ -125,19 +144,19 @@ export function FechaEventoPicker({ tipoId, excepcional, diasProduccion, value, 
         aria-expanded={abierto}
         className={`${CLASE_INPUT} flex items-center justify-between text-left ${value ? '' : 'text-tinta-suave'}`}
       >
-        {value ? isoATextoFecha(value) : 'Selecciona la fecha del evento'}
+        {value ? isoATextoFecha(value) : `Seleccionar ${etiqueta.toLowerCase()}`}
         <CalendarDays size={16} className="text-tinta-suave" />
       </button>
 
       <p className="mt-1 text-xs text-tinta-suave">
-        Primer día disponible: {diaSemanaMinimo} {isoATextoFecha(minimo)} ({diasProduccion} día(s) hábiles de
-        producción)
+        Primer día disponible: {diaSemanaMinimo} {isoATextoFecha(minimo)} (
+        {conProduccion ? `${diasProduccion} día(s) hábiles de producción` : textoPeriodo})
       </p>
 
       {abierto && (
         <div
           role="dialog"
-          aria-label="Elegir la fecha del evento"
+          aria-label={`Elegir ${etiqueta.toLowerCase()}`}
           onMouseDown={(e) => e.preventDefault()}
           className={`absolute z-30 w-[300px] rounded-xl border border-azul-niebla bg-white p-3 text-tinta shadow-xl ${
             posicion.arriba ? 'bottom-full mb-1' : 'top-[38px] mt-1'
@@ -189,7 +208,7 @@ export function FechaEventoPicker({ tipoId, excepcional, diasProduccion, value, 
               const titulo = feriado
                 ? feriado.nombre
                 : enProduccion
-                  ? `Periodo de producción: ${diasProduccion} día(s) hábiles`
+                  ? textoPeriodo
                   : esFinDeSemana
                     ? 'Fin de semana'
                     : undefined

@@ -93,8 +93,8 @@ export function AnalistaDashboard() {
   const [busqueda, setBusqueda] = useState('')
   const [exportarAbierto, setExportarAbierto] = useState(false)
   const esMovil = useEsMovil()
-  const anchoEjeY = esMovil ? 130 : 190
-  const anchoTick = esMovil ? 120 : 180
+  const anchoEjeY = esMovil ? 130 : 250
+  const anchoTick = esMovil ? 120 : 240
   const exportarRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -377,9 +377,11 @@ export function AnalistaDashboard() {
             onChange={(e) => actualizarFiltro('area', e.target.value)}
           >
             <option value="">Todas</option>
+            {/* Las inactivas sí se ofrecen (tienen tickets históricos), pero marcadas. */}
             {areas.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.nombre}
+                {a.estado ? '' : ' (inactiva)'}
               </option>
             ))}
           </select>
@@ -469,11 +471,12 @@ export function AnalistaDashboard() {
             <Kpi etiqueta="Promedio días resolución" valor={kpis.promedioDias ?? '—'} color="azul" />
             <Kpi etiqueta="Retrasadas" valor={kpis.retrasadas} color="coral" />
             <Kpi etiqueta="En curso" valor={kpis.enCurso} color="azul" />
-            <Kpi etiqueta="Aprobadas" valor={`${kpis.aprobadas} (${kpis.automaticas} auto.)`} color="menta" />
+            <Kpi etiqueta="Aprobadas" valor={kpis.aprobadas} detalle={`${kpis.automaticas} auto.`} color="menta" />
             <Kpi etiqueta="% con corrección" valor={`${kpis.pctConCorreccion}%`} color="ambar" />
             <Kpi
               etiqueta="Excepcionales"
-              valor={`${kpis.excepcionales} (${kpis.pctExcepcionalesAceptadas ?? '—'}% aceptadas)`}
+              valor={kpis.excepcionales}
+              detalle={`${kpis.pctExcepcionalesAceptadas ?? '—'}% aceptadas`}
               color="ambar"
             />
           </div>
@@ -762,6 +765,8 @@ function altoBarrasHorizontal(cantidad: number): number {
   return Math.max(ALTO_MINIMO_GRAFICA, cantidad * PIXELES_POR_BARRA)
 }
 
+const MAX_LINEAS_TICK = 3
+
 interface TickEnvueltoProps {
   x?: number
   y?: number
@@ -786,8 +791,10 @@ function TickEnvuelto({ x = 0, y = 0, payload, ancho = 180 }: TickEnvueltoProps)
     }
   }
   lineas.push(actual.trim())
-  const visibles = lineas.slice(0, 2)
-  if (lineas.length > 2) visibles[1] = visibles[1].replace(/.{0,1}$/, '…')
+  // Hasta 3 líneas (caben en los 44 px de cada barra) para que los nombres largos se lean completos (E-16);
+  // solo uno excepcionalmente largo se corta, y el nombre entero sigue en el `<title>` y en el tooltip.
+  const visibles = lineas.slice(0, MAX_LINEAS_TICK)
+  if (lineas.length > MAX_LINEAS_TICK) visibles[MAX_LINEAS_TICK - 1] += '…'
   return (
     <g transform={`translate(${x},${y})`}>
       <title>{valor}</title>
@@ -807,12 +814,29 @@ function TickEnvuelto({ x = 0, y = 0, payload, ancho = 180 }: TickEnvueltoProps)
   )
 }
 
-function Kpi({ etiqueta, valor, color }: { etiqueta: string; valor: string | number; color: 'azul' | 'menta' | 'coral' | 'ambar' }) {
+/**
+ * `detalle` va aparte y en pequeño ("12% aceptadas"): así el número principal tiene el mismo tamaño en
+ * todas las tarjetas, sin que un texto largo lo haga saltar de línea.
+ */
+function Kpi({
+  etiqueta,
+  valor,
+  detalle,
+  color,
+}: {
+  etiqueta: string
+  valor: string | number
+  detalle?: string
+  color: 'azul' | 'menta' | 'coral' | 'ambar'
+}) {
   const barra = { azul: 'bg-azul-medio', menta: 'bg-menta', coral: 'bg-coral', ambar: 'bg-ambar' }[color]
   return (
     <Card>
       <p className="text-xs uppercase text-tinta-suave">{etiqueta}</p>
-      <p className="font-mono text-2xl font-bold text-azul-noche">{valor}</p>
+      <p className="font-mono text-2xl font-bold text-azul-noche">
+        {valor}
+        {detalle && <span className="ml-1.5 font-sans text-xs font-medium text-tinta-suave">({detalle})</span>}
+      </p>
       <span className={`mt-1 block h-1 w-8 rounded-full ${barra}`} />
     </Card>
   )

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { ChangeEvent, KeyboardEvent } from 'react'
+import { errorRangoNumero } from '../../lib/inputNumero'
 
 interface InputNumeroProps {
   value: string
@@ -12,6 +13,11 @@ interface InputNumeroProps {
   className?: string
   id?: string
   required?: boolean
+  /**
+   * Muestra bajo el campo el error de rango ("El mínimo es 10"). Se apaga cuando quien lo usa ya pinta
+   * su propio error para ese campo, para no repetirlo.
+   */
+  mostrarError?: boolean
 }
 
 const TECLAS_BLOQUEADAS_ENTERO = new Set(['-', '+', 'e', 'E', '.', ','])
@@ -25,7 +31,8 @@ const TECLAS_BLOQUEADAS_DECIMAL = new Set(['-', '+', 'e', 'E'])
  *   decimales);
  * - escribir o pegar deja solo dígitos (y el separador decimal si `permiteDecimales`) — un valor
  *   vacío se queda vacío, nunca se convierte en 0;
- * - al salir del campo, un valor por debajo de `min` se ajusta a `min`.
+ * - un valor fuera de `min`/`max` nunca se ajusta en silencio: se avisa en rojo bajo el campo y quien lo
+ *   usa bloquea el guardado con `errorRangoNumero` (E-03). Solo las flechas del input respetan el rango.
  */
 export function InputNumero({
   value,
@@ -37,6 +44,7 @@ export function InputNumero({
   className,
   id,
   required,
+  mostrarError = true,
 }: InputNumeroProps) {
   const ref = useRef<HTMLInputElement>(null)
   const enfocadoRef = useRef(false)
@@ -65,29 +73,28 @@ export function InputNumero({
     if (bloqueadas.has(evento.key)) evento.preventDefault()
   }
 
-  function manejarSalir() {
-    enfocadoRef.current = false
-    if (value.trim() === '') return
-    const numero = Number(value)
-    if (Number.isFinite(numero) && numero < min) onChange(String(min))
-  }
+  const error = mostrarError ? errorRangoNumero(value, min, max) : null
 
   return (
-    <input
-      ref={ref}
-      id={id}
-      type="number"
-      inputMode={permiteDecimales ? 'decimal' : 'numeric'}
-      min={min}
-      max={max}
-      required={required}
-      placeholder={placeholder}
-      value={value}
-      onChange={manejarCambio}
-      onKeyDown={manejarTeclado}
-      onFocus={() => (enfocadoRef.current = true)}
-      onBlur={manejarSalir}
-      className={className}
-    />
+    <>
+      <input
+        ref={ref}
+        id={id}
+        type="number"
+        inputMode={permiteDecimales ? 'decimal' : 'numeric'}
+        min={min}
+        max={max}
+        required={required}
+        placeholder={placeholder}
+        value={value}
+        onChange={manejarCambio}
+        onKeyDown={manejarTeclado}
+        onFocus={() => (enfocadoRef.current = true)}
+        onBlur={() => (enfocadoRef.current = false)}
+        aria-invalid={error ? true : undefined}
+        className={`${className ?? ''} ${error ? 'border-coral' : ''}`}
+      />
+      {error && <p className="mt-1 text-xs text-coral">{error}</p>}
+    </>
   )
 }
