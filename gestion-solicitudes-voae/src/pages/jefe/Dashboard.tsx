@@ -244,7 +244,7 @@ export function JefeDashboard() {
               <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-tinta-suave" />
               <input
                 className={`${CLASE_INPUT} w-56 pl-8`}
-                placeholder="Código, tipo, diseñador, solicitante, estado"
+                placeholder={muestraAsignacion ? 'Código, tipo, diseñador, solicitante, estado' : 'Código, tipo, solicitante, estado'}
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
               />
