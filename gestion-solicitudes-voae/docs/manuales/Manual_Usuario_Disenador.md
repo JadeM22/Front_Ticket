@@ -1,171 +1,175 @@
 # 1. Introducción
 
-**iTickets** es el sistema de la Vicerrectoría de Orientación y Asuntos Estudiantiles (VOAE) para
-pedir, diseñar y aprobar solicitudes de diseño y comunicación: afiches, banners, videos, invitaciones,
-señalización y más. Cada solicitud se convierte en un **ticket** con un código único (por ejemplo
-`ADH-0001`) que se puede seguir de principio a fin.
+**iTickets** es el sistema de la Vicerrectoría de Orientación y Asuntos Estudiantiles (VOAE) de la UNAH para pedir, producir y aprobar piezas de diseño y comunicación. Cada pedido es un **ticket** con un código único (por ejemplo `AOAA-0006`).
 
-Como **Diseñador** eres quien convierte las solicitudes en el diseño final. Este manual explica lo
-que solo tú puedes hacer:
+Este manual es para el rol **Diseñador**: la persona del equipo de diseño que produce las piezas. Con iTickets puedes:
 
-- Tomar tickets de la cola de "Sin asignación".
-- Subir tus entregables (archivos o enlaces).
-- Seguir tus tickets activos hasta que el Jefe de Área los dictamine.
+- Ver las solicitudes que esperan a alguien del equipo y **tomarlas** en orden de llegada.
+- Recibir los tickets que te **asignan**.
+- Ver tus tickets organizados por estado en **Mis tickets**.
+- **Subir los entregables** (archivo o enlace) y las nuevas versiones cuando te piden una corrección.
+
+Tú trabajas a **cualquier hora**: tomar tickets y subir entregables no depende del horario hábil.
 
 # 2. Acceso al sistema
 
 ## 2.1 Iniciar sesión
 
-Entra a la dirección del sistema en tu navegador. Verás el boleto **iTickets** a la izquierda (en
-pantallas grandes) y el formulario de inicio de sesión a la derecha:
+Entra a la dirección de iTickets en tu navegador.
 
-1. Escribe tu **correo** y tu **contraseña**.
-2. Pulsa **Ingresar**.
+1. Escribe tu **Correo**.
+2. Escribe tu **Contraseña**. Para verla mientras la escribes, pulsa el ojo que está a la derecha del campo.
+3. Pulsa **Ingresar**.
 
-> Importante: usa el correo y la contraseña que te asignó el Administrador. Si olvidaste tu
-> contraseña, usa el enlace **¿Olvidaste tu contraseña?** de la pantalla de inicio de sesión.
+![Pantalla de inicio de sesión con los logos de la VOAE y de la UNAH](capturas/comunes/01_login.png)
+
+Si el correo o la contraseña no coinciden, aparece el aviso **"Correo o contraseña incorrectos."**.
+
+![Aviso "Correo o contraseña incorrectos."](capturas/comunes/02_login_error.png)
+
+> ¿Olvidaste tu contraseña? Pulsa **¿Olvidaste tu contraseña?**, escribe tu correo y pulsa **Enviar enlace**.
 
 ## 2.2 Primer ingreso y cambio de contraseña
 
-La primera vez que entras con la contraseña temporal que te dieron, el sistema **te obliga a
-cambiarla** antes de dejarte usar el resto de la aplicación. Escribe una contraseña nueva y
-confírmala para continuar.
+La primera vez entras con una **contraseña temporal**. iTickets te pide crear una propia: escribe la **Contraseña nueva**, repítela en **Confirmar contraseña** y pulsa **Guardar contraseña**.
+
+![Pantalla "Cambia tu contraseña" del primer ingreso](capturas/comunes/03_primer_ingreso.png)
 
 ## 2.3 Conoce la pantalla
 
-Una vez dentro verás:
+- **Menú lateral**, sección **Producción**: **Mi tablero**. El número amarillo junto a **Mi tablero** indica cuántos tickets sin asignar puedes tomar. Con el botón junto a la palabra iTickets puedes plegar el menú.
+- **Campana**: te avisa en tiempo real cuando te asignan un ticket, cuando te piden una corrección o cuando un ticket se retrasa. Al hacer clic en una notificación se abre el ticket.
+- **Tu nombre**, y el botón para **cerrar sesión**.
 
-- A la izquierda, el **menú lateral** con una sola sección: **Mi tablero**, con el número de tus
-  tickets activos en una burbuja.
-- Arriba a la derecha, la **campana de notificaciones** (te avisa en tiempo real de asignaciones,
-  correcciones y aprobaciones) y tu nombre con el área a la que perteneces.
-- Un botón para **cerrar sesión**, junto a tu nombre.
+![Barra superior: campana, nombre y botón para cerrar sesión](capturas/comunes/07_cerrar_sesion.png)
 
-> Si además tienes el rol **Asignador**, verás una sección más arriba del menú para repartir el
-> trabajo del equipo; eso se explica en el manual del Asignador.
+> Por seguridad, la sesión se cierra sola después de **20 minutos** sin actividad.
 
 # 3. Tomar un ticket
 
-En **Mi tablero**, la pestaña **Tickets sin asignación** lista, en orden de llegada (el más antiguo
-primero, numerado #1, #2…), todos los tickets que todavía no tiene nadie.
+## 3.1 Tickets sin asignación
 
-![Mi tablero: pestaña "Tickets sin asignación" con tarjetas numeradas y el botón Tomar](capturas/disenador/01_tablero_sin_asignacion.jpg)
+**Mi tablero** abre en la pestaña **Tickets sin asignación**: las solicitudes que todavía no tienen a nadie del equipo, **en orden de llegada** (la más antigua primero). Cada tarjeta muestra el código, el título, el tipo, el área, las fechas y el botón **Tomar**.
 
-1. Revisa el código, el tipo de solicitud y la fecha límite de la tarjeta que te interese.
-2. Pulsa **Tomar**.
+![Mi tablero, pestaña "Tickets sin asignación", con el botón Tomar en cada tarjeta](capturas/disenador/01_sin_asignacion.png)
 
-![Toast "Tomaste ADH-0036" tras pulsar Tomar](capturas/disenador/02_tomar_toast.jpg)
+Para tomar uno:
 
-> Importante: si otro diseñador toma el mismo ticket un segundo antes que tú, el sistema te avisa
-> con el mensaje "Otro diseñador ya tomó …" y la tarjeta desaparece de la cola. No es un error: solo
-> significa que llegaste tarde.
+1. Pulsa **Tomar** en la tarjeta. También puedes abrir el ticket y pulsar **Tomar ticket**.
+2. El ticket pasa a **En proceso**, queda a tu nombre y aparece en **Mis tickets**.
 
-Una etiqueta **Liberado** en una tarjeta significa que ese ticket ya tuvo diseñador antes, pero
-volvió a la cola porque a esa persona se le desactivó la cuenta o se le quitó el rol Diseñador — no
-es un ticket nuevo. Una etiqueta **Excepcional** marca una solicitud urgente que aceptó el Asignador.
-Si el Asignador te asignó un ticket directamente (sin que tú lo tomaras), lo verás con la etiqueta
-**Asignado**.
+![Detalle de un ticket sin asignar, con el botón "Tomar ticket"](capturas/disenador/02_tomar_desde_detalle.png)
+
+> Toma los tickets en orden: el primero de la lista es el que lleva más tiempo esperando. Si otra persona del equipo lo tomó un momento antes, verás un aviso y el ticket desaparecerá de la lista.
+
+## 3.2 Tickets que te asignan
+
+La persona que distribuye el trabajo de diseño también puede **asignarte** un ticket. Te llega una notificación y el ticket aparece directamente en **Mis tickets** con la etiqueta **Asignado**.
 
 # 4. Mis tickets
 
-La pestaña **Mis tickets** organiza tu trabajo activo en cuatro columnas: **En proceso**,
-**Corrección**, **Retrasados** y **Finalizados esperando dictamen**.
+La pestaña **Mis tickets** organiza tu trabajo en columnas:
 
-![Pestaña "Mis tickets" con las cuatro columnas, un ticket en "En proceso"](capturas/disenador/03_mis_tickets_columnas.jpg)
+| Columna | Qué contiene |
+|---|---|
+| **En proceso** | Tickets que estás trabajando. |
+| **Corrección** | Tickets donde el jefe del área pidió cambios. Muestra "Correcciones X/5". |
+| **Retrasados** | Tickets que pasaron su fecha límite sin entrega. |
+| **Finalizados esperando dictamen** | Tickets que ya entregaste. Muestra el tiempo que le queda al jefe del área para dictaminar. |
 
-Debajo de las columnas, el enlace **Historial** despliega tus tickets ya cerrados (aprobados o
-rechazados) de los últimos días, para que puedas consultarlos sin que estorben en tu tablero activo.
+Al final, **Historial** guarda los tickets ya cerrados.
+
+![Mis tickets: columnas En proceso, Corrección, Retrasados y Finalizados esperando dictamen](capturas/disenador/03_mis_tickets.png)
+
+## 4.1 Etiquetas
+
+| Etiqueta | Significado |
+|---|---|
+| **Asignado** | Te lo asignó la persona que distribuye el trabajo de diseño. |
+| **Excepcional** | Es una solicitud urgente. Atiéndela primero. |
+| **Liberado** | Volvió a la cola porque la persona que lo tenía ya no está activa en el sistema. |
+
+![Tarjeta de AOAA-0014 con las etiquetas "Excepcional" y "Asignado"](capturas/disenador/04_etiqueta_excepcional.png)
+
+## 4.2 Excepcionales pendientes de aceptación
+
+Al final de **Tickets sin asignación** está la sección **Excepcionales pendientes de aceptación**. Ahí ves las solicitudes urgentes que todavía no fueron aceptadas. **No se pueden tomar** hasta que la persona que distribuye el trabajo las acepte y elija quién las hará.
+
+![Excepcional pendiente de aceptación, sin botón para tomarla](capturas/disenador/05_excepcionales_pendientes.png)
 
 # 5. Subir un entregable
 
-Abre el ticket desde cualquiera de sus tarjetas para ver el detalle completo: el título, la fecha
-límite (con los días hábiles u corridos que le quedan), el conteo de correcciones usadas y el botón
-**Subir entregable**.
+Los entregables se suben **desde el detalle del ticket**.
 
-![Detalle de ADH-0036 en "En proceso", con el conteo de correcciones (0/5) y el botón "Subir entregable"](capturas/disenador/04_detalle_en_proceso.jpg)
+1. Abre el ticket (desde **Mis tickets** o desde la notificación).
+2. Pulsa **Subir entregable**.
 
-Al pulsar **Subir entregable**, eliges entre dos pestañas:
+![Detalle de AOAA-0006 "En proceso", con el botón "Subir entregable"](capturas/disenador/06_detalle_en_proceso.png)
 
-- **Archivo**: arrastra o elige el archivo desde tu equipo y, si quieres, agrega una descripción.
+3. Elige **Archivo** y arrastra el diseño al recuadro (o haz clic para buscarlo),
 
-  ![Modal "Subir entregable", pestaña Archivo, con afiche_prueba.png cargado](capturas/disenador/05_subir_entregable_archivo.jpg)
+![Ventana "Subir entregable", opción Archivo](capturas/disenador/07_subir_entregable_archivo.png)
 
-- **Enlace**: pega la URL (por ejemplo, a una carpeta de Drive o Figma) y, si quieres, una
-  descripción.
+   o elige **Enlace** y pega la dirección (por ejemplo, de Drive). Puedes pegarla sin `https://`: debajo verás "Se guardará como…".
 
-  ![Modal "Subir entregable", pestaña Enlace, con una URL de ejemplo](capturas/disenador/06_subir_entregable_enlace.jpg)
+4. Si quieres, escribe una **Descripción (opcional)**.
+5. Pulsa **Subir**.
 
-Al guardar, tu entrega aparece en la sección **Entregables** del ticket, agrupada como
-**Versión 1**, junto a los **Adjuntos del solicitante** (lo que la persona que pidió el ticket anexó
-al enviarlo) y el **Progreso de la solicitud**, que avanza al paso "Dictamen del jefe".
+![Ventana "Subir entregable", opción Enlace, con la vista previa del enlace y una descripción](capturas/disenador/08_subir_entregable_enlace.png)
 
-![Ticket con el entregable subido: Adjuntos del solicitante, Entregables "Versión 1" y el progreso en "Dictamen del jefe"](capturas/disenador/07_entregables_version1.jpg)
+El ticket pasa a **Finalizado** y le llega al jefe del área para que lo dictamine. Cada entrega queda guardada como una **versión** (Versión 1, Versión 2…), y el solicitante también puede verla.
 
-> Importante: subir el primer entregable de un ticket lo pasa automáticamente a **Finalizado**, en
-> espera del dictamen del Jefe de Área — ya no puedes editarlo ni seguir trabajándolo hasta que el
-> jefe pida una corrección.
+> Revisa bien antes de subir: el jefe del área tiene 24 horas hábiles para dictaminar. Si no lo hace, el ticket se aprueba solo.
 
-El ticket ya Finalizado muestra un cronómetro con las horas hábiles que le quedan al Jefe de Área
-para dictaminar: si no dictamina a tiempo, el ticket **se aprueba solo**.
+# 6. Corregir un diseño
 
-![Ticket Finalizado con el cronómetro "24:00" y la nota "Pausado: fuera de horario hábil"](capturas/disenador/08_finalizado_cronometro.jpg)
+Si el jefe del área pide cambios, el ticket vuelve a ti en la columna **Corrección** y te llega una notificación. En el detalle, la sección **Dictámenes** muestra el comentario con lo que hay que cambiar:
 
-Y en tu tablero, la tarjeta pasa a la columna **Finalizados esperando dictamen**:
+![Sección Dictámenes con el comentario "Corrección solicitada"](capturas/disenador/09_correccion.png)
 
-![Pestaña "Mis tickets" con el ticket ya en la columna "Finalizados esperando dictamen"](capturas/disenador/09_mis_tickets_finalizado.jpg)
+1. Haz los cambios que se piden.
+2. Pulsa **Subir entregable** y sube la nueva versión.
+3. El ticket vuelve a **Finalizado** y espera un nuevo dictamen.
 
-> El cronómetro **se pausa fuera del horario hábil** (lunes a viernes, 8:00 a. m. a 4:00 p. m., hora
-> de Honduras) y sigue corriendo cuando vuelve a empezar la jornada.
+> Un ticket admite hasta **5 correcciones**. Después de la quinta, el jefe del área solo puede aprobarlo.
 
-# 6. Si el Jefe de Área pide una corrección
+# 7. Tickets retrasados
 
-Si el jefe no aprueba el diseño, el ticket vuelve a tu tablero en la columna **Corrección**, con la
-etiqueta de correcciones usadas:
+Si un ticket pasa su fecha límite (**Vence**) sin entrega, queda **Retrasado**: aparece en la columna **Retrasados** y la fecha se marca en rojo. Todavía puedes entregarlo con **Subir entregable**.
 
-![Pestaña "Mis tickets": el ticket en la columna "Corrección" con la etiqueta "Correcciones 1/5"](capturas/disenador/10_mis_tickets_correccion.jpg)
+![AOAA-0011 "Retrasado": la fecha de vencimiento ya pasó](capturas/disenador/10_retrasado.png)
 
-Abre el ticket y repite los pasos de la sección 5 para subir la **siguiente versión**: el
-entregable nuevo se agrega como **Versión 2** (y así sucesivamente), siempre debajo de las
-anteriores, que no se borran. El comentario del jefe explicando qué hay que cambiar queda en la
-sección **Dictámenes** del ticket, justo encima de la barra de progreso.
-
-![Entregables con "Versión 1" y "Versión 2", y abajo la sección "Dictámenes" con el comentario del jefe](capturas/disenador/11_version2_entregable.jpg)
-
-> Importante: cada ticket tiene un máximo de **5 correcciones**. El contador del detalle (por
-> ejemplo "2/5") te avisa cuántas lleva. Después de la quinta, el jefe ya solo puede **aprobar** —
-> no puede pedir una corrección más.
-
-# 7. Reglas importantes
+# 8. Reglas importantes
 
 | Tema | Regla |
 |---|---|
-| Orden de "Sin asignación" | FIFO: el ticket que lleva más tiempo esperando aparece primero (#1). |
-| Subir el primer entregable | Pasa el ticket a **Finalizado** y arranca el plazo de dictamen del jefe. |
-| Dictamen del jefe | Tiene 24 horas hábiles desde que subes el entregable. Si no dictamina, el ticket se **aprueba solo**. |
-| Correcciones | Máximo 5 por ticket. Cada versión nueva se agrega sin borrar las anteriores. |
-| Etiqueta Liberado | El ticket volvió a la cola porque su diseñador anterior fue desactivado. |
-| Etiqueta Asignado | El Asignador te puso este ticket directamente, sin que lo tomaras tú. |
-| Etiqueta Excepcional | Es una solicitud urgente que aceptó el Asignador. |
-| Horario | Trabajas a cualquier hora, incluso fuera del horario hábil. |
+| Horario | Tomas tickets y subes entregables a cualquier hora. |
+| Orden | Los tickets sin asignación se muestran en orden de llegada: el más antiguo primero. |
+| Excepcionales | No se pueden tomar hasta que se acepten; la persona que distribuye el trabajo elige quién las hace. |
+| Entregables | Se suben desde el detalle del ticket, como archivo o enlace. Cada entrega es una nueva versión. |
+| Correcciones | Máximo 5 por ticket. |
+| Plazos | Cada tipo tiene sus días hábiles de producción. Si pasa la fecha límite, el ticket queda Retrasado. |
+| Dictamen | El jefe del área tiene 24 horas hábiles para dictaminar; si no, se aprueba solo. |
 
-# 8. Preguntas frecuentes y problemas comunes
+# 9. Preguntas frecuentes y problemas comunes
 
 | Situación | Qué hacer |
 |---|---|
-| Pulsé "Tomar" y me dice que otro diseñador ya lo tomó | Alguien te ganó por segundos; elige otro ticket de la cola. |
-| Subí un entregable y ya no puedo editar el ticket | Es correcto: al subirlo, el ticket pasa a Finalizado, a la espera del dictamen. |
-| El cronómetro del dictamen no avanza | Está fuera del horario hábil; se pausa de 4:00 p. m. a 8:00 a. m. y los fines de semana. |
-| Un ticket volvió a mi tablero con comentario del jefe | Te pidió corrección: revisa el comentario y sube la siguiente versión. |
-| No veo la opción de pedir más de 5 correcciones | Es el límite del sistema; a partir de la quinta, el jefe solo puede aprobar. |
+| Pulsé **Tomar** y salió un aviso de que otra persona ya lo tomó | Alguien del equipo lo tomó antes. Toma el siguiente de la lista. |
+| No puedo tomar una excepcional | Todavía no la aceptan. Espera a que te la asignen. |
+| "El ticket … no puede pasar a "Finalizado" sin un entregable de diseño." | Sube al menos un archivo o un enlace con **Subir entregable**. |
+| No encuentro un ticket que tenía | Si ya se cerró, está en **Historial**, al final de **Mis tickets**. |
+| Mi ticket dice **Liberado** | Volvió a la cola porque quien lo tenía ya no está activo. Si lo tomas, revisa los entregables anteriores. |
+| El enlace que pegué no empieza con `https://` | No pasa nada: el sistema lo completa. Revisa "Se guardará como…". |
 
-# 9. Glosario
+# 10. Glosario
 
-- **Ticket:** una solicitud de diseño o comunicación, con su propio código (p. ej. `ADH-0001`).
-- **Entregable:** el archivo o enlace que subes como resultado de tu trabajo en un ticket.
-- **Versión:** cada entrega sucesiva de un mismo ticket (Versión 1, Versión 2…), cuando hay
-  correcciones de por medio.
-- **Dictamen:** la decisión del Jefe de Área sobre un diseño entregado: Aprobar o pedir Corrección.
-- **Liberado:** un ticket que volvió a "Sin asignación" porque a su diseñador se le desactivó la
-  cuenta o se le quitó el rol Diseñador.
-- **Asignado:** etiqueta que indica que el Asignador, y no tú, le puso ese ticket a alguien.
-- **Excepcional:** una solicitud urgente que envió un Jefe de Área y aceptó el Asignador.
+| Término | Significado |
+|---|---|
+| **Mi tablero** | Tu pantalla principal, con las pestañas Tickets sin asignación y Mis tickets. |
+| **Tomar** | Quedarte con un ticket sin asignar para trabajarlo. |
+| **Entregable** | Archivo o enlace con el diseño. Cada entrega es una versión. |
+| **Dictamen** | La decisión del jefe del área: aprobar o pedir corrección. |
+| **Corrección** | Cambios que pide el jefe del área, con un comentario. Máximo 5. |
+| **Retrasado** | Ticket que pasó su fecha límite sin entrega. |
+| **Asignado / Excepcional / Liberado** | Etiquetas de las tarjetas (ver sección 4.1). |

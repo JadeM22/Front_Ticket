@@ -1,165 +1,162 @@
 # 1. Introducción
 
-**iTickets** es el sistema de la Vicerrectoría de Orientación y Asuntos Estudiantiles (VOAE) para
-pedir, diseñar y aprobar solicitudes de diseño y comunicación: afiches, banners, videos, invitaciones,
-señalización y más. Cada solicitud se convierte en un **ticket** con un código único (por ejemplo
-`ADH-0001`) que se puede seguir de principio a fin.
+**iTickets** es el sistema de la Vicerrectoría de Orientación y Asuntos Estudiantiles (VOAE) de la UNAH para pedir, producir y aprobar piezas de diseño y comunicación. Cada pedido es un **ticket** con un código único (por ejemplo `AOAA-0007`).
 
-Como **Asignador** reparte el trabajo entre el equipo de diseño. Este manual explica lo que solo tú
-puedes hacer:
+Este manual es para el rol **Asignador**. Eres parte del equipo de diseño, con permisos extra para **distribuir el trabajo**:
 
-- Repartir los tickets nuevos entre los diseñadores disponibles.
-- Reasignar un ticket de un diseñador a otro.
-- Aceptar o rechazar las solicitudes excepcionales que envían los Jefes de Área.
-
-El rol Asignador **siempre viene junto con el rol Diseñador**: tu cuenta también tiene la sección
-**Mi tablero**, donde trabajas tus propios tickets igual que cualquier diseñador. Para esa parte,
-consulta el manual del rol **Diseñador** — aquí solo se explica lo que es exclusivo de Asignación.
+- Ver todos los tickets del equipo de diseño en la pantalla **Asignación**.
+- **Asignar** un ticket sin asignar a una persona del equipo, o **reasignarlo**.
+- **Aceptar o rechazar** las solicitudes excepcionales. Al aceptarlas, eliges quién las hace.
+- Además, haces todo lo que hace cualquier persona del equipo de diseño: tomar tickets, subir entregables y atender correcciones.
 
 # 2. Acceso al sistema
 
 ## 2.1 Iniciar sesión
 
-Entra a la dirección del sistema en tu navegador. Verás el boleto **iTickets** a la izquierda (en
-pantallas grandes) y el formulario de inicio de sesión a la derecha:
+Entra a la dirección de iTickets en tu navegador.
 
-1. Escribe tu **correo** y tu **contraseña**.
-2. Pulsa **Ingresar**.
+1. Escribe tu **Correo**.
+2. Escribe tu **Contraseña**. Para verla mientras la escribes, pulsa el ojo que está a la derecha del campo.
+3. Pulsa **Ingresar**.
 
-> Importante: usa el correo y la contraseña que te asignó el Administrador. Si olvidaste tu
-> contraseña, usa el enlace **¿Olvidaste tu contraseña?** de la pantalla de inicio de sesión.
+![Pantalla de inicio de sesión con los logos de la VOAE y de la UNAH](capturas/comunes/01_login.png)
+
+Si el correo o la contraseña no coinciden, aparece el aviso **"Correo o contraseña incorrectos."**.
+
+> ¿Olvidaste tu contraseña? Pulsa **¿Olvidaste tu contraseña?**, escribe tu correo y pulsa **Enviar enlace**.
 
 ## 2.2 Primer ingreso y cambio de contraseña
 
-La primera vez que entras con la contraseña temporal que te dieron, el sistema **te obliga a
-cambiarla** antes de dejarte usar el resto de la aplicación. Escribe una contraseña nueva y
-confírmala para continuar.
+La primera vez entras con una **contraseña temporal**. iTickets te pide crear una propia: escribe la **Contraseña nueva**, repítela en **Confirmar contraseña** y pulsa **Guardar contraseña**.
+
+![Pantalla "Cambia tu contraseña" del primer ingreso](capturas/comunes/03_primer_ingreso.png)
 
 ## 2.3 Conoce la pantalla
 
-Una vez dentro verás:
+- **Menú lateral**, con dos secciones: **Distribución** (**Asignación**) y **Producción** (**Mi tablero**). El número amarillo junto a **Mi tablero** indica cuántos tickets sin asignar hay.
+- **Campana**: te avisa de nuevas solicitudes excepcionales, de tickets que vuelven a la cola y de lo que pasa con tus propios tickets. Al hacer clic en una notificación se abre el ticket.
+- **Tu nombre**, y el botón para **cerrar sesión**.
 
-- A la izquierda, el **menú lateral** con dos secciones: **Asignación** (lo tuyo como Asignador) y
-  **Mi tablero** (lo tuyo como Diseñador), con el conteo de tus tickets activos.
-- Arriba a la derecha, la **campana de notificaciones** (te avisa en tiempo real de lo que pasa en
-  el sistema) y tu nombre con el área a la que perteneces.
-- Un botón para **cerrar sesión**, junto a tu nombre.
+![Barra superior: campana, nombre y botón para cerrar sesión](capturas/comunes/07_cerrar_sesion.png)
 
-![Pantalla de Asignación: excepcional pendiente arriba y las pestañas "Sin asignar" y una por diseñador](capturas/asignador/01_vista_general.jpg)
+> Por seguridad, la sesión se cierra sola después de **20 minutos** sin actividad.
 
-# 3. Solicitudes excepcionales
+# 3. La pantalla Asignación
 
-Un **Jefe de Área** puede enviar una solicitud **excepcional** cuando tiene una urgencia: la envía
-a cualquier hora y día, con al menos 2 días hábiles de anticipación a la fecha del evento. Mientras
-nadie responda, queda **pendiente** en la parte de arriba de tu pantalla de Asignación, con un
-contador de cuánto falta para que se rechace sola.
+**Asignación** reúne todo el trabajo del equipo de diseño:
 
-> Importante: si nadie la acepta ni la rechaza antes de la fecha del evento, el sistema la
-> **rechaza automáticamente**.
+- Arriba, **Excepcionales pendientes**: las urgencias que esperan tu respuesta.
+- Debajo, una pestaña **Sin asignar** y una pestaña por cada persona del equipo, con el número de tickets activos de cada una. La tuya dice **(yo)**.
 
-## 3.1 Aceptar una excepcional
+![Asignación: excepcionales pendientes y pestañas del equipo](capturas/asignador/01_asignacion.png)
 
-1. En la tarjeta **Excepcionales pendientes**, pulsa **Aceptar**.
-2. Elige a qué diseñador se la vas a asignar.
-3. Pulsa **Aceptar y asignar**.
+# 4. Responder solicitudes excepcionales
 
-![Modal "Aceptar solicitud excepcional ADH-0041": elegir diseñador y confirmar](capturas/asignador/02_excepcional_aceptar.jpg)
+Una **solicitud excepcional** la envía un jefe de área para una urgencia, con al menos 2 días hábiles de anticipación. Solo tú puedes aceptarla o rechazarla.
 
-El ticket pasa a **En proceso** (o se queda en el estado que tenía) con la etiqueta **Excepcional**,
-y el diseñador elegido la ve de inmediato en "Mi tablero".
+> Cada tarjeta indica la fecha en que la solicitud **se rechaza automáticamente** si nadie responde. Atiéndelas primero.
 
-## 3.2 Rechazar una excepcional
+## 4.1 Aceptar
 
-1. En la tarjeta, pulsa **Rechazar**.
-2. Escribe el **motivo del rechazo** — es obligatorio, y el Jefe de Área lo verá.
-3. Pulsa **Rechazar solicitud**.
+1. En la tarjeta de la excepcional, pulsa **Dictaminar**.
+2. Deja elegida la opción **Aceptar**.
+3. En **Asignar a**, elige a la persona que la va a trabajar (puedes ser tú).
+4. Pulsa **Aceptar y asignar**.
 
-![Modal "Rechazar solicitud excepcional ADH-0041" con el motivo escrito](capturas/asignador/03_excepcional_rechazar.jpg)
+![Ventana "Dictaminar solicitud excepcional": Aceptar y "Asignar a"](capturas/asignador/02_excepcional_aceptar.png)
 
-> Importante: ni aceptar ni rechazar se pueden deshacer. Revisa bien el diseñador o el motivo antes
-> de confirmar.
+El ticket pasa a **En proceso** con las etiquetas **Excepcional** y **Asignado**, y la persona elegida recibe un aviso.
 
-## 3.3 Aviso de una nueva excepcional
+## 4.2 Rechazar
 
-La campana de notificaciones te avisa apenas llega una solicitud excepcional nueva, con el código y
-la fecha del evento, para que no se te pase el plazo de respuesta.
+1. Pulsa **Dictaminar**.
+2. Elige **Rechazar**.
+3. Escribe el **Motivo del rechazo**. Es obligatorio; el jefe del área lo verá.
+4. Pulsa **Rechazar solicitud**.
 
-![Notificación "Nueva solicitud excepcional ADH-0042 (Afiche): evento el 21/10/2026. Acéptala o recházala."](capturas/asignador/04_notificacion_excepcional.jpg)
+![Ventana "Dictaminar solicitud excepcional": Rechazar con el motivo](capturas/asignador/03_excepcional_rechazar.png)
 
-# 4. Repartir los tickets sin asignar
+> Cada excepcional se responde **una sola vez**. Si ya fue respondida, verás "Esta solicitud ya fue respondida.".
 
-La pestaña **Sin asignar** lista, en orden de llegada (el más antiguo primero, numerado #1, #2…),
-todos los tickets que todavía no tienen diseñador.
+# 5. Asignar tickets sin asignar
 
-![Galería "Sin asignar" numerada, con el selector "Asignar a…" y el botón "Tomar" en cada tarjeta](capturas/asignador/05_galeria_sin_asignar.jpg)
+La pestaña **Sin asignar** muestra los tickets que nadie ha tomado, **en orden de llegada**: **#1** es el que lleva más tiempo esperando. Cada tarjeta indica cuánto tiempo lleva **en cola**.
 
-Para cada ticket tienes dos formas de repartirlo:
+![Pestaña "Sin asignar": tickets numerados #1, #2, #3… con el tiempo en cola](capturas/asignador/04_galeria_sin_asignar.png)
 
-- **Asignar a…**: elige un diseñador del selector. El ticket pasa a su lista de inmediato, sin pedir
-  confirmación.
-- **Tomar**: te lo asignas a ti mismo, igual que cualquier diseñador lo haría desde su propio
-  tablero.
+En cada tarjeta tienes dos opciones:
 
-> Importante: respeta el orden de llegada (#1, #2…) salvo que haya una razón para saltarte la fila
-> (por ejemplo, la carga de trabajo de cada diseñador).
+- **Asignar a…**: elige a una persona del equipo y el ticket queda asignado **en ese momento**. Pasa a **En proceso** con la etiqueta **Asignado**.
+- **Tomar**: te quedas con el ticket para trabajarlo tú.
 
-Un ticket con la etiqueta **Liberado** volvió a esta lista porque al diseñador que lo tenía se le
-desactivó la cuenta o se le quitó el rol Diseñador — no es un ticket nuevo.
+![Tarjeta con el selector "Asignar a…" y el botón Tomar](capturas/asignador/05_asignar_a.png)
 
-# 5. Ver y reasignar el trabajo de un diseñador
+> **Asignar a…** no pide confirmación: en cuanto eliges un nombre, el ticket se asigna. Revisa bien el nombre antes de soltar el selector.
 
-Cada diseñador del equipo tiene su propia pestaña, con el número de tickets activos entre
-paréntesis. La tuya aparece marcada con **"(yo)"**.
+# 6. Ver y reasignar el trabajo de una persona
 
-Dentro de la pestaña de un diseñador, sus tickets activos se agrupan en cuatro columnas: **En
-proceso**, **Corrección**, **Retrasados** y **Finalizados esperando dictamen**.
+Pulsa la pestaña de una persona para ver sus tickets organizados en **En proceso**, **Corrección**, **Retrasados** y **Finalizados esperando dictamen**. Al final, **Aprobados y rechazados (últimos 30 días)** muestra lo que ya cerró.
 
-![Pestaña de un diseñador con sus cuatro columnas de tickets activos](capturas/asignador/06_pestana_disenador.jpg)
+![Pestaña de una persona del equipo: sus tickets por columna](capturas/asignador/06_pestana_disenador.png)
 
-Para pasarle un ticket a otro diseñador:
+Para pasarle un ticket a otra persona:
 
-1. En la tarjeta del ticket, abre el selector **Reasignar a…**.
-2. Elige el nuevo diseñador.
-3. Como el ticket ya tenía dueño, el sistema te pide confirmación antes de mover.
+1. En la tarjeta, abre **Reasignar a…** y elige a la persona.
+2. Aparece la ventana **Reasignar ticket**. Pulsa **Reasignar** para confirmar, o **Cancelar**.
 
-![Confirmación "Reasignar ticket": AOAA-0002 ya tenía diseñador asignado](capturas/asignador/07_reasignar_confirmacion.jpg)
+![Ventana "Reasignar ticket" con la confirmación](capturas/asignador/07_reasignar.png)
 
-Debajo de las columnas, el enlace **Aprobados y rechazados (últimos 30 días)** despliega el
-historial reciente de ese diseñador, para revisar su trabajo ya cerrado sin salir de la pestaña.
+La persona nueva recibe un aviso y el cambio queda registrado en la bitácora de asignaciones.
 
-# 6. Reglas importantes
+## 6.1 Tickets que vuelven a la cola
+
+Si el administrador desactiva la cuenta de una persona del equipo, sus tickets activos vuelven a **Sin asignar** con la etiqueta **Liberado**, y tú recibes una notificación. Asígnalos de nuevo lo antes posible.
+
+# 7. Tus propias tareas de diseño
+
+Como parte del equipo de diseño, también usas **Mi tablero**. Resumen:
+
+1. En **Tickets sin asignación**, pulsa **Tomar** para quedarte con un ticket.
+2. En **Mis tickets**, sigue tus tickets por columna.
+3. Abre el ticket y pulsa **Subir entregable** para entregar un archivo o un enlace. El ticket pasa a **Finalizado**.
+4. Si el jefe del área pide una corrección, lee el comentario en **Dictámenes** y sube la nueva versión.
+
+![Mis tickets: columnas En proceso, Corrección, Retrasados y Finalizados esperando dictamen](capturas/disenador/03_mis_tickets.png)
+
+![Ventana "Subir entregable"](capturas/disenador/08_subir_entregable_enlace.png)
+
+Para más detalle, consulta el **Manual de Usuario – Rol: Diseñador**.
+
+# 8. Reglas importantes
 
 | Tema | Regla |
 |---|---|
-| Quién puede ser Asignador | Solo una cuenta que ya tiene el rol **Diseñador** (lo asigna el Administrador). |
-| Solicitud excepcional | La envía un Jefe de Área, con al menos 2 días hábiles de anticipación al evento. |
-| Plazo de respuesta | Si nadie la acepta ni la rechaza antes de la fecha del evento, se **rechaza automáticamente**. |
-| Motivo del rechazo | Obligatorio; el Jefe de Área que la envió lo ve. |
-| Orden de "Sin asignar" | FIFO: el ticket que lleva más tiempo esperando aparece primero (#1). |
-| Etiqueta Liberado | El ticket volvió a "Sin asignar" porque su diseñador fue desactivado, no porque sea nuevo. |
-| Reasignar | Si el ticket ya tenía diseñador, el sistema pide confirmación antes de mover. |
-| Horario | Trabajas a cualquier hora, incluso fuera del horario hábil. |
+| Excepcionales | Solo tú las aceptas o rechazas, una sola vez. Al aceptar eliges quién la hace; al rechazar, el motivo es obligatorio. |
+| Rechazo automático | Si nadie responde una excepcional antes de la fecha indicada, se rechaza sola. |
+| Asignar | **Asignar a…** asigna al instante, sin confirmación. |
+| Reasignar | **Reasignar a…** pide confirmación. |
+| Orden | Los tickets sin asignar se numeran por orden de llegada (#1 es el más antiguo). |
+| Horario | Puedes asignar, reasignar y responder excepcionales a cualquier hora. |
+| Cuentas desactivadas | Sus tickets activos vuelven a Sin asignar con la etiqueta **Liberado** y te llega un aviso. |
 
-# 7. Preguntas frecuentes y problemas comunes
+# 9. Preguntas frecuentes y problemas comunes
 
 | Situación | Qué hacer |
 |---|---|
-| Acepté o rechacé una excepcional y la tarjeta sigue en "pendientes" | Recarga la página; la lista no se actualiza sola todavía. |
-| No encuentro a un diseñador en el selector | Solo aparecen los usuarios con el rol Diseñador activo; pide al Administrador que revise su cuenta. |
-| Reasigné un ticket por error | Vuelve a abrir su pestaña actual y reasígnalo de nuevo al diseñador correcto. |
-| Una excepcional se rechazó sola sin que nadie la viera | Pasó la fecha límite de respuesta (2 días hábiles antes del evento) sin que nadie la aceptara ni la rechazara. |
-| Tomé un ticket de "Sin asignar" y sigue apareciendo ahí | Igual que con las excepcionales: recarga la página para ver la lista al día. |
+| Asigné un ticket a la persona equivocada | Abre la pestaña de esa persona y usa **Reasignar a…** para pasarlo a quien corresponde. |
+| "Esta solicitud ya fue respondida." | Otra persona o el propio sistema ya la respondió (o se rechazó automáticamente). Recarga la página. |
+| No puedo rechazar una excepcional | Escribe el **Motivo del rechazo**: es obligatorio. |
+| Una persona del equipo aparece con 0 tickets y no la encuentro en Asignar a… | Puede estar desactivada. Consulta con el administrador. |
+| Me llegó un aviso de tickets liberados | Revisa **Sin asignar**: los tickets con etiqueta **Liberado** necesitan una nueva persona. |
 
-# 8. Glosario
+# 10. Glosario
 
-- **Ticket:** una solicitud de diseño o comunicación, con su propio código (p. ej. `ADH-0001`).
-- **Excepcional:** una solicitud urgente que solo puede enviar un Jefe de Área, y que tú aceptas o
-  rechazas.
-- **Sin asignar:** un ticket que todavía no tiene diseñador, ya sea porque es nuevo o porque su
-  diseñador fue desactivado.
-- **Liberado:** un ticket que volvió a "Sin asignar" porque a su diseñador se le desactivó la
-  cuenta o se le quitó el rol Diseñador (y no porque sea nuevo).
-- **Asignado:** etiqueta que indica que tú (el Asignador), y no el propio diseñador, le pusiste ese
-  ticket a alguien.
-- **FIFO:** "primero en entrar, primero en salir" — el orden en que aparecen los tickets en "Sin
-  asignar", del más antiguo al más nuevo.
+| Término | Significado |
+|---|---|
+| **Asignación** | Pantalla para distribuir el trabajo del equipo de diseño. |
+| **Asignar** | Darle a una persona un ticket sin asignar (al instante). |
+| **Reasignar** | Pasar un ticket de una persona a otra (con confirmación). |
+| **Solicitud excepcional** | Pedido urgente de un jefe de área; tú lo aceptas o rechazas. |
+| **En cola** | Tiempo que un ticket lleva sin asignar. |
+| **Liberado** | Ticket que volvió a la cola porque su responsable fue desactivado. |
+| **Entregable** | Archivo o enlace con el diseño. |

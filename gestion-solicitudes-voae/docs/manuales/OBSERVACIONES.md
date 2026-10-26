@@ -234,3 +234,110 @@ hábil. Se recargó la página antes de cada captura, como pidió.
 - Con esto, **las 6 secciones de captura pendientes del documento de estado original (B1–B9 más los
   4 de dictamen) quedan completas.** Falta solo la verificación visual manual de los documentos
   generados (punto anterior) antes de dar el trabajo por cerrado.
+
+---
+
+# Versión 2.0 (26/10/2026) — manuales rehechos, solo PDF
+
+## Cómo se hizo
+
+- **Entorno:** https://front-ticket.pages.dev. Antes de empezar se confirmó que el bundle publicado
+  (`assets/index-BHsOAPbl.js`) contiene los textos nuevos del último push (`d616c68`, "Correcciones de
+  los 18 errores"), así que producción estaba al día.
+- **Capturas:** Puppeteer (`puppeteer-core` + Chrome local), un contexto aislado por usuario, ventana
+  de 1440 × 900 (390 × 844 en móvil). Script: `scripts/manuales/capturas.mjs` + guiones por rol en
+  `scripts/manuales/guiones.mjs`. Las contraseñas se pasaron solo como variables de entorno
+  (`MANUALES_PASS`, `MANUALES_PASS_NUEVO`); no están en ningún archivo, log ni captura.
+- **PDF:** `npm run manuales` genera ahora solo los 7 PDF (versión 2.0). Los `.docx` y las capturas
+  de la versión 1.0 se movieron a `docs/manuales/v1/`.
+- **Ajuste a `md2pdf.mjs`:** las imágenes tienen ahora una altura máxima de 88 mm (antes ocupaban
+  el ancho completo y una sola captura alta llenaba una página). Sin ese ajuste, el manual del
+  Empleado tenía 39 páginas.
+- **Verificación:** sin poppler en esta máquina, se agregó `scripts/manuales/revisar-pdf.mjs`, que
+  usa pdf.js para contar páginas, buscar "[Falta la imagen" y dibujar hojas de miniaturas. Se
+  revisaron a ojo la portada, el índice, las tablas y las imágenes de los 7 PDF.
+- **Horario:** la sesión fue en horario hábil (la base respondió `true` a `fnEsHorarioHabilEscalar`).
+
+## Privacidad: datos reales que aparecen en la app y se difuminaron
+
+1. **El afiche de AOAA-0019** ("Demo charla sobre manejo de estre") no es un afiche: es la captura
+   de un documento con un **nombre, un número de cuenta y una firma**. Se difumina en todas las
+   capturas donde aparece (bandeja del Validador). **Recomendación:** reemplazar ese archivo por un
+   afiche de ejemplo.
+2. **La cuenta real `angienam2004`** (correo personal de Gmail, con todos los roles) aparece mezclada
+   con las de demostración en: la lista de **Usuarios**, la columna **Creado por** de Tipos de
+   solicitud, **Realizado por** en la Bitácora de roles y una **pestaña de Asignación**. Se difumina
+   en todas las capturas. Como tiene los roles Jefe de Área, Asignador y Validador, probablemente
+   recibe las notificaciones de los tickets `[DEMO]`.
+
+## Calidad de los datos de demostración
+
+3. Los afiches de **AOAA-0020** son capturas de errores de código, no afiches. Se usaron igual
+   (no tienen datos personales) para mostrar el historial de intentos.
+4. El tipo **"Izamiento de la bandera nacional"** tiene como descripción
+   `ijsdnnvsonfseoinfwersoinfsweriof`, que se ve en la pantalla **Nueva solicitud** (capturas
+   `empleado/02` y `jefe/09`). Conviene corregirla desde Catálogos y volver a correr
+   `node scripts/manuales/capturas.mjs empleado 02` y `... jefe 09`.
+
+## Diferencias entre la app y las reglas (no se "corrigieron" en el manual)
+
+5. **Buscador del historial del Jefe:** en producción el texto de ayuda todavía dice
+   "Código, tipo, **diseñador**, solicitante, estado". El código local ya lo corrige
+   (`src/pages/jefe/Dashboard.tsx`, sin commit ni publicar). En las capturas del jefe se escribe una
+   búsqueda para que no aparezca.
+6. **Textos que nombran roles** (contra la regla "textos sin roles internos"):
+   - Progreso de un ticket enviado: "Esperando que **un diseñador** la tome".
+   - Progreso en Corrección: "**El diseñador** aplica los cambios pedidos".
+   - Cronómetro: "Si **el jefe de área** no dictamina antes del…".
+   - Crear tipo: "El equipo de diseño toma la solicitud, entrega y **el Jefe de Área** dictamina."
+7. **"Asignar a…"** (pantalla Asignación) asigna **al instante, sin confirmación**. El prompt pedía
+   "Asignar a… (cancelar)", pero no hay nada que cancelar: la captura muestra solo el control y el
+   manual advierte que no pide confirmación. "Reasignar a…" sí pide confirmación.
+8. **Ventana "Inhabilitar usuario"**: dice "Sus tickets finalizados esperando dictamen se quedan
+   **con ella**" aunque la cuenta sea de un hombre (pedro diseñador demo).
+9. **Crear usuario:** el campo se llama **"Área"**, no "Área o coordinación" como dice la regla
+   (aunque la lista sí incluye las coordinaciones).
+10. **Categorías:** la app dice **"Protocolo"** (singular); la regla dice "Protocolos". El manual usa
+    el texto de la app.
+11. **Analista:** la vista tiene el filtro **Diseñador**, la columna **Diseñador** y la gráfica
+    **Carga por diseñador**, pero este rol los recibe vacíos ("—" y "Sin datos para este filtro").
+    El manual lo explica; quizá convenga ocultarlos para este rol.
+12. **Editor de un campo:** el título de la ventana sigue diciendo `Campos de "Trifolio"` en lugar de
+    algo como "Nuevo campo".
+13. **Bitácora de roles:** la columna **Usuario** muestra solo el primer nombre ("nuevo", "luis"),
+    lo que puede ser ambiguo si dos personas se llaman igual.
+14. **Cuenta del Asignador demo:** el prompt la indica sin área ("—"), pero en la app pertenece al
+    **Área de Salud**.
+
+## Capturas pendientes
+
+| Captura | Por qué falta | Cómo completarla |
+|---|---|---|
+| Aviso de **fuera de horario** al enviar una solicitud, y el botón **Dictaminar** bloqueado | La sesión fue en horario hábil. | Después de las 4:00 p. m.: `node scripts/manuales/capturas.mjs …` con un paso nuevo (no hay que crear datos). El manual ya explica la regla con texto. |
+| **Contraseña temporal** al crear un usuario (borrosa) | Obliga a crear una cuenta real, que no se puede borrar. | Si se autoriza, crear una cuenta `@voae.test` y difuminar la contraseña. |
+| **Reenviar afiche** (ticket IA en Corrección) | Ningún ticket IA está en Corrección; habría que **rechazar** AOAA-0023 como Validador (acción irreversible). | Si se autoriza, rechazar AOAA-0023 y capturar el botón y la ventana **Reenviar afiche** (cancelando). |
+
+## Tickets `[DEMO]` nuevos creados en esta sesión
+
+| Código | Id | Tipo | Estado |
+|---|---|---|---|
+| AOAA-0022 | 23 | Grabación y edición de videos, spots o cortinas institucionales | Enviado |
+| AOAA-0023 | 24 | Aprobación de afiches con IA (afiche de ejemplo generado, sin datos personales) | Enviado, intento 1 |
+
+Ningún ticket `[DEMO]` existente cambió de estado: todos los diálogos (Dictaminar, Aceptar,
+Rechazar, Pedir corrección, Reasignar, Inhabilitar, Crear usuario, Crear tipo, Crear feriado,
+Agregar campo) se abrieron, se llenaron, se capturaron y se cancelaron.
+
+## Resultado
+
+| Manual | Páginas | Capturas |
+|---|---|---|
+| Empleado | 25 | 35 |
+| Jefe de Área | 18 | 22 |
+| Diseñador | 13 | 14 |
+| Asignador | 12 | 12 |
+| Validador | 12 | 14 |
+| Analista | 13 | 14 |
+| Administrador | 18 | 19 |
+
+0 "[Falta la imagen" en los 7 PDF.

@@ -1,181 +1,222 @@
 # 1. Introducción
 
-**iTickets** es el sistema de la Vicerrectoría de Orientación y Asuntos Estudiantiles (VOAE) para
-pedir, diseñar y aprobar solicitudes de diseño y comunicación: afiches, banners, videos, invitaciones,
-señalización y más. Cada solicitud se convierte en un **ticket** con un código único (por ejemplo
-`ADH-0001`) que se puede seguir de principio a fin.
+**iTickets** es el sistema de la Vicerrectoría de Orientación y Asuntos Estudiantiles (VOAE) de la UNAH para pedir, producir y aprobar piezas de diseño y comunicación. Cada pedido se convierte en un **ticket** con un código único (por ejemplo `AOAA-0008`).
 
-Como **Jefe de Área** cierras el ciclo de cada solicitud de tu área. Este manual explica lo que solo
-tú puedes hacer:
+Este manual es para el rol **Jefe de Área**. Como jefe o jefa de un área o de una coordinación puedes:
 
-- Dictaminar los diseños que entrega el equipo: aprobarlos o pedir una corrección.
-- Enviar una **solicitud excepcional** cuando tienes una urgencia fuera del proceso normal.
-- Revisar el historial de solicitudes dictaminadas de tu área.
+- **Dictaminar** los diseños que entrega el equipo de diseño: aprobarlos o pedir una corrección.
+- Revisar el **historial** de las solicitudes de tu área y exportarlo.
+- Enviar una **solicitud excepcional** cuando hay una urgencia.
+- Enviar **solicitudes normales** y seguirlas en **Mis solicitudes**.
+- Si diriges varias coordinaciones, ver y dictaminar las de todas.
 
-Como Jefe de Área también puedes **enviar solicitudes normales** y ver "Mis solicitudes", igual que
-un Empleado — para esa parte, consulta el manual del rol **Empleado**.
+Cada usuario pertenece a **un área** (AOAA, ADH o ADS) **o a una coordinación** (UROE, UCCR o UPLAN). El código de cada ticket empieza con ese prefijo: `AOAA-0001`, `UCCR-0001`…
 
 # 2. Acceso al sistema
 
 ## 2.1 Iniciar sesión
 
-Entra a la dirección del sistema en tu navegador. Verás el boleto **iTickets** a la izquierda (en
-pantallas grandes) y el formulario de inicio de sesión a la derecha:
+Entra a la dirección de iTickets en tu navegador.
 
-1. Escribe tu **correo** y tu **contraseña**.
-2. Pulsa **Ingresar**.
+1. Escribe tu **Correo**.
+2. Escribe tu **Contraseña**. Para verla mientras la escribes, pulsa el ojo que está a la derecha del campo.
+3. Pulsa **Ingresar**.
 
-> Importante: usa el correo y la contraseña que te asignó el Administrador. Si olvidaste tu
-> contraseña, usa el enlace **¿Olvidaste tu contraseña?** de la pantalla de inicio de sesión.
+![Pantalla de inicio de sesión con los logos de la VOAE y de la UNAH](capturas/comunes/01_login.png)
+
+Si el correo o la contraseña no coinciden, aparece el aviso **"Correo o contraseña incorrectos."**.
+
+![Aviso "Correo o contraseña incorrectos."](capturas/comunes/02_login_error.png)
+
+> ¿Olvidaste tu contraseña? Pulsa **¿Olvidaste tu contraseña?**, escribe tu correo y pulsa **Enviar enlace**.
 
 ## 2.2 Primer ingreso y cambio de contraseña
 
-La primera vez que entras con la contraseña temporal que te dieron, el sistema **te obliga a
-cambiarla** antes de dejarte usar el resto de la aplicación. Escribe una contraseña nueva y
-confírmala para continuar.
+La primera vez entras con una **contraseña temporal**. iTickets te pide crear una propia: escribe la **Contraseña nueva**, repítela en **Confirmar contraseña** y pulsa **Guardar contraseña**.
+
+![Pantalla "Cambia tu contraseña" del primer ingreso](capturas/comunes/03_primer_ingreso.png)
 
 ## 2.3 Conoce la pantalla
 
-Una vez dentro verás:
+- **Menú lateral**, sección **Mi área**: **Por dictaminar**, **Solicitud excepcional**, **Nueva solicitud** y **Mis solicitudes**. Con el botón junto a la palabra iTickets puedes plegarlo para dejar solo los íconos.
+- **Campana**: te avisa en tiempo real de entregas listas para dictaminar y de lo que pasa con tus solicitudes. Al hacer clic en una notificación se abre el ticket.
+- **Tu nombre y tu área**, y el botón para **cerrar sesión**.
 
-- A la izquierda, el **menú lateral** con cuatro secciones: **Por dictaminar**, **Solicitud
-  excepcional**, **Nueva solicitud** y **Mis solicitudes**.
-- Arriba a la derecha, la **campana de notificaciones** (te avisa en tiempo real de entregas listas
-  para dictaminar y de lo que pasa con tus excepcionales) y tu nombre con tu área.
-- Un botón para **cerrar sesión**, junto a tu nombre.
+![Barra superior: campana, nombre, área y botón para cerrar sesión](capturas/comunes/07_cerrar_sesion.png)
 
-# 3. Dictaminar un ticket
+> Por seguridad, la sesión se cierra sola después de **20 minutos** sin actividad.
 
-**Por dictaminar** lista los tickets de tu área que el equipo de diseño ya entregó y están esperando
-tu decisión. Si no hay ninguno, la pantalla lo dice con un mensaje vacío.
+# 3. Dictaminar un diseño
 
-![Pantalla "Por dictaminar" vacía, con el "Historial del área" y sus filtros abajo](capturas/jefe/08_por_dictaminar_historial.jpg)
+Cuando el equipo de diseño entrega un trabajo, el ticket pasa a **Finalizado** y aparece en **Por dictaminar**. Ahí decides si lo apruebas o pides una corrección.
 
-Tienes **24 horas hábiles** desde que el diseñador entrega, para aprobar o pedir corrección. Un
-cronómetro te muestra cuánto tiempo queda (se pausa fuera del horario hábil); si no dictaminas a
-tiempo, el ticket **se aprueba solo**.
+## 3.1 Por dictaminar
 
-![Ticket Finalizado con el cronómetro "24:00" corriendo, en espera de tu dictamen](capturas/jefe/09_cronometro_corriendo.jpg)
+Cada tarjeta muestra el código, el tipo, las correcciones usadas y un **cronómetro** con el tiempo que te queda.
 
-Debajo del cronómetro verás los **Adjuntos del solicitante**, los **Entregables** del diseñador
-(agrupados por versión) y la barra de **Progreso de la solicitud**, para revisar el trabajo antes
-de decidir.
+![Por dictaminar: tarjeta de AOAA-0008 con el cronómetro, y el historial del área debajo](capturas/jefe/01_por_dictaminar.png)
 
-![Adjuntos y Entregables del ticket, con el progreso marcando "Dictamen del jefe"](capturas/jefe/10_entregables_progreso.jpg)
+> Tienes **24 horas hábiles** desde la entrega para dictaminar. El cronómetro (horas:minutos) solo corre en horario hábil y se pausa de noche, en fines de semana y en feriados. Si no dictaminas a tiempo, el ticket se **aprueba automáticamente** y queda como **Aprobado (Automático)**.
 
-Para dictaminar, abre el ticket y pulsa el botón de dictamen:
+## 3.2 Revisar la entrega
 
-1. Elige **Aprobar** o **Pedir corrección**.
-2. Si eliges **Pedir corrección**, escribe un comentario explicando qué hay que cambiar — es
-   obligatorio.
-3. Pulsa **Confirmar**.
+Pulsa el código del ticket para abrir el detalle. Arriba ves el estado, las fechas, las correcciones usadas y el cronómetro:
 
-![Modal "Dictamen del ticket": "Pedir corrección" elegida, con el comentario escrito](capturas/jefe/11_pedir_correccion_dialogo.jpg)
+![Encabezado de AOAA-0008 "Finalizado", con el cronómetro y el botón Dictaminar](capturas/jefe/02_cronometro.png)
 
-El ticket vuelve al diseñador con el estado **Corrección** y el contador de correcciones avanza:
+Más abajo están el **Detalle de la solicitud**, los **Adjuntos del solicitante** y los **Entregables**. Pulsa **Ver** para abrir cada versión del diseño.
 
-![Ticket en "Corrección", con el contador "Correcciones 1/5"](capturas/jefe/12_correccion_contador_1_5.jpg)
+![Entregables de AOAA-0008: versión 1](capturas/jefe/03_detalle_entregables.png)
 
-> Importante: cada ticket admite un máximo de **5 correcciones**. El modal te muestra
-> "Correcciones usadas: X/5"; después de la quinta, la opción "Pedir corrección" se deshabilita y
-> solo puedes aprobar.
+## 3.3 Aprobar
 
-Cuando el diseñador sube la siguiente versión, el ticket vuelve a "Por dictaminar". Si esta vez
-apruebas:
+1. Pulsa **Dictaminar**.
+2. Deja elegida la opción **Aprobar**.
+3. Pulsa **Aprobar**.
 
-![Modal "Dictamen del ticket" con "Aprobar" elegida y "Correcciones usadas: 1/5"](capturas/jefe/13_aprobar_dialogo.jpg)
+![Ventana "Dictamen del ticket AOAA-0008" con "Aprobar" elegida](capturas/jefe/04_dictaminar_aprobar.png)
 
-El ticket queda **Aprobado**, con el conteo final de correcciones usadas:
+El ticket queda **Aprobado** y el solicitante recibe un aviso.
 
-![Ticket ADH-0036 ya "Aprobado"](capturas/jefe/14_aprobado.jpg)
+## 3.4 Pedir corrección
 
-## 3.1 Historial del área
+1. Pulsa **Dictaminar**.
+2. Elige **Pedir corrección**.
+3. Explica qué hay que cambiar. El comentario es **obligatorio**.
+4. Pulsa **Pedir corrección**.
 
-Debajo de "Por dictaminar" (ver la captura anterior), el **Historial del área** lista todas las
-solicitudes de tu área, con buscador, rango de fechas, filtro por **Decisión** y los botones
-**Limpiar filtros** y **Exportar** (CSV o PDF) — en la captura, filtrado por "logotipo" con el menú
-Exportar abierto.
+![Ventana de dictamen con "Pedir corrección" y el comentario escrito](capturas/jefe/05_dictaminar_correccion.png)
 
-# 4. Solicitud excepcional
+El ticket pasa a **Corrección**, el contador sube (por ejemplo **1 / 5**) y el equipo de diseño recibe tu comentario. Cuando entregue la nueva versión, el ticket vuelve a **Por dictaminar**.
 
-Úsala solo para **urgencias**: se puede enviar cualquier día y a cualquier hora, con al menos **2
-días hábiles** de anticipación a la fecha del evento. El **Asignador** del equipo de diseño la acepta
-o la rechaza; si nadie la atiende antes del evento, se **rechaza automáticamente**.
+![AOAA-0009 en "Corrección", con "Correcciones 1 / 5"](capturas/jefe/06_correccion_contador.png)
 
-## 4.1 Enviarla
+> Cada ticket admite hasta **5 correcciones**. La ventana muestra "Correcciones usadas: X/5". Después de la quinta, **Pedir corrección** queda deshabilitado y solo puedes aprobar.
 
-1. Entra a **Solicitud excepcional** en el menú lateral.
-2. Elige el **tipo de solicitud**, igual que en una solicitud normal.
+> Los dictámenes solo se hacen en **horario hábil** (lunes a viernes, de 8:00 a. m. a 4:00 p. m.). Fuera de ese horario el botón **Dictaminar** aparece deshabilitado, salvo en las solicitudes excepcionales.
 
-   ![Pantalla "Solicitud excepcional", paso 1 "Tipo", con el aviso de uso y los tipos disponibles](capturas/jefe/01_excepcional_tipo.jpg)
+# 4. Historial del área
 
-3. Completa el formulario del tipo elegido. En la **fecha del evento**, el calendario solo te deja
-   elegir desde el primer día hábil que cumple el mínimo de 2 días hábiles de anticipación — los
-   días anteriores aparecen bloqueados.
+Debajo de **Por dictaminar** está el **Historial del área**: todas las solicitudes de tu área que no están esperando tu dictamen. No muestra quién las diseña.
 
-   ![Calendario de fecha de evento con los primeros días bloqueados por el mínimo de 2 días hábiles](capturas/jefe/02_excepcional_calendario.jpg)
+Para encontrar algo rápido:
 
-4. Adjunta lo que haga falta y revisa antes de enviar.
+- **Buscar**: escribe un código, un tipo, el solicitante o un estado.
+- **Desde** y **Hasta**: limita por fecha de registro.
+- **Decisión**: Aprobado, Corrección, Aprobado (Automático), Rechazado o Retrasado.
+- **Flujo**: Diseño o Aprobación con IA.
+- **Limpiar filtros** quita todos los filtros a la vez.
 
-Al enviarla, el ticket queda **Enviado** con la etiqueta **Excepcional** y el aviso "Pendiente de
-aceptación por el Asignador":
+![Historial filtrado por "Afiche"](capturas/jefe/07_historial.png)
 
-![Ticket ADH-0041 recién enviado: etiqueta Excepcional y "Pendiente de aceptación por el Asignador"](capturas/jefe/03_excepcional_enviada.jpg)
+Para guardar el historial filtrado, pulsa **Exportar** y elige **CSV** (para Excel) o **PDF**.
 
-## 4.2 Seguirla en "Mis solicitudes excepcionales"
+![Menú Exportar con las opciones CSV y PDF](capturas/jefe/08_exportar.png)
 
-No es una pantalla aparte: es una sección al final de la misma página **Solicitud excepcional**, con
-todas las que has enviado y su estado.
+# 5. Solicitud excepcional
 
-![Sección "Mis solicitudes excepcionales" con una solicitud "Enviado · Pendiente de aceptación"](capturas/jefe/04_mis_excepcionales_pendiente.jpg)
+La **solicitud excepcional** es para urgencias que no alcanzan los días de producción normales. Solo un jefe de área puede enviarla.
 
-Cuando el Asignador la acepta, cambia a **En proceso** y te dice quién la está trabajando:
+> Puedes enviarla **cualquier día y a cualquier hora**, con al menos **2 días hábiles** de anticipación al evento. La revisa la persona que distribuye el trabajo de diseño: la acepta o la rechaza con un motivo. Si nadie la atiende antes de la fecha del evento, se rechaza automáticamente.
 
-![Dos solicitudes: una "Enviado · Pendiente de aceptación" y otra "En proceso · Aceptada por Prueba Manual Ejemplo Ficticio"](capturas/jefe/05_mis_excepcionales_aceptada.jpg)
+![Aviso de la solicitud excepcional y los tipos disponibles](capturas/jefe/09_excepcional_aviso.png)
 
-> El texto "Aceptada por…" nombra al **diseñador** que la va a trabajar, no al Asignador que tomó la
-> decisión.
+Para enviarla:
 
-Si el Asignador la rechaza, queda **Rechazado** con el motivo que escribió:
+1. En el menú, pulsa **Solicitud excepcional**.
+2. Elige el tipo de solicitud.
+3. Llena el formulario igual que una solicitud normal. En el calendario, el primer día disponible está a **2 días hábiles**.
+4. Agrega los adjuntos, revisa y pulsa **Enviar solicitud**.
 
-![Solicitud "Rechazado" con el motivo del rechazo visible](capturas/jefe/06_mis_excepcionales_rechazada.jpg)
+![Calendario de una solicitud excepcional: hoy y los dos días hábiles siguientes están bloqueados](capturas/jefe/10_excepcional_calendario.png)
 
-## 4.3 Notificaciones
+## 5.1 Mis solicitudes excepcionales
 
-La campana te avisa en cuanto el Asignador responde tu excepcional, con el código y el resultado:
+Al final de la página **Solicitud excepcional** está la lista **Mis solicitudes excepcionales**, con el estado de cada una:
 
-![Panel de notificaciones: una excepcional RECHAZADA (con motivo) y otra ACEPTADA (con el diseñador)](capturas/jefe/07_notificaciones.jpg)
+- **Pendiente de aceptación**: todavía nadie la acepta.
+- **Aceptada – En proceso**: el equipo de diseño ya está trabajando.
+- **Rechazada**: con el motivo del rechazo.
 
-# 5. Reglas importantes
+![Mis solicitudes excepcionales: una aceptada, una rechazada con su motivo y una pendiente](capturas/jefe/11_mis_excepcionales.png)
+
+En el detalle de una excepcional aceptada ves la etiqueta **Excepcional** y el aviso **Aceptada – En proceso**:
+
+![AOAA-0014: excepcional aceptada y en proceso](capturas/jefe/12_excepcional_aceptada.png)
+
+Si fue rechazada, el motivo aparece en el encabezado. Puedes enviarla de nuevo como solicitud normal si la fecha lo permite.
+
+![AOAA-0015: excepcional rechazada, con el motivo](capturas/jefe/13_excepcional_rechazada.png)
+
+# 6. Si diriges varias coordinaciones
+
+Un jefe de coordinación puede dirigir **varias coordinaciones** (por ejemplo, UROE, UCCR y UPLAN). En ese caso:
+
+- **Por dictaminar** y el historial muestran los tickets de **todas** tus coordinaciones.
+- Arriba a la derecha aparece el selector **Área / Coordinación** para ver solo una.
+- El historial se titula **Historial de varias coordinaciones**.
+
+![Selector "Área / Coordinación" con "Unidad Coordinadora de Centros Regionales" elegida](capturas/jefe/14_coordinaciones_filtro.png)
+
+Dictaminas cada ticket igual que en la sección 3, sin importar de cuál de tus coordinaciones venga:
+
+![UCCR-0001 "Finalizado", listo para dictaminar](capturas/jefe/15_coordinaciones_ticket.png)
+
+> El administrador del sistema es quien indica de qué otras coordinaciones eres jefe o jefa.
+
+# 7. Enviar una solicitud normal
+
+Como jefe de área también puedes pedir trabajos al equipo de diseño. El proceso es el mismo que para cualquier solicitante:
+
+1. En el menú, pulsa **Nueva solicitud** y elige el tipo.
+2. Llena el formulario. El calendario solo deja elegir días hábiles posteriores a los días de producción del tipo.
+3. Agrega los adjuntos (hasta 10, entre archivos y enlaces).
+4. Revisa y pulsa **Enviar solicitud**. Si el tipo trae un aviso, acéptalo en **Antes de enviar**.
+
+![Paso 1: tipos de solicitud agrupados por categoría](capturas/empleado/02_nueva_tipos.png)
+
+![Calendario: días de producción rayados y fines de semana en gris](capturas/empleado/06_calendario.png)
+
+![Aviso "Solicitud AOAA-0022 enviada."](capturas/empleado/13_solicitud_enviada.png)
+
+Tus solicitudes aparecen en **Mis solicitudes**, donde puedes filtrarlas por estado o tipo y abrir su detalle.
+
+> Las solicitudes normales solo se envían en horario hábil. Las excepcionales, a cualquier hora.
+
+# 8. Reglas importantes
 
 | Tema | Regla |
 |---|---|
-| Plazo de dictamen | 24 horas hábiles desde que el diseñador entrega. Si no dictaminas, el ticket se **aprueba solo**. |
-| Correcciones | Máximo 5 por ticket. Después de la quinta, solo puedes aprobar. |
-| Comentario de corrección | Obligatorio al pedir corrección. |
-| Solicitud excepcional | La envías tú, con al menos 2 días hábiles de anticipación al evento. |
-| Respuesta a la excepcional | La acepta o rechaza el **Asignador**, no tú. |
-| Plazo de la excepcional | Si nadie responde antes del evento, se rechaza automáticamente. |
-| "Mis solicitudes excepcionales" | Es una sección dentro de "Solicitud excepcional", no una pantalla aparte. |
-| Horario de dictamen | Solo dictaminas en horario hábil (lunes a viernes, 8:00 a. m. a 4:00 p. m., hora de Honduras); el cronómetro se pausa fuera de ese horario. |
+| Plazo para dictaminar | 24 horas hábiles desde la entrega. Si no dictaminas, se aprueba solo (**Aprobado (Automático)**). |
+| Horario para dictaminar | Lunes a viernes, de 8:00 a. m. a 4:00 p. m., sin feriados. Las excepcionales se dictaminan a cualquier hora. |
+| Correcciones | Máximo 5 por ticket. El comentario es obligatorio. Después de la quinta, solo puedes aprobar. |
+| Solicitud excepcional | Cualquier día y hora, con al menos 2 días hábiles de anticipación. Si nadie la atiende antes del evento, se rechaza sola. |
+| Solicitud normal | Solo en horario hábil, respetando los días de producción del tipo. |
+| Quién diseña | El sistema no muestra qué persona del equipo de diseño trabaja cada ticket. |
+| Varias coordinaciones | Ves y dictaminas los tickets de todas las coordinaciones que diriges. |
 
-# 6. Preguntas frecuentes y problemas comunes
+# 9. Preguntas frecuentes y problemas comunes
 
 | Situación | Qué hacer |
 |---|---|
-| Ya pasaron las 24 horas y no alcancé a dictaminar | El ticket se aprueba solo; no necesitas hacer nada más. |
-| Quiero pedir una sexta corrección | El sistema no lo permite: a partir de la quinta, solo puedes aprobar. |
-| Envié una excepcional y no sé si la aceptaron | Revisa "Mis solicitudes excepcionales" al final de la página, o espera la notificación de la campana. |
-| Mi excepcional se rechazó sin que nadie respondiera | Pasó la fecha límite de 2 días hábiles antes del evento sin que el Asignador la atendiera. |
-| No puedo elegir una fecha cercana para la excepcional | El calendario bloquea los días que no alcanzan el mínimo de 2 días hábiles de anticipación. |
-| No encuentro "Mis solicitudes excepcionales" como pantalla propia | No existe como pantalla aparte; está al final de "Solicitud excepcional". |
+| El botón **Dictaminar** está deshabilitado y dice "Los dictámenes solo se hacen en horario hábil." | Vuelve de lunes a viernes entre 8:00 a. m. y 4:00 p. m. El cronómetro está pausado mientras tanto. |
+| "Pedir corrección" está deshabilitado | Ya se usaron las 5 correcciones; solo puedes aprobar. |
+| No puedo enviar la corrección | Escribe el comentario: es obligatorio. |
+| "Venció el plazo de 24 horas hábiles para dictaminar el ticket …; quedó aprobado automáticamente." | El plazo se cumplió antes de tu decisión. El ticket ya está **Aprobado (Automático)**. |
+| "Las solicitudes excepcionales necesitan 2 días hábiles de anticipación: la fecha del evento debe ser a partir del …" | Elige una fecha igual o posterior a la indicada. |
+| Mi excepcional fue rechazada | Lee el motivo en **Mis solicitudes excepcionales** y, si hay tiempo, envíala como solicitud normal. |
+| No veo los tickets de otra coordinación | Pide al administrador que te agregue esa coordinación en **También es jefe de**. |
+| Quiero saber quién diseña un ticket | Esa información no se muestra a las jefaturas. |
 
-# 7. Glosario
+# 10. Glosario
 
-- **Ticket:** una solicitud de diseño o comunicación, con su propio código (p. ej. `ADH-0001`).
-- **Dictamen:** tu decisión sobre un diseño entregado: **Aprobar** o pedir **Corrección**.
-- **Días hábiles:** lunes a viernes, sin contar los feriados activos registrados antes de crear el
-  ticket.
-- **Excepcional:** una solicitud urgente que solo puedes enviar tú (Jefe de Área), y que acepta o
-  rechaza el Asignador.
-- **Historial del área:** el listado completo de solicitudes de tu área, con filtros y exportación.
+| Término | Significado |
+|---|---|
+| **Dictamen** | Tu decisión sobre un diseño entregado: aprobarlo o pedir corrección. |
+| **Cronómetro** | Tiempo hábil que te queda para dictaminar (horas:minutos). |
+| **Corrección** | Pedido de cambios al equipo de diseño, con un comentario. Máximo 5 por ticket. |
+| **Aprobado (Automático)** | Ticket aprobado solo porque pasaron 24 horas hábiles sin dictamen. |
+| **Solicitud excepcional** | Pedido urgente con 2 días hábiles de anticipación, que solo envía un jefe de área. |
+| **Coordinación** | Unidad como UROE, UCCR o UPLAN. Un usuario pertenece a un área o a una coordinación. |
+| **Historial** | Lista de solicitudes de tu área que no están esperando dictamen. |
+| **Entregable** | Cada versión del diseño que entrega el equipo. |
