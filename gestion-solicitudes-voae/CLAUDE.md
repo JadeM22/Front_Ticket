@@ -62,8 +62,13 @@ see them), `cambios_bd_2026-10-23.sql` (28–35: rol "Aprobador IA" → "Validad
 `DecisionValidacion`), plus `analista_ver_tickets.sql`. The formularios-configurables/afiches-IA changes
 before Parte 28 were applied from chat and have no file here. `cambios_bd_2026-10-25.sql` (Partes 36–42:
 role-name-free messages, Jefe de Área loses designer visibility, `Campus` read-only, `Areas.tipo`
-COORDINACION + `JefaturasArea`, días-hábiles-only event/FECHA dates, tipo "Trifolio") is the latest; its
-frontend side is described under Architecture below. Code comments cite these by number ("Parte 27"), so grep
+COORDINACION + `JefaturasArea`, días-hábiles-only event/FECHA dates, tipo "Trifolio"); its
+frontend side is described under Architecture below. `cambios_bd_2026-10-25_reporte.sql` (Partes 44–50, the
+fixes from the QA report in `docs/pruebas/2026-10-25/REPORTE.md`) is the latest: `fnUsuariosNombresTabla` only
+resolves designer names for Diseñador/Asignador/Administrador/Analista, `TicketLog` no longer stores designer
+names (only the admin-only `AsignacionLog` does), a designer can take an ACEPTADA excepcional left without
+designer (`data/tickets.ts`, `disenador/Dashboard.tsx`), and automatic approval also notifies the area's
+Jefes. Code comments cite these by number ("Parte 27"), so grep
 `docs/cambios/` for `PARTE <n>` to find the rule a comment refers to. `docs/semilla_datos_prueba.sql` is
 test seed data. All of these are kept here for reference only — `src/types/database.ts` is the authoritative, generated API
 surface and is already regenerated against the live schema. Do not hand-edit `database.ts`; regenerate it

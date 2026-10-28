@@ -11,7 +11,7 @@ export function LoginBannerTicket() {
         className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:radial-gradient(currentColor_1px,transparent_1px)] [background-size:22px_22px]"
       />
 
-      <header className="relative flex h-20 items-center">
+      <header className="relative flex h-28 items-center">
         <LogosInstitucionales />
       </header>
 
