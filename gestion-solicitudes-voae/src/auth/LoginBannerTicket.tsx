@@ -1,8 +1,6 @@
 import { LogosInstitucionales } from './LogosInstitucionales'
 
 export function LoginBannerTicket() {
-  const anio = new Date().getFullYear()
-
   return (
     <aside className="relative hidden overflow-hidden bg-gradient-to-br from-azul-noche via-azul-institucional to-azul-noche text-white lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:p-10">
       {/* Patrón sutil */}
@@ -67,10 +65,8 @@ export function LoginBannerTicket() {
         </div>
       </div>
 
-      {/* Derechos de autor */}
-      <footer className="relative text-xs text-white/60">
-        © {anio} Vicerrectoría de Orientación y Asuntos Estudiantiles – UNAH. Todos los derechos reservados.
-      </footer>
+      {/* Espaciador: mantiene el boleto centrado frente al encabezado */}
+      <div aria-hidden className="h-20" />
     </aside>
   )
 }
