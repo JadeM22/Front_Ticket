@@ -1,122 +1,165 @@
 # 1. Introducción
 
-**iTickets** es el sistema de la Vicerrectoría de Orientación y Asuntos Estudiantiles (VOAE) para
-pedir, diseñar y aprobar solicitudes de diseño y comunicación: afiches, banners, videos, invitaciones,
-señalización y más. Cada solicitud se convierte en un **ticket** con un código único (por ejemplo
-`ADH-0001`) que se puede seguir de principio a fin.
+**iTickets** es el sistema de la Vicerrectoría de Orientación y Asuntos Estudiantiles (VOAE) de la UNAH para pedir, producir y aprobar piezas de diseño y comunicación. Cada pedido es un **ticket** con un código único (por ejemplo `AOAA-0019`).
 
-Como **Analista** tienes una vista completa de las estadísticas del sistema, sin entrar al contenido
-de cada solicitud. Este manual explica lo que solo tú puedes hacer:
+Este manual es para el rol **Analista**. Con iTickets puedes:
 
-- Consultar indicadores y gráficas de todas las solicitudes del sistema.
-- Filtrar, buscar y exportar esos datos a CSV o PDF.
+- Consultar las **Estadísticas** de todas las solicitudes, con filtros, indicadores y gráficas.
+- Buscar tickets en la tabla de detalle y **exportarla** a PDF o CSV.
+- Enviar tus propias solicitudes y seguirlas en **Mis solicitudes**.
 
-Además, como Analista también puedes **enviar solicitudes** y ver **"Mis solicitudes"**, igual que
-un Empleado — para esa parte, consulta el manual del rol **Empleado**.
+Las estadísticas muestran cifras y estados, **no el contenido** de las solicitudes.
 
 # 2. Acceso al sistema
 
 ## 2.1 Iniciar sesión
 
-Entra a la dirección del sistema en tu navegador. Verás el boleto **iTickets** a la izquierda (en
-pantallas grandes) y el formulario de inicio de sesión a la derecha:
+Entra a la dirección de iTickets en tu navegador.
 
-1. Escribe tu **correo** y tu **contraseña**.
-2. Pulsa **Ingresar**.
+1. Escribe tu **Correo**.
+2. Escribe tu **Contraseña**. Para verla mientras la escribes, pulsa el ojo que está a la derecha del campo.
+3. Pulsa **Ingresar**.
 
-> Importante: usa el correo y la contraseña que te asignó el Administrador. Si olvidaste tu
-> contraseña, usa el enlace **¿Olvidaste tu contraseña?** de la pantalla de inicio de sesión.
+![Pantalla de inicio de sesión con los logos de la VOAE y de la UNAH](capturas/comunes/01_login.png)
+
+Si el correo o la contraseña no coinciden, aparece el aviso **"Correo o contraseña incorrectos."**.
+
+![Aviso "Correo o contraseña incorrectos."](capturas/comunes/02_login_error.png)
+
+> ¿Olvidaste tu contraseña? Pulsa **¿Olvidaste tu contraseña?**, escribe tu correo y pulsa **Enviar enlace**.
 
 ## 2.2 Primer ingreso y cambio de contraseña
 
-La primera vez que entras con la contraseña temporal que te dieron, el sistema **te obliga a
-cambiarla** antes de dejarte usar el resto de la aplicación. Escribe una contraseña nueva y
-confírmala para continuar.
+La primera vez entras con una **contraseña temporal**. iTickets te pide crear una propia: escribe la **Contraseña nueva**, repítela en **Confirmar contraseña** y pulsa **Guardar contraseña**.
+
+![Pantalla "Cambia tu contraseña" del primer ingreso](capturas/comunes/03_primer_ingreso.png)
 
 ## 2.3 Conoce la pantalla
 
-Una vez dentro verás:
+- **Menú lateral**, sección **Análisis**: **Estadísticas**, **Nueva solicitud** y **Mis solicitudes**. Con el botón junto a la palabra iTickets puedes plegarlo.
+- **Campana**: te avisa de los cambios en tus propias solicitudes. Al hacer clic en una notificación se abre el ticket.
+- **Tu nombre y tu área**, y el botón para **cerrar sesión**.
 
-- A la izquierda, el **menú lateral** con tres secciones: **Estadísticas**, **Nueva solicitud** y
-  **Mis solicitudes**.
-- Arriba a la derecha, la **campana de notificaciones** y tu nombre con el área a la que perteneces.
-- Un botón para **cerrar sesión**, junto a tu nombre.
+![Barra superior: campana, nombre, área y botón para cerrar sesión](capturas/comunes/06_cerrar_sesion.png)
+
+> Por seguridad, la sesión se cierra sola después de **20 minutos** sin actividad.
 
 # 3. Estadísticas
 
-La pantalla **Estadísticas** es la razón de ser de tu rol: una vista de todas las solicitudes del
-sistema, sin importar el área, con indicadores, gráficas y una tabla de detalle.
+**Estadísticas** es tu pantalla principal. Arriba están los filtros, después los indicadores, las gráficas y la tabla de detalle.
 
-## 3.1 Filtros e indicadores (KPIs)
+![Estadísticas: filtros e indicadores](capturas/analista/01_estadisticas.png)
 
-Arriba tienes los filtros — **Rango** (con atajos como "Este mes"), **Área**, **Tipo**, **Estado** y
-**Diseñador** — y debajo, ocho indicadores: total de solicitudes, % a tiempo, promedio de días de
-resolución, retrasadas, en curso, aprobadas (y cuántas fueron automáticas), % con corrección y
-excepcionales (con el % que fueron aceptadas).
+## 3.1 Filtros
 
-![Estadísticas: filtros y los ocho indicadores (KPIs)](capturas/analista/01_kpis_filtros.jpg)
+| Filtro | Para qué sirve |
+|---|---|
+| **Rango** | Periodo de registro: **Este mes**, **Mes anterior**, **Últimos 3 meses**, **Este año** o **Personalizado** (eliges las fechas). |
+| **Área** | Un área o coordinación en particular. |
+| **Tipo** | Un tipo de solicitud (Afiche, Video, Trifolio…). |
+| **Flujo** | **Diseño**, **Aprobación con IA** o **Validación** (coberturas de evento). |
+| **Estado** | Enviado, En proceso, Aprobado, etc. |
+| **Diseñador** | La persona del equipo de diseño. |
 
-Los filtros se quedan **fijos en pantalla** aunque bajes con el cursor por las gráficas o la tabla,
-así siempre los tienes a mano.
+Cuando aplicas un filtro, todo se recalcula: indicadores, gráficas y tabla. **Limpiar filtros** los quita todos a la vez.
 
-![Filtros fijos mientras se ve la gráfica "Por tipo de solicitud" en barras horizontales](capturas/analista/02_filtros_fijos_grafica_tipo.jpg)
+![Filtro de Flujo "Aprobación con IA": los indicadores y las gráficas se recalculan](capturas/analista/02_filtro_flujo.png)
 
-Para quitar todos los filtros a la vez, pulsa **Limpiar filtros**.
+> Los filtros quedan **fijos** en la parte de arriba mientras bajas por la página, para que puedas cambiarlos sin volver al inicio. Además, se guardan en la dirección de la página: si la copias y la compartes, la otra persona ve la misma vista.
 
-![Filtro "Estado: Retrasado" aplicado, con el botón "Limpiar filtros" activo](capturas/analista/03_filtro_estado_limpiar.jpg)
+## 3.2 Indicadores
 
-## 3.2 Gráficas
+| Indicador | Qué mide |
+|---|---|
+| **Total** | Solicitudes en el periodo y filtros elegidos. |
+| **% a tiempo** | Porcentaje entregado antes de su fecha límite. |
+| **Promedio días resolución** | Días que tarda, en promedio, una solicitud en resolverse. |
+| **Retrasadas** | Solicitudes que pasaron su fecha límite. |
+| **En curso** | Solicitudes todavía abiertas. |
+| **Aprobadas** | Solicitudes aprobadas (entre paréntesis, las aprobadas automáticamente). |
+| **% con corrección** | Porcentaje que tuvo al menos una corrección. |
+| **Excepcionales** | Solicitudes excepcionales y el porcentaje que fue aceptado. |
 
-Debajo de los indicadores hay seis gráficas: **Solicitudes por mes**, **Por tipo de solicitud**
-(en barras horizontales, para que los nombres largos se lean completos), **Por área**,
-**Distribución por estado**, **Cumplimiento a tiempo por tipo** y **Carga por diseñador**.
+## 3.3 Gráficas
 
-> Como Analista no ves quién tiene asignado cada ticket: la columna **Diseñador** de la tabla
-> siempre muestra "—" y la gráfica **Carga por diseñador** aparece vacía. Es el mismo permiso que
-> oculta esa información a cualquier rol que no sea Diseñador, Asignador, Jefe de Área o
-> Administrador.
+- **Solicitudes por mes**: cuántas se registraron cada mes.
+- **Por tipo de solicitud**: barras horizontales, con el nombre completo de cada tipo.
+- **Por área**: reparto entre áreas y coordinaciones.
+- **Distribución por estado**: cuántas hay en cada estado.
+- **Cumplimiento a tiempo por tipo**: a tiempo frente a tarde, por tipo.
+- **Carga por diseñador**: tickets por persona del equipo de diseño.
 
-## 3.3 Tabla de detalle, búsqueda y exportación
+![Gráficas "Solicitudes por mes" y "Por tipo de solicitud"](capturas/analista/03_graficas.png)
 
-Al final de la página, la tabla **Detalle** lista cada ticket que cumple los filtros, con paginación.
-El buscador acepta el código con o sin guion.
+![Gráficas "Por área", "Distribución por estado", "Cumplimiento a tiempo por tipo" y "Carga por diseñador"](capturas/analista/04_graficas_estado.png)
 
-![Tabla de detalle filtrada por el código "adh0041"](capturas/analista/04_tabla_busqueda_codigo.jpg)
+> Para proteger la información del equipo, tu vista no muestra los nombres de quién diseña cada ticket: la columna **Diseñador** aparece con "—" y **Carga por diseñador** dice "Sin datos para este filtro".
 
-El botón **Exportar** te deja elegir entre **CSV** y **PDF** — ambos descargan exactamente las filas
-que ves en ese momento, ya filtradas.
+## 3.4 Tabla de detalle
 
-![Menú "Exportar" abierto con las opciones CSV y PDF](capturas/analista/05_exportar_menu.jpg)
+Al final está **Detalle**, con una fila por ticket: código, tipo, área, estado, fechas de registro y evento, días de resolución e intentos (en los afiches con IA). El título indica cuántos tickets se muestran de los que hay.
 
-El PDF incluye el rango de fechas, los filtros aplicados, los indicadores y la tabla completa, listo
-para imprimir o compartir:
+Escribe en el buscador un código (por ejemplo `AOAA-001`), un tipo o un área para encontrar un ticket:
 
-![PDF de Estadísticas abierto, con el resumen y la tabla de tickets](capturas/analista/06_pdf_exportado.jpg)
+![Tabla de detalle filtrada por "AOAA-001": 11 de 24 tickets](capturas/analista/05_tabla_busqueda.png)
 
-# 4. Reglas importantes
+# 4. Exportar
+
+1. Aplica los filtros y la búsqueda que necesites.
+2. Pulsa **Exportar**, a la derecha de la tabla.
+3. Elige **CSV** (para abrirlo en Excel) o **PDF**.
+
+![Menú Exportar con las opciones CSV y PDF](capturas/analista/06_exportar.png)
+
+El archivo se descarga con la tabla tal como la estás viendo. El PDF incluye arriba el rango, los filtros aplicados, los indicadores principales y la fecha en que se generó:
+
+![Primera página del PDF exportado](capturas/analista/07_pdf_exportado.png)
+
+# 5. Enviar tus propias solicitudes
+
+Como analista también puedes pedir trabajos al equipo de diseño:
+
+1. En el menú, pulsa **Nueva solicitud** y elige el tipo.
+2. Llena el formulario. El calendario solo deja elegir días hábiles posteriores a los días de producción del tipo.
+3. Agrega los adjuntos (hasta 10, entre archivos y enlaces).
+4. Revisa y pulsa **Enviar solicitud**.
+
+![Paso 1: tipos de solicitud agrupados por categoría](capturas/empleado/02_nueva_tipos.png)
+
+![Aviso "Solicitud AOAA-0022 enviada."](capturas/empleado/13_solicitud_enviada.png)
+
+En **Mis solicitudes** ves solo las tuyas, como boletos, con filtros por estado y tipo:
+
+![Mis solicitudes: tickets como boletos](capturas/empleado/14_mis_solicitudes.png)
+
+> Las solicitudes solo se envían en horario hábil: de lunes a viernes, de 8:00 a. m. a 4:00 p. m.
+
+# 6. Reglas importantes
 
 | Tema | Regla |
 |---|---|
-| Alcance | Ves estadísticas de **todas** las áreas y tipos de solicitud, sin ver el contenido de cada una. |
-| Visibilidad de asignación | No ves quién tiene asignado cada ticket (columna Diseñador vacía, gráfica "Carga por diseñador" sin datos). |
-| Búsqueda de códigos | Acepta con o sin guion: "adh41" no encuentra `ADH-0041` si falta el cero; usa "adh0041" o el código completo. |
-| Exportar | CSV y PDF descargan exactamente las filas visibles con los filtros aplicados en ese momento. |
-| Limpiar filtros | Borra rango, área, tipo, estado, diseñador y la búsqueda de un solo clic. |
-| Horario | Consultas Estadísticas a cualquier hora; para enviar solicitudes aplican las mismas reglas que a un Empleado. |
+| Alcance | Ves las cifras de todas las solicitudes, pero no su contenido ni quién las diseña. |
+| Filtros | Se recalcula todo con cada filtro. Quedan fijos al bajar y se guardan en la dirección de la página. |
+| Exportación | CSV y PDF exportan la tabla filtrada. |
+| Tus solicitudes | Solo en horario hábil, respetando los días de producción del tipo. |
 
-# 5. Preguntas frecuentes y problemas comunes
+# 7. Preguntas frecuentes y problemas comunes
 
 | Situación | Qué hacer |
 |---|---|
-| Busco un código y no aparece nada | Revisa que los dígitos coincidan exactamente (con ceros incluidos); el buscador ignora guiones y espacios, no dígitos. |
-| La gráfica "Carga por diseñador" aparece vacía | Es el comportamiento esperado: tu rol no ve esa información. |
-| Exporté un PDF y no trae los filtros que esperaba | Revisa los filtros activos arriba antes de exportar; el PDF solo lleva lo que ves filtrado en ese momento. |
-| Necesito enviar una solicitud o ver las mías | Usa **Nueva solicitud** o **Mis solicitudes** en el menú — funcionan igual que para un Empleado. |
+| Los indicadores salen en 0 | Revisa el **Rango** y los demás filtros; pulsa **Limpiar filtros**. |
+| "Carga por diseñador" dice "Sin datos para este filtro" | Es normal en tu vista: esa información no se muestra a este rol. |
+| El archivo CSV muestra caracteres raros en Excel | Ábrelo con **Datos > Desde texto/CSV** y elige UTF-8. |
+| No encuentro un ticket en la tabla | Quita los filtros y busca por el código completo (por ejemplo `AOAA-0019`). |
+| Quiero compartir una vista | Copia la dirección de la página: guarda los filtros. |
 
-# 6. Glosario
+# 8. Glosario
 
-- **Ticket:** una solicitud de diseño o comunicación, con su propio código (p. ej. `ADH-0001`).
-- **KPI:** indicador clave (total, % a tiempo, retrasadas, etc.) que resume el estado del sistema.
-- **Excepcional:** una solicitud urgente que envía un Jefe de Área y acepta o rechaza el Asignador.
-- **Aprobado (Automático):** un ticket que se aprobó solo porque el Jefe de Área no dictaminó a
-  tiempo.
+| Término | Significado |
+|---|---|
+| **Flujo** | Camino de una solicitud: Diseño, Aprobación con IA o Validación. |
+| **% a tiempo** | Porcentaje de solicitudes resueltas antes de su fecha límite. |
+| **Días de resolución** | Días entre el registro y la resolución de un ticket. |
+| **Excepcional** | Solicitud urgente enviada por un jefe de área. |
+| **Intentos IA** | Envíos de un afiche con IA (máximo 5). |
+| **CSV** | Archivo de texto con la tabla, para abrir en Excel. |

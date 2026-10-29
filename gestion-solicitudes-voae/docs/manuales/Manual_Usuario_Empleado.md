@@ -1,205 +1,319 @@
 # 1. Introducción
 
-**iTickets** es el sistema de la Vicerrectoría de Orientación y Asuntos Estudiantiles (VOAE) para
-pedir diseños y piezas de comunicación: afiches, banners, videos, invitaciones, señalización,
-diplomas y más. Cada solicitud que envías se convierte en un **ticket** con un código único (por
-ejemplo `ADH-0001`) que puedes seguir hasta que quede aprobado.
+**iTickets** es el sistema de la Vicerrectoría de Orientación y Asuntos Estudiantiles (VOAE) de la UNAH para pedir piezas de diseño y comunicación: afiches, banners, invitaciones, videos, trifolios, señalización, coberturas de eventos y más. Cada pedido se convierte en un **ticket** con un código único (por ejemplo `AOAA-0010`) que puedes seguir de principio a fin.
 
-Como **Empleado** puedes:
+Este manual es para el rol **Empleado**: la persona que pide el trabajo. Con iTickets puedes:
 
-- Enviar nuevas solicitudes de diseño.
-- Adjuntar archivos o enlaces de referencia.
-- Ver el estado de tus propias solicitudes y su historial simplificado.
+- Enviar una **solicitud de diseño** y adjuntar lo que el equipo necesita (logos, textos, enlaces).
+- Pedir la **aprobación de un afiche hecho con IA** que tú mismo preparaste.
+- Pedir la **cobertura fotográfica o de video** de un evento.
+- Seguir el estado de tus solicitudes y descargar los diseños entregados.
 
-No ves quién diseña tu solicitud ni los comentarios internos del equipo: solo el **estado** de tu
-ticket (Enviado, En proceso, Finalizado, Corrección, Retrasado, Aprobado, Rechazado).
+El código del ticket empieza con el prefijo de tu área o coordinación: `AOAA-0001`, `ADH-0001`, `ADS-0001`, `UCCR-0001`, etc.
 
 # 2. Acceso al sistema
 
 ## 2.1 Iniciar sesión
 
-Entra a la dirección del sistema en tu navegador. Verás el boleto **iTickets** a la izquierda (en
-pantallas grandes) y el formulario de inicio de sesión a la derecha:
+Entra a la dirección de iTickets en tu navegador.
 
-1. Escribe tu **correo** y tu **contraseña**.
-2. Pulsa **Ingresar**.
+1. Escribe tu **Correo**.
+2. Escribe tu **Contraseña**. Si quieres verla mientras la escribes, pulsa el ojo que está a la derecha del campo.
+3. Pulsa **Ingresar**.
 
-![Pantalla de inicio de sesión: el boleto iTickets a la izquierda y el formulario a la derecha](capturas/empleado/19_inicio_sesion.jpg)
+![Pantalla de inicio de sesión con los logos de la VOAE y de la UNAH](capturas/comunes/01_login.png)
 
-> Importante: usa el correo y la contraseña que te asignó el Administrador. Si olvidaste tu
-> contraseña, usa el enlace **¿Olvidaste tu contraseña?**.
+Si el correo o la contraseña no coinciden, aparece el aviso **"Correo o contraseña incorrectos."** arriba a la derecha. Revisa que no tengas activadas las mayúsculas y vuelve a intentarlo.
+
+![Aviso "Correo o contraseña incorrectos." después de un intento fallido](capturas/comunes/02_login_error.png)
+
+> ¿Olvidaste tu contraseña? Pulsa **¿Olvidaste tu contraseña?**, escribe tu correo y pulsa **Enviar enlace**. Te llegará un correo con un enlace para crear una contraseña nueva.
 
 ## 2.2 Primer ingreso y cambio de contraseña
 
-La primera vez que entras con la contraseña temporal que te dieron, el sistema **te obliga a
-cambiarla** antes de dejarte usar el resto de la aplicación: escribe una contraseña nueva y
-confírmala para continuar. Mientras no la cambies, no puedes ver tus solicitudes ni enviar nuevas.
+La primera vez que entras, usas la **contraseña temporal** que te dio el administrador del sistema. Antes de dejarte continuar, iTickets te pide crear una contraseña propia:
 
-![Pantalla "Cambia tu contraseña": es tu primer ingreso, debes definir una nueva antes de continuar](capturas/empleado/23_cambio_password_primer_ingreso.jpg)
+1. Escribe la **Contraseña nueva**.
+2. Repítela en **Confirmar contraseña**.
+3. Pulsa **Guardar contraseña**.
+
+![Pantalla "Cambia tu contraseña" del primer ingreso](capturas/comunes/03_primer_ingreso.png)
+
+> La contraseña nueva debe ser distinta de la temporal. Si es muy corta, verás "La contraseña es demasiado débil o corta.".
 
 ## 2.3 Conoce la pantalla
 
-Una vez dentro verás:
+- **Menú lateral** (izquierda): **Resumen**, **Nueva solicitud** y **Mis solicitudes**.
+- **Campana** (arriba a la derecha): te avisa en tiempo real cuando tu solicitud cambia de estado. El número rojo indica cuántas notificaciones tienes. Al hacer clic en una notificación se abre el ticket.
+- **Tu nombre y tu área**, y el botón para **cerrar sesión** (la flecha que sale de la puerta).
 
-- A la izquierda, el **menú lateral** con tus tres secciones: **Resumen**, **Nueva solicitud** y
-  **Mis solicitudes**. Puedes plegarlo con el ícono de la esquina superior para ganar espacio.
+![Pantalla principal con el menú lateral desplegado](capturas/comunes/04_menu_desplegado.png)
 
-  ![Menú lateral desplegado, con la opción activa resaltada](capturas/empleado/20_sidebar_desplegado.jpg)
+Si necesitas más espacio, pliega el menú con el botón que está junto a la palabra iTickets; quedan solo los íconos. Vuelve a pulsarlo para desplegarlo.
 
-  ![Menú lateral plegado, solo con íconos](capturas/empleado/17_sidebar_plegado.jpg)
+![Campana de notificaciones abierta](capturas/comunes/05_notificaciones.png)
 
-- Arriba a la derecha, la **campana de notificaciones** (te avisa en tiempo real cuando cambia el
-  estado de tus tickets) y tu nombre con tu área.
+![Barra superior: campana, nombre, área y botón para cerrar sesión](capturas/comunes/06_cerrar_sesion.png)
 
-  ![Panel de notificaciones abierto](capturas/empleado/18_campana_notificaciones.png)
+En el celular, el menú se abre con el botón de tres rayas de la esquina superior izquierda (ver la sección 8).
 
-- Un botón para **cerrar sesión**, junto a tu nombre.
+> Por seguridad, si pasas **20 minutos** sin usar iTickets, la sesión se cierra sola. Vuelve a iniciar sesión para continuar.
 
-# 3. Enviar una solicitud nueva
+# 3. Resumen
 
-## 3.1 Elegir el tipo
+**Resumen** es la primera pantalla que ves. Muestra cuántas solicitudes tienes en cada estado y tus últimos tickets. Pulsa un ticket para ver su detalle, o **Nueva solicitud** para pedir algo nuevo.
 
-1. Pulsa **Nueva solicitud** en el menú, o el botón **+ Nueva solicitud** del Resumen.
-2. Elige el tipo que necesitas, agrupado por categoría (Arte, Video, DIRCOM, Protocolo, Otros).
-   Cada tarjeta muestra cuántos días hábiles de producción necesita.
+![Resumen: contadores por estado y últimos tickets](capturas/empleado/01_resumen.png)
 
-![Paso 1: elegir el tipo de solicitud, con los días de producción de cada una](capturas/empleado/02_nueva_solicitud_tipo.jpg)
+# 4. Enviar una solicitud de diseño
 
-> Importante: entre más anticipación le des al equipo de diseño, mejor. Campaña publicitaria y
-> Logotipo (DIRCOM) piden solicitud anticipada de un mes.
+Una solicitud se envía en cuatro pasos: **1. Tipo**, **2. Formulario**, **3. Adjuntos** y **4. Revisar y enviar**.
 
-## 3.2 Llenar el formulario
+> Las solicitudes solo se envían en **horario hábil**: de lunes a viernes, de 8:00 a. m. a 4:00 p. m. (hora de Honduras), sin contar feriados. Fuera de ese horario puedes llenar el formulario, pero el botón **Enviar solicitud** queda deshabilitado.
 
-El formulario cambia según el tipo que elegiste, pero **todos piden la fecha del evento**. El
-calendario **bloquea automáticamente** los días que no alcanzan el plazo de producción: solo puedes
-elegir desde el primer día disponible en adelante.
+## 4.1 Elegir el tipo de solicitud
 
-![Calendario con los días bloqueados (rayados) hasta el primer día disponible](capturas/empleado/03_calendario_bloqueado.jpg)
+1. En el menú, pulsa **Nueva solicitud**.
+2. Busca el tipo de pieza. Los tipos están agrupados en **Arte**, **Video**, **DIRCOM**, **Protocolo** y **Otros**. Debajo de cada nombre ves cuántos **días hábiles** necesita el equipo para producirla.
+3. Pulsa la tarjeta del tipo que necesitas.
 
-Ejemplos de los distintos formularios según el tipo elegido:
+![Paso 1: tipos de solicitud agrupados por categoría](capturas/empleado/02_nueva_tipos.png)
 
-![Formulario de Arte (Afiche): título, horario, lugar, modalidad, logotipos](capturas/empleado/04_formulario_arte.jpg)
-![Formulario de Video: objetivo, fecha de entrega/publicación, encargado, participación de estudiantes](capturas/empleado/10_formulario_video.jpg)
-![Formulario de DIRCOM (Logotipo/Campaña publicitaria): tipo de material, fecha en que lo necesitas, contexto](capturas/empleado/11_formulario_dircom.jpg)
-![Formulario de Protocolo: nombre de la actividad, lugar, invitados, equipo requerido](capturas/empleado/12_formulario_protocolo.jpg)
-![Formulario Genérico (Diploma, Señalización, etc.): título y descripción](capturas/empleado/13_formulario_generico.jpg)
+Si no encuentras el tipo, escribe parte del nombre en **Buscar tipo de solicitud…**:
 
-> Importante: ningún campo de fecha te deja elegir un día que ya pasó, ni uno que no alcance el
-> plazo de producción del tipo que elegiste.
+![Buscador de tipos: al escribir "video" solo quedan los tipos que coinciden](capturas/empleado/03_nueva_buscador.png)
 
-## 3.3 Adjuntar archivos o enlaces
+## 4.2 Llenar el formulario
 
-En el paso **Adjuntos** puedes subir hasta **10 archivos** (máximo 50 MB cada uno) o agregar
-**enlaces** (por ejemplo, una carpeta de Drive con muchas fotos). Es opcional, pero ayuda mucho al
-diseñador a entender lo que necesitas.
+Todas las solicitudes empiezan con los mismos datos generales:
 
-![Paso de Adjuntos: subir archivos o agregar un enlace con título](capturas/empleado/05_adjuntos.jpg)
+- **Título**: un nombre corto para reconocer tu solicitud.
+- **Fecha del evento**: el día en que se usará la pieza.
+- **Dirigido a**: el público (estudiantes, docentes, personal administrativo…).
+- **Alcance**: los campus donde se difundirá. Puedes usar **Seleccionar todos**.
 
-1. Arrastra un archivo al recuadro, o haz clic para elegirlo desde tu computadora.
-2. Para un enlace, escribe un **título** corto y pega la **URL**, luego pulsa **Agregar**.
+Debajo vienen los campos propios de cada tipo. Los que tienen asterisco (`*`) son obligatorios.
 
-## 3.4 Revisar y enviar
+![Paso 2 de un Afiche: datos generales (título, fecha, dirigido a y alcance)](capturas/empleado/04_generalidades.png)
 
-El último paso te muestra un resumen de todo lo que escribiste, para que lo revises antes de
-enviarlo.
+![Campos propios del Afiche: horas, lugar, modalidad, código QR, descripción y logotipos](capturas/empleado/05_campos_afiche.png)
 
-![Paso "Revisa tu solicitud": resumen de todos los campos antes de enviar](capturas/empleado/06_revisar_enviar.jpg)
+**Logotipos.** Pulsa las sugerencias (**+ Logo de VOAE**, **+ Logo de la UNAH**, **+ Logo de la Facultad**) o escribe otro y pulsa Enter. Cada logotipo queda como una etiqueta que puedes quitar con la ×.
 
-Pulsa **Enviar solicitud**. Verás un aviso con el **código** de tu nuevo ticket:
+**Enlaces.** Puedes pegar un enlace sin `https://`. iTickets lo completa por ti y te muestra debajo cómo se va a guardar ("Se guardará como…").
 
-![Aviso "Solicitud ADH-0037 enviada."](capturas/empleado/07_toast_codigo.jpg)
+## 4.3 Elegir la fecha
 
-Fuera del horario hábil (lunes a viernes, 8:00 a. m. a 4:00 p. m., hora de Honduras) verás un
-aviso al llenar el formulario. Puedes llenarlo igual, pero el botón para enviar se habilitará solo
-en horario hábil.
+Pulsa el campo de la fecha para abrir el calendario. Solo puedes elegir **días hábiles** que respeten el tiempo de producción del tipo:
 
-![Aviso de fuera de horario: puedes llenar el formulario, pero el envío se habilitará en horario hábil](capturas/empleado/22_fuera_horario.jpg)
+- Los días rayados están bloqueados porque no alcanza el tiempo de producción.
+- Los sábados, domingos y feriados aparecen en gris y no se pueden elegir.
+- Debajo del campo se indica el **primer día disponible**.
 
-> Importante: fuera del horario hábil no se puede enviar una solicitud nueva.
+![Calendario de un Afiche: los días de producción aparecen rayados y los fines de semana en gris](capturas/empleado/06_calendario.png)
 
-# 4. Ver tus solicitudes
+> Algunos tipos cambian el nombre de la fecha. Por ejemplo, **Trifolio** y **Plantilla de Power Point** piden una **Fecha de entrega**, **Actualización en páginas web** pide una **Fecha de actualización** y **Cobertura de evento** pide solo una **Fecha**.
 
-## 4.1 Resumen
+![Trifolio: el campo se llama "Fecha de entrega"](capturas/empleado/07_trifolio_fecha_entrega.png)
 
-La pantalla **Resumen** (la página de inicio) te muestra cuántos tickets tienes por estado y tus
-últimos tickets.
+Algunos tipos traen un aviso al inicio del formulario. Léelo antes de continuar:
 
-![Resumen con solicitudes ya enviadas](capturas/empleado/16_resumen_con_tickets.jpg)
+![Aviso del tipo "Grabación y edición de videos": tiempo de promoción en los medios institucionales](capturas/empleado/08_video_aviso.png)
 
-## 4.2 Mis solicitudes
+Pulsa **Continuar**. Si falta algún dato obligatorio, el campo se marca en rojo y aparece un aviso como "Completa "Objetivo"." Llénalo y vuelve a pulsar **Continuar**.
 
-Aquí ves **todas** tus solicitudes, con filtros y búsqueda.
+![Campos obligatorios sin llenar, marcados en rojo](capturas/empleado/09_campo_obligatorio.png)
 
-![Lista "Mis solicitudes" con los boletos de cada ticket](capturas/empleado/14_mis_solicitudes.jpg)
+## 4.4 Agregar adjuntos
 
-- **Buscar:** escribe el código, el tipo, tu nombre o el área. El buscador ignora mayúsculas,
-  tildes, y para los códigos también ignora guiones y espacios — "adh 0038" encuentra `ADH-0038`
-  igual que si lo escribieras con guion.
+En el paso 3 adjunta lo que sirva para tu solicitud: logos, imágenes, textos o referencias. Puedes agregar hasta **10 adjuntos** en total, entre archivos y enlaces.
 
-  ![Búsqueda "adh 0038" filtrando a un solo resultado](capturas/empleado/15_busqueda_codigo.jpg)
+- **Archivos**: haz clic en el recuadro o arrastra los archivos (máximo 50 MB cada uno).
+- **Enlaces**: escribe un título (por ejemplo "Fotos del evento"), pega el enlace y pulsa **Agregar**. Si son muchas fotos, comparte una carpeta de Drive.
 
-- **Filtros:** "Todos los estados" y "Todos los tipos" te dejan ver solo lo que te interesa.
-- El contador "N de M solicitudes" te dice cuántas estás viendo del total.
+![Paso 3: enlace pegado sin "https://" y la vista previa "Se guardará como…"](capturas/empleado/10_adjuntos_enlace.png)
 
-![Filtro de tipo "Diploma" aplicado: el contador muestra "1 de 5 solicitudes"](capturas/empleado/21_filtros_mis_solicitudes.jpg)
+Pulsa **Continuar**.
 
-"Mis solicitudes" también funciona bien desde el celular: los boletos se acomodan en una sola
-columna y el menú lateral se convierte en un botón de hamburguesa.
+## 4.5 Revisar y enviar
 
-![Vista móvil de "Mis solicitudes": boletos en una columna y menú de hamburguesa](capturas/empleado/24_vista_movil_mis_solicitudes.jpg)
+1. Revisa el resumen: tipo, datos generales, campos y adjuntos.
+2. Si algo está mal, pulsa **Volver** para corregirlo.
+3. Pulsa **Enviar solicitud**.
 
-## 4.3 Detalle del ticket
+![Paso 4: resumen de la solicitud antes de enviarla](capturas/empleado/11_revisar_y_enviar.png)
 
-Al hacer clic en cualquier ticket ves su información completa: tipo, fechas, el detalle del
-formulario que llenaste y tus adjuntos.
+Si el tipo trae un aviso, aparece la ventana **Antes de enviar**. Léela y pulsa **Acepto, enviar solicitud** (o **Volver** si quieres revisar algo más).
 
-![Detalle del ticket: código, tipo, solicitante, fechas y detalle del formulario](capturas/empleado/08_detalle_ticket.jpg)
+![Ventana "Antes de enviar" de una solicitud de video](capturas/empleado/12_antes_de_enviar.png)
 
-Como Empleado, en vez del historial completo de cambios ves una barra de **progreso simplificada**
-con 4 pasos (Enviada → En diseño → Dictamen del jefe → Aprobada):
+Al enviarla, aparece un aviso verde con el código de tu ticket, por ejemplo **"Solicitud AOAA-0022 enviada."**, y se abre el detalle de la solicitud.
 
-![Barra de progreso con el paso actual resaltado](capturas/empleado/09_detalle_progreso.jpg)
+![Aviso "Solicitud AOAA-0022 enviada."](capturas/empleado/13_solicitud_enviada.png)
 
-No ves quién diseña tu ticket, ni comentarios internos, ni el contador de correcciones — esa
-información es solo para el equipo de diseño y el jefe de área.
+> ¿Algo urgente que no alcanza los días de producción? Pídeselo a tu jefe de área: solo él o ella puede enviar una **solicitud excepcional**.
 
-> Importante: mientras tu ticket no esté **Aprobado**, puedes seguir agregando adjuntos desde su
-> detalle (hasta el máximo de 10).
+# 5. Seguir tus solicitudes
 
-# 5. Reglas importantes
+## 5.1 Mis solicitudes
+
+**Mis solicitudes** muestra todos tus tickets como boletos, del más reciente al más antiguo. Cada boleto tiene el código, el título, el tipo, el área, la fecha de creación, la del evento, el vencimiento y el estado.
+
+![Mis solicitudes: tus tickets como boletos](capturas/empleado/14_mis_solicitudes.png)
+
+Usa los filtros **Todos los estados** y **Todos los tipos** para ver solo lo que buscas. A la derecha se indica cuántas solicitudes coinciden.
+
+![Filtro de estado "Corrección": 1 de 18 solicitudes](capturas/empleado/15_filtros.png)
+
+También puedes escribir en el buscador un código, un tipo o un área:
+
+![Búsqueda por código "AOAA-0010"](capturas/empleado/16_busqueda.png)
+
+## 5.2 Estados de una solicitud
+
+| Estado | Qué significa |
+|---|---|
+| **Enviado** | Tu solicitud llegó y espera que el equipo de diseño la tome. |
+| **En proceso** | El equipo de diseño está trabajando en ella. |
+| **Finalizado** | El diseño se entregó y tu jefe de área lo está revisando. |
+| **Corrección** | Tu jefe de área pidió cambios y el equipo los está haciendo. |
+| **Aprobado** | El diseño quedó aprobado. |
+| **Aprobado (Automático)** | Se aprobó solo porque pasaron 24 horas hábiles sin revisión. |
+| **Retrasado** | Pasó la fecha límite y el trabajo todavía no se entrega. |
+| **Rechazado** | La solicitud no se va a atender (por ejemplo, una cobertura rechazada). |
+
+## 5.3 Detalle de una solicitud
+
+Pulsa un boleto para abrir el detalle. Ahí ves:
+
+- El encabezado con el código, el estado, las fechas y el vencimiento.
+- **Detalle de la solicitud**: lo que llenaste en el formulario.
+- **Adjuntos del solicitante**: lo que tú adjuntaste.
+- **Entregables**: los diseños que entregó el equipo, agrupados por versión. Pulsa **Ver** para abrirlos o descargarlos.
+- **Progreso de la solicitud**: en qué paso va.
+
+![Entregables de AOAA-0010: versión 1 y versión 2, cada una con "Ver"](capturas/empleado/17_entregables.png)
+
+> En el detalle ves el estado y los entregables, pero no quién trabaja tu solicitud ni los comentarios internos de la revisión.
+
+## 5.4 Agregar un adjunto después de enviar
+
+Si olvidaste algo, abre el ticket y pulsa **Agregar** en **Adjuntos del solicitante**. Puedes subir un archivo o pegar un enlace. No se puede agregar adjuntos cuando el ticket ya está **Aprobado**, ni pasar de 10 en total.
+
+![Ventana "Agregar adjunto"](capturas/empleado/18_agregar_adjunto.png)
+
+# 6. Pedir la aprobación de un afiche hecho con IA
+
+Si tú preparaste un afiche (por ejemplo, con una herramienta de inteligencia artificial), el tipo **Aprobación de afiches con IA** sirve para que el área encargada de revisar lo apruebe antes de publicarlo. Aquí no interviene el equipo de diseño.
+
+> Tienes hasta **5 intentos** y **10 días hábiles** para que tu afiche sea aprobado.
+
+## 6.1 Crear la solicitud
+
+1. En **Nueva solicitud**, elige **Aprobación de afiches con IA** (en **Otros**).
+2. Llena el título, la fecha del evento, a quién va dirigido y el alcance. Pulsa **Continuar**.
+
+![Formulario de "Aprobación de afiches con IA"](capturas/empleado/19_ia_formulario.png)
+
+3. En el paso **3. Afiche**, sube tu afiche (PNG, JPG, WEBP o PDF, de 10 MB como máximo). Si quieres, escribe un **Comentario para quien revisa**. Pulsa **Continuar**.
+
+![Paso 3: afiche seleccionado y comentario opcional](capturas/empleado/20_ia_subir_afiche.png)
+
+4. Revisa y pulsa **Enviar solicitud**.
+
+![Paso 4: resumen con el nombre del archivo del afiche](capturas/empleado/21_ia_revisar.png)
+
+Se abre el detalle con tu afiche, el intento en curso y **Intentos restantes**:
+
+![Afiche enviado: intento 1, "Pendiente de revisión"](capturas/empleado/22_ia_enviada.png)
+
+## 6.2 Si tu afiche es rechazado
+
+Si el área encargada rechaza el afiche, la campana te avisa con el motivo, y en el detalle, bajo **Envíos y revisiones**, ves cada intento con su resultado y el comentario.
+
+1. Abre el ticket. Su estado es **Corrección** y aparece el botón **Reenviar afiche**.
+2. Corrige el afiche según el comentario.
+3. Pulsa **Reenviar afiche**.
+
+![AOAA-0023 en "Corrección", con "Intentos restantes 4 de 5" y el botón "Reenviar afiche"](capturas/empleado/23_ia_correccion.png)
+
+4. Sube la nueva versión y, si quieres, escribe un **Comentario para quien revisa**.
+5. Pulsa **Enviar afiche**.
+
+![Ventana "Reenviar afiche" con la nueva versión seleccionada](capturas/empleado/24_ia_reenviar_afiche.png)
+
+El ticket vuelve a **Enviado** y la revisión empieza de nuevo con el siguiente intento. En **Envíos y revisiones** queda el historial de todos los intentos:
+
+![Historial de intentos: el intento 1 rechazado con su comentario y el intento 2 pendiente](capturas/empleado/25_ia_rechazado.png)
+
+> Si el quinto intento también se rechaza, la solicitud queda **Rechazada** de forma definitiva.
+
+## 6.3 Afiche aprobado
+
+Cuando lo aprueban, el ticket queda **Aprobado** y el progreso se completa:
+
+![Afiche con IA aprobado](capturas/empleado/26_ia_aprobado.png)
+
+# 7. Pedir la cobertura de un evento
+
+**Cobertura de evento** sirve para pedir fotografías o video de un evento. La solicitud se **aprueba o se rechaza**; no tiene correcciones.
+
+1. En **Nueva solicitud**, elige **Cobertura de evento** (en **Otros**).
+2. Llena el **Título**, la **Fecha**, **Dirigido a**, el **Alcance**, la **Hora**, el **Lugar** y la **Descripción** (di si necesitas fotos, video o ambos).
+3. Adjunta lo que ayude a decidir (programa, invitación) y envíala.
+
+![Formulario de "Cobertura de evento"](capturas/empleado/27_cobertura_formulario.png)
+
+En el detalle verás la **Decisión de validación**:
+
+![Cobertura aprobada](capturas/empleado/28_cobertura_aprobada.png)
+
+![Cobertura rechazada, con el motivo](capturas/empleado/29_cobertura_rechazada.png)
+
+# 8. iTickets en el celular
+
+Puedes usar iTickets desde el navegador de tu celular. Los boletos se acomodan en una sola columna y el menú se abre con el botón de tres rayas.
+
+![Mis solicitudes en un celular](capturas/empleado/30_movil_mis_solicitudes.png)
+
+# 9. Reglas importantes
 
 | Tema | Regla |
 |---|---|
-| Horario hábil | Lunes a viernes, 8:00 a. m. a 4:00 p. m. (hora de Honduras). Solo puedes enviar solicitudes en ese horario. |
-| Fecha del evento | Obligatoria en todo formulario. El calendario bloquea los días que no alcanzan el plazo de producción del tipo elegido. |
-| Días de producción | Varían según el tipo: 10 días hábiles es lo más común; Campaña publicitaria y Logotipo (DIRCOM) piden un mes de anticipación. Los feriados alargan el plazo. |
-| Adjuntos | Hasta 10 por solicitud, máximo 50 MB cada archivo. Puedes seguir agregando mientras el ticket no esté Aprobado. |
-| Lo que ves | Solo el estado de tu ticket. No ves quién lo diseña, comentarios del jefe, ni el contador de correcciones. |
-| Búsqueda de códigos | Ignora mayúsculas, tildes, guiones y espacios: "adh 38" o "0038" encuentran `ADH-0038`. |
-| Primer ingreso | Con la contraseña temporal, el sistema te obliga a cambiarla antes de dejarte continuar. |
+| Horario para enviar | De lunes a viernes, de 8:00 a. m. a 4:00 p. m. (hora de Honduras), sin feriados. |
+| Tiempo de producción | Cada tipo tiene sus días hábiles (mínimo 10; Campaña publicitaria, 30). Se ven en la tarjeta del tipo. |
+| Fechas | El calendario solo deja elegir días hábiles posteriores al tiempo de producción. Los feriados alargan el plazo. |
+| Adjuntos | Hasta 10 por solicitud, entre archivos (50 MB cada uno) y enlaces. No se agregan si el ticket ya está aprobado. |
+| Afiche con IA | Hasta 5 intentos y 10 días hábiles. Afiche en PNG, JPG, WEBP o PDF, de 10 MB como máximo. |
+| Cobertura de evento | Se aprueba o se rechaza una sola vez, sin correcciones. |
+| Revisión del diseño | Tu jefe de área tiene 24 horas hábiles para revisar cada entrega; si no lo hace, se aprueba sola. |
+| Urgencias | Solo tu jefe de área puede enviar una solicitud excepcional. |
+| Sesión | Se cierra sola tras 20 minutos sin actividad. |
 
-# 6. Preguntas frecuentes y problemas comunes
+# 10. Preguntas frecuentes y problemas comunes
 
 | Situación | Qué hacer |
 |---|---|
-| No puedo enviar una solicitud ahorita | Revisa la hora: solo se envían de lunes a viernes, 8:00 a. m. a 4:00 p. m. |
-| El calendario no me deja elegir la fecha que quiero | El calendario solo bloquea los días que no alcanzan el plazo mínimo de producción de ese tipo de solicitud; elige una fecha posterior al "primer día disponible" que indica el formulario. |
-| Mi evento es antes del primer día disponible | Habla con tu Jefe de Área: solo él puede enviar una **solicitud excepcional**, con al menos 2 días hábiles de anticipación. |
-| No encuentro mi ticket al buscar | Prueba sin el guion ni espacios del código (por ejemplo "0038" en vez de "ADH-0038"); el buscador los ignora igual. |
-| No veo quién está diseñando mi ticket | Es normal: el Empleado solo ve el estado, no quién lo tiene asignado. |
-| No puedo cambiar mi contraseña | Si es tu primer ingreso, el sistema te lo pide automáticamente; si ya tienes cuenta y la olvidaste, usa "¿Olvidaste tu contraseña?" en el inicio de sesión. |
+| "Correo o contraseña incorrectos." | Revisa las mayúsculas y vuelve a intentarlo. Si no la recuerdas, usa **¿Olvidaste tu contraseña?** |
+| El botón **Enviar solicitud** está deshabilitado y dice que solo se envía en horario hábil | Estás fuera del horario (lunes a viernes, 8:00 a. m. a 4:00 p. m.). Vuelve en horario hábil; lo que llenaste se pierde si sales de la página. |
+| "Para "Afiche" se necesitan 10 días hábiles de anticipación: la fecha del evento debe ser a partir del…" | Elige una fecha igual o posterior a la indicada. Si es urgente, habla con tu jefe de área. |
+| "Completa "Objetivo"." (u otro campo) | Llena el campo marcado en rojo y vuelve a pulsar **Continuar**. |
+| "El ticket … ya tiene el máximo de 10 adjuntos." | Comparte los demás archivos en una carpeta de Drive y agrega solo el enlace. |
+| No puedo elegir un día en el calendario | Es fin de semana, feriado o no alcanza el tiempo de producción. Elige el primer día disponible o uno posterior. |
+| Salí de la página y se cerró mi sesión | Pasaste 20 minutos sin actividad. Vuelve a iniciar sesión. |
+| Quiero saber quién trabaja mi solicitud | Esa información no se muestra. Sigue el estado del ticket; la campana te avisa de cada cambio. |
+| Mi afiche con IA está en **Corrección** | Lee el comentario en **Envíos y revisiones**, corrige el afiche y pulsa **Reenviar afiche**. |
 
-# 7. Glosario
+# 11. Glosario
 
-- **Ticket:** una solicitud de diseño, con su propio código (p. ej. `ADH-0001`).
-- **Días hábiles:** lunes a viernes, sin contar los feriados activos registrados antes de que
-  crearas el ticket.
-- **Enviado:** tu ticket acaba de entrar y espera que un diseñador lo tome.
-- **En proceso:** un diseñador ya está trabajando en tu ticket.
-- **Finalizado:** el diseñador entregó el diseño; espera el dictamen del Jefe de Área.
-- **Corrección:** el Jefe de Área pidió un ajuste antes de aprobar.
-- **Retrasado:** pasó la fecha límite sin que el ticket avanzara.
-- **Aprobado / Aprobado (Automático):** tu solicitud quedó lista; "automático" significa que
-  pasaron 24 horas hábiles sin dictamen y el sistema lo aprobó solo.
-- **Rechazado:** solo aplica a solicitudes excepcionales que el Asignador no aceptó.
-- **Solicitud excepcional:** una solicitud urgente que solo puede enviar un Jefe de Área.
+| Término | Significado |
+|---|---|
+| **Ticket** | Cada solicitud registrada en iTickets, con su código único (por ejemplo `AOAA-0010`). |
+| **Tipo de solicitud** | La clase de pieza que pides (Afiche, Video, Trifolio…). Define el formulario y los días de producción. |
+| **Días hábiles** | De lunes a viernes, sin feriados. |
+| **Horario hábil** | De lunes a viernes, de 8:00 a. m. a 4:00 p. m., sin feriados. |
+| **Adjunto** | Archivo o enlace que tú agregas a tu solicitud. |
+| **Entregable** | El diseño que entrega el equipo de diseño, por versiones. |
+| **Dictamen** | La decisión de tu jefe de área sobre el diseño: aprobarlo o pedir corrección. |
+| **Intento** | Cada envío de un afiche con IA para revisión (máximo 5). |
+| **Solicitud excepcional** | Pedido urgente que solo puede enviar un jefe de área. |

@@ -56,7 +56,7 @@ nav#TOC a { color: #1c3d6e; text-decoration: none; }
 h1 { background: #12397a !important; }
 th { background: #12397a !important; }
 h2 { color: #12397a !important; border-bottom-color: #c9daf5 !important; }
-img { max-width: 100%; border: 1px solid #d9e2ec; border-radius: 6px; display: block; margin: 10px auto 2px; }
+img { max-width: 100%; max-height: 88mm; width: auto; height: auto; border: 1px solid #d9e2ec; border-radius: 6px; display: block; margin: 10px auto 2px; }
 figure { margin: 10px 0 14px; page-break-inside: avoid } figcaption { display:block; text-align:center; font-size: 9pt; color:#52606d; }
 blockquote { background:#eaf7f2; border-left:4px solid #2fbf8f; margin:10px 0; padding:6px 12px; }
 nav.toc ul { list-style:none; padding:0 } nav.toc li.n1 { font-weight:bold; margin-top:6px } nav.toc li.n2 { padding-left:16px }
