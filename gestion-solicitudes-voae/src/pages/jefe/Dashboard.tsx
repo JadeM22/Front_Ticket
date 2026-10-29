@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ChevronDown, Download, FileDown, Search, X } from 'lucide-react'
@@ -23,6 +23,7 @@ import { SkeletonLista } from '../../components/ui/Skeleton'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { EstadoChip } from '../../components/EstadoChip'
 import { BadgeExcepcional } from '../../components/BadgeExcepcional'
+import { CLASE_CARD_ENLACE, propsCardEnlace } from '../../hooks/useCardEnlace'
 import { CronometroDictamen } from '../../components/ui/CronometroDictamen'
 import { DictamenModal } from '../../components/DictamenModal'
 import { ETIQUETA_FLUJO, TAG_FLUJO, type DecisionJefe, type Flujo, type TicketEstadoReal } from '../../types/domain'
@@ -47,6 +48,7 @@ export function JefeDashboard() {
   const horarioHabil = useHorarioHabil()
   const esAdmin = tieneRol('Administrador')
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [ticketDictamen, setTicketDictamen] = useState<TicketEstadoReal | null>(null)
   // Parte 37: el Jefe de Área ya no ve quién diseña el ticket, ni la columna ni el filtro.
   const muestraAsignacion = puedeVerAsignacion(perfil?.roles ?? [])
@@ -207,12 +209,18 @@ export function JefeDashboard() {
           {porDictaminar.map((ticket) => {
             const bloqueadoPorHorario = !ticket.es_excepcional && !esAdmin && horarioHabil === false
             return (
-              <Card key={ticket.ticket_id} className="space-y-3">
+              <article
+                key={ticket.ticket_id}
+                {...propsCardEnlace(`/tickets/${ticket.ticket_id}`, navigate)}
+                aria-label={`Ticket ${ticket.codigo}`}
+                className={`rounded-xl ${CLASE_CARD_ENLACE}`}
+              >
+              <Card className="flex h-full flex-col space-y-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <Link to={`/tickets/${ticket.ticket_id}`} className="font-semibold text-azul-noche hover:underline">
+                    <span className="font-semibold text-azul-noche">
                       {ticket.codigo} · {ticket.tipo_solicitud}
-                    </Link>
+                    </span>
                     {ticket.es_excepcional && <BadgeExcepcional />}
                   </div>
                   {tieneJefaturas && <p className="text-xs text-tinta-suave">{ticket.area}</p>}
@@ -225,15 +233,31 @@ export function JefeDashboard() {
                   minutos={ticket.minutos_habiles_restantes_dictamen}
                   fechaAprobacion={ticket.fecha_aprobacion_automatica}
                 />
-                <Button
-                  variante="secundario"
-                  disabled={bloqueadoPorHorario}
-                  title={bloqueadoPorHorario ? 'Los dictámenes solo se hacen en horario hábil.' : undefined}
-                  onClick={() => setTicketDictamen(ticket)}
-                >
-                  Dictaminar
-                </Button>
+                <div className="mt-auto flex gap-2">
+                  <Button
+                    className="flex-1"
+                    disabled={bloqueadoPorHorario}
+                    title={bloqueadoPorHorario ? 'Los dictámenes solo se hacen en horario hábil.' : undefined}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setTicketDictamen(ticket)
+                    }}
+                  >
+                    Dictaminar
+                  </Button>
+                  <Button
+                    variante="fantasma"
+                    className="flex-1 border border-azul-institucional text-azul-institucional"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      navigate(`/tickets/${ticket.ticket_id}`)
+                    }}
+                  >
+                    Ver detalles
+                  </Button>
+                </div>
               </Card>
+              </article>
             )
           })}
         </div>

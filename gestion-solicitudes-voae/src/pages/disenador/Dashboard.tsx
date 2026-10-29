@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ChevronDown, ChevronUp, Hand } from 'lucide-react'
@@ -38,7 +38,6 @@ export function DisenadorDashboard() {
   const { data: conteoSinAsignar } = useConteoSinAsignar()
   const { perfil } = useAuth()
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const vista = ((params.get('vista') as Vista | null) ?? 'sin-asignar') as Vista
   const [tomando, setTomando] = useState<number | null>(null)
@@ -139,7 +138,6 @@ export function DisenadorDashboard() {
                 <TicketCard perspectiva="diseno"
                   key={ticket.ticket_id}
                   ticket={ticket}
-                  onClick={() => navigate(`/tickets/${ticket.ticket_id}`)}
                   accion={
                     <button
                       type="button"
@@ -191,7 +189,7 @@ export function DisenadorDashboard() {
                   <div className="space-y-2">
                     {ticketsColumna.length === 0 && <p className="text-xs text-tinta-suave">Sin tickets.</p>}
                     {ticketsColumna.map((ticket) => (
-                      <TicketCard perspectiva="diseno" key={ticket.ticket_id} ticket={ticket} onClick={() => navigate(`/tickets/${ticket.ticket_id}`)} />
+                      <TicketCard perspectiva="diseno" key={ticket.ticket_id} ticket={ticket} />
                     ))}
                   </div>
                 </div>
@@ -218,7 +216,7 @@ export function DisenadorDashboard() {
                   <p className="text-sm text-tinta-suave">Sin tickets en el historial.</p>
                 ) : (
                   historial.map((ticket) => (
-                    <TicketCard perspectiva="diseno" key={ticket.ticket_id} ticket={ticket} onClick={() => navigate(`/tickets/${ticket.ticket_id}`)} />
+                    <TicketCard perspectiva="diseno" key={ticket.ticket_id} ticket={ticket} />
                   ))
                 )}
               </div>

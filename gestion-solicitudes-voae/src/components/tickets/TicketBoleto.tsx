@@ -7,13 +7,13 @@ import { CronometroDictamen } from '../ui/CronometroDictamen'
 import { formatFecha, formatFechaHora } from '../../lib/date'
 import { puedeVerAsignacion } from '../../lib/permisos'
 import { useAuth } from '../../auth/useAuth'
+import { useCardEnlace } from '../../hooks/useCardEnlace'
 import type { TicketEstadoReal } from '../../types/domain'
 
 const CORRECCIONES_MAXIMAS = 5
 
 interface TicketBoletoProps {
   ticket: TicketEstadoReal
-  onClick?: () => void
   mostrarDisenador?: boolean
 }
 
@@ -21,10 +21,12 @@ interface TicketBoletoProps {
  * Ticket estilo boleto para "Resumen" y "Mis solicitudes": franja azul a la izquierda (arriba en
  * móvil) con código/estado/insignias, perforación con muescas y el resto de los datos en columnas.
  * Conserva todos los campos de `TicketCard`, incluida la visibilidad por rol (el solicitante puro
- * no ve el contador de correcciones).
+ * no ve el contador de correcciones). Todo el boleto abre el detalle (Ctrl/Cmd o clic central: en
+ * otra pestaña).
  */
-export function TicketBoleto({ ticket, onClick, mostrarDisenador }: TicketBoletoProps) {
+export function TicketBoleto({ ticket, mostrarDisenador }: TicketBoletoProps) {
   const { tieneRol, perfil } = useAuth()
+  const enlace = useCardEnlace(`/tickets/${ticket.ticket_id}`)
   const correccionesUsadas = ticket.correcciones_usadas ?? 0
   const puedeVerGestion = tieneRol('Jefe de Área') || tieneRol('Diseñador') || tieneRol('Administrador')
   const muestraCorrecciones = puedeVerGestion && correccionesUsadas > 0
@@ -34,12 +36,9 @@ export function TicketBoleto({ ticket, onClick, mostrarDisenador }: TicketBoleto
 
   return (
     <article
-      onClick={onClick}
-      onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
-      tabIndex={onClick ? 0 : undefined}
-      role={onClick ? 'button' : undefined}
+      {...enlace}
       aria-label={`Ticket ${ticket.codigo}`}
-      className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-azul-niebla transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-menta sm:flex-row"
+      className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-azul-niebla transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-menta sm:flex-row"
     >
       {/* Franja azul */}
       <div className="relative flex shrink-0 items-center justify-between gap-3 bg-gradient-to-br from-azul-institucional to-azul-noche px-5 py-3 text-white sm:w-44 sm:flex-col sm:items-start sm:justify-center sm:py-5">

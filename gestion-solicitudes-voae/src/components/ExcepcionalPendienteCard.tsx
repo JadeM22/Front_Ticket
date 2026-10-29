@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom'
 import { Button } from './ui/Button'
 import { BadgeExcepcional } from './BadgeExcepcional'
+import { CLASE_CARD_ENLACE, useCardEnlace } from '../hooks/useCardEnlace'
 import { formatFecha } from '../lib/date'
 import type { TicketEstadoReal } from '../types/domain'
 
@@ -19,16 +19,17 @@ function fechaRechazoAutomatico(fechaEvento: string | null): string {
   return formatFecha(fecha.toISOString())
 }
 
+/** Toda la tarjeta abre el detalle; "Dictaminar" no. */
 export function ExcepcionalPendienteCard({ ticket, puedeResponder, onDictaminar }: ExcepcionalPendienteCardProps) {
+  const enlace = useCardEnlace(`/tickets/${ticket.ticket_id}`)
   return (
-    <div className="rounded-lg border-2 border-ambar bg-ambar-bruma/40 p-3">
+    <div
+      {...enlace}
+      aria-label={`Ticket ${ticket.codigo}`}
+      className={`rounded-lg border-2 border-ambar bg-ambar-bruma/40 p-3 ${CLASE_CARD_ENLACE}`}
+    >
       <div className="flex flex-wrap items-center gap-1.5">
-        <Link
-          to={`/tickets/${ticket.ticket_id}`}
-          className="whitespace-nowrap font-mono text-xs font-semibold text-ambar"
-        >
-          {ticket.codigo}
-        </Link>
+        <span className="whitespace-nowrap font-mono text-xs font-semibold text-ambar">{ticket.codigo}</span>
         <BadgeExcepcional />
       </div>
       <p className="text-sm font-semibold text-tinta">{ticket.tipo_solicitud}</p>
@@ -41,7 +42,13 @@ export function ExcepcionalPendienteCard({ ticket, puedeResponder, onDictaminar 
           : `Pendiente de aceptación; se rechaza automáticamente si no se acepta antes del ${fechaRechazoAutomatico(ticket.fecha_evento)}`}
       </p>
       {puedeResponder && (
-        <Button className="mt-2 w-full" onClick={onDictaminar}>
+        <Button
+          className="mt-2 w-full"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDictaminar?.()
+          }}
+        >
           Dictaminar
         </Button>
       )}

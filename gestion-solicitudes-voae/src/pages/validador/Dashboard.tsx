@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { EstadoChip } from '../../components/EstadoChip'
+import { propsCardEnlace } from '../../hooks/useCardEnlace'
 import { BadgeExcepcional } from '../../components/BadgeExcepcional'
 import { MiniaturaAfiche } from '../../components/afichesIA/HistorialEnviosIA'
 import { afichesPorRevisar, validacionesPendientes } from '../../lib/bandejaValidador'
@@ -89,10 +90,6 @@ function Seccion({
   const navigate = useNavigate()
   const vencidos = tickets.filter((t) => t.fuera_de_plazo).length
 
-  function abrirDetalle(ticketId: number) {
-    navigate(`/tickets/${ticketId}`)
-  }
-
   function abrirDictamen(ticketId: number) {
     navigate(`/tickets/${ticketId}`, { state: { abrirDictamen: true } })
   }
@@ -115,10 +112,7 @@ function Seccion({
           {tickets.map((ticket) => (
             <article
               key={ticket.ticket_id}
-              onClick={() => abrirDetalle(ticket.ticket_id!)}
-              onKeyDown={(e) => e.key === 'Enter' && abrirDetalle(ticket.ticket_id!)}
-              role="button"
-              tabIndex={0}
+              {...propsCardEnlace(`/tickets/${ticket.ticket_id}`, navigate)}
               aria-label={`Ticket ${ticket.codigo}`}
               className="cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul-institucional"
             >

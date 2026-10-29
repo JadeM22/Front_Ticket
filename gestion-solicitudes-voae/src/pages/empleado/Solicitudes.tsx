@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { ChevronDown, Filter, Search, X } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { useAuth } from '../../auth/useAuth'
@@ -17,7 +17,6 @@ const RETARDO_BUSQUEDA_MS = 250
 export function EmpleadoSolicitudesPage() {
   const { data: todos, isLoading } = useTicketsEstadoReal()
   const { perfil } = useAuth()
-  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   // "Mis solicitudes" = las que registró este usuario. RLS deja ver más tickets a quien además es
   // Analista, Diseñador, Jefe o Administrador, así que aquí sí se filtra por autor.
@@ -139,7 +138,7 @@ export function EmpleadoSolicitudesPage() {
       ) : (
         <div className="space-y-3">
           {filtrados.map((ticket) => (
-            <TicketBoleto key={ticket.ticket_id} ticket={ticket} onClick={() => navigate(`/tickets/${ticket.ticket_id}`)} />
+            <TicketBoleto key={ticket.ticket_id} ticket={ticket} />
           ))}
         </div>
       )}

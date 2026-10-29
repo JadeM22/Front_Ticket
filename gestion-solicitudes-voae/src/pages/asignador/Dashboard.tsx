@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ChevronDown, ChevronUp, Hand } from 'lucide-react'
@@ -34,7 +34,6 @@ export function AsignadorDashboard() {
   const { data: tickets = [], isLoading } = useTicketsDiseno()
   const { perfil } = useAuth()
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const pestana = params.get('tab') ?? 'sin-asignar'
 
@@ -179,7 +178,6 @@ export function AsignadorDashboard() {
                 <div className="flex-1">
                   <TicketCard perspectiva="diseno"
                     ticket={ticket}
-                    onClick={() => navigate(`/tickets/${ticket.ticket_id}`)}
                     accion={
                       <div className="space-y-2">
                         <select
@@ -217,7 +215,6 @@ export function AsignadorDashboard() {
           tickets={ticketsFifo}
           disenadores={disenadores}
           onCambiarDisenador={manejarCambiarDisenador}
-          onAbrir={(id) => navigate(`/tickets/${id}`)}
         />
       )}
 
@@ -260,13 +257,11 @@ function PestanaDisenador({
   tickets,
   disenadores,
   onCambiarDisenador,
-  onAbrir,
 }: {
   disenador: DisenadorAsignable
   tickets: TicketEstadoReal[]
   disenadores: DisenadorAsignable[]
   onCambiarDisenador: (ticket: TicketEstadoReal, disenadorId: number) => void
-  onAbrir: (ticketId: number) => void
 }) {
   const [historialAbierto, setHistorialAbierto] = useState(false)
   const propios = tickets.filter((t) => t.disenador_id === disenador.id)
@@ -297,7 +292,7 @@ function PestanaDisenador({
                 {ticketsColumna.length === 0 && <p className="text-xs text-tinta-suave">Sin tickets.</p>}
                 {ticketsColumna.map((ticket) => (
                   <div key={ticket.ticket_id}>
-                    <TicketCard perspectiva="diseno" ticket={ticket} onClick={() => onAbrir(ticket.ticket_id!)} />
+                    <TicketCard perspectiva="diseno" ticket={ticket} />
                     <select
                       className={`${CLASE_INPUT} mt-1 w-full text-xs`}
                       value=""
@@ -336,7 +331,7 @@ function PestanaDisenador({
             {historial.length === 0 ? (
               <p className="text-sm text-tinta-suave">Sin movimientos en este periodo.</p>
             ) : (
-              historial.map((ticket) => <TicketCard perspectiva="diseno" key={ticket.ticket_id} ticket={ticket} onClick={() => onAbrir(ticket.ticket_id!)} />)
+              historial.map((ticket) => <TicketCard perspectiva="diseno" key={ticket.ticket_id} ticket={ticket} />)
             )}
           </div>
         )}

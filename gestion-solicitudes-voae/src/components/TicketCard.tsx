@@ -9,6 +9,7 @@ import { formatFecha, formatFechaHora } from '../lib/date'
 import { esTicketLiberado } from '../lib/tableroDisenador'
 import { puedeVerAsignacion } from '../lib/permisos'
 import { useAuth } from '../auth/useAuth'
+import { CLASE_CARD_ENLACE, useCardEnlace } from '../hooks/useCardEnlace'
 import type { PerspectivaEstado } from '../lib/estados'
 import type { TicketEstadoReal } from '../types/domain'
 
@@ -18,13 +19,14 @@ interface TicketCardProps {
   ticket: TicketEstadoReal
   /** Quién mira: decide el texto del estado. */
   perspectiva: PerspectivaEstado
-  onClick?: () => void
-  /** Pie de la tarjeta: botones como "Tomar" o el selector "Asignar a…", fuera del área clicable principal. */
+  /** Pie de la tarjeta: botones como "Tomar" o el selector "Asignar a…"; no abren el detalle. */
   accion?: ReactNode
 }
 
-export function TicketCard({ ticket, perspectiva, onClick, accion }: TicketCardProps) {
+/** Toda la tarjeta abre el detalle del ticket (Ctrl/Cmd o clic central: en otra pestaña). */
+export function TicketCard({ ticket, perspectiva, accion }: TicketCardProps) {
   const { tieneRol, perfil } = useAuth()
+  const enlace = useCardEnlace(`/tickets/${ticket.ticket_id}`)
   const correccionesUsadas = ticket.correcciones_usadas ?? 0
   const muestraCronometro =
     (tieneRol('Jefe de Área') || tieneRol('Diseñador')) && ticket.minutos_habiles_restantes_dictamen != null
@@ -34,12 +36,9 @@ export function TicketCard({ ticket, perspectiva, onClick, accion }: TicketCardP
 
   return (
     <article
-      onClick={onClick}
-      onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
-      tabIndex={onClick ? 0 : undefined}
-      role={onClick ? 'button' : undefined}
+      {...enlace}
       aria-label={`Ticket ${ticket.codigo}`}
-      className="flex h-full flex-col rounded-xl bg-white p-4 shadow-sm transition-shadow duration-150 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul-institucional"
+      className={`flex h-full flex-col rounded-xl bg-white p-4 shadow-sm ${CLASE_CARD_ENLACE}`}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -112,7 +111,11 @@ export function TicketCard({ ticket, perspectiva, onClick, accion }: TicketCardP
       )}
 
       {accion && (
-        <div className="mt-auto border-t border-azul-niebla/60 pt-3" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="mt-auto cursor-default border-t border-azul-niebla/60 pt-3"
+          onClick={(e) => e.stopPropagation()}
+          onAuxClick={(e) => e.stopPropagation()}
+        >
           {accion}
         </div>
       )}

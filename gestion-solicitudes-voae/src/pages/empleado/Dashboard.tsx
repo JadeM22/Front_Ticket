@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { useAuth } from '../../auth/useAuth'
@@ -13,7 +13,6 @@ import { etiquetaEstado } from '../../lib/estados'
 export function EmpleadoDashboard() {
   const { data: todos = [], isLoading } = useTicketsEstadoReal()
   const { perfil } = useAuth()
-  const navigate = useNavigate()
   // "Mis solicitudes" = las que registró este usuario. RLS deja ver más tickets a quien además es
   // Analista, Diseñador, Jefe o Administrador, así que aquí sí se filtra por autor.
   const tickets = todos.filter((t) => t.usuario_registro === perfil?.id)
@@ -71,7 +70,7 @@ export function EmpleadoDashboard() {
         ) : (
           <div className="space-y-3">
             {tickets.slice(0, 6).map((ticket) => (
-              <TicketBoleto key={ticket.ticket_id} ticket={ticket} onClick={() => navigate(`/tickets/${ticket.ticket_id}`)} />
+              <TicketBoleto key={ticket.ticket_id} ticket={ticket} />
             ))}
           </div>
         )}
