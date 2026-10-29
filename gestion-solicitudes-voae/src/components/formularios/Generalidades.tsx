@@ -4,6 +4,7 @@ import { Campo, CLASE_INPUT } from '../ui/Campo'
 import { FechaEventoPicker } from '../ui/FechaEventoPicker'
 import { Skeleton } from '../ui/Skeleton'
 import { MAX_LONGITUD_GENERALIDAD, type Generalidades } from '../../lib/validacionFormularios'
+import { TEXTO_COBERTURA_NACIONAL } from '../../lib/campus'
 import type { EtiquetasGenerales } from '../../types/domain'
 
 interface GeneralidadesCamposProps {
@@ -30,12 +31,22 @@ export function GeneralidadesCampos({
 }: GeneralidadesCamposProps) {
   const { data: campus = [], isLoading } = useQuery({ queryKey: ['catalogos', 'campus'], queryFn: listarCampus })
   const activos = campus.filter((c) => c.estado)
-  const todosMarcados = activos.length > 0 && activos.every((c) => valor.campus_ids.includes(c.id))
+  // "Cobertura nacional" es excluyente (Parte 52): va aparte y, si se marca, reemplaza a los campus.
+  const nacional = activos.find((c) => c.es_cobertura_nacional)
+  const individuales = activos.filter((c) => !c.es_cobertura_nacional)
+  const esNacional = nacional != null && valor.campus_ids.includes(nacional.id)
+  const todosMarcados = individuales.length > 0 && individuales.every((c) => valor.campus_ids.includes(c.id))
+  const marcados = individuales.filter((c) => valor.campus_ids.includes(c.id)).length
 
   function alternarCampus(id: number, marcado: boolean) {
     // Se guardan en el orden del catálogo, no en el orden en que se marcaron.
-    const ids = activos.filter((c) => (c.id === id ? marcado : valor.campus_ids.includes(c.id))).map((c) => c.id)
+    const ids = individuales.filter((c) => (c.id === id ? marcado : valor.campus_ids.includes(c.id))).map((c) => c.id)
     onCambiar({ ...valor, campus_ids: ids })
+  }
+
+  function alternarNacional(marcado: boolean) {
+    if (!nacional) return
+    onCambiar({ ...valor, campus_ids: marcado ? [nacional.id] : [] })
   }
 
   return (
@@ -73,12 +84,19 @@ export function GeneralidadesCampos({
 
       <fieldset>
         <div className="mb-1 flex items-center justify-between gap-2">
-          <legend className="text-sm font-medium text-tinta">{etiquetas.alcance} *</legend>
-          {activos.length > 1 && (
+          <legend className="text-sm font-medium text-tinta">
+            {etiquetas.alcance} *
+            {activos.length > 0 && (
+              <span className="ml-2 text-xs font-normal text-tinta-suave">
+                {esNacional ? TEXTO_COBERTURA_NACIONAL : `${marcados} de ${individuales.length}`}
+              </span>
+            )}
+          </legend>
+          {individuales.length > 1 && !esNacional && (
             <button
               type="button"
               className="text-xs font-medium text-azul-institucional hover:underline"
-              onClick={() => onCambiar({ ...valor, campus_ids: todosMarcados ? [] : activos.map((c) => c.id) })}
+              onClick={() => onCambiar({ ...valor, campus_ids: todosMarcados ? [] : individuales.map((c) => c.id) })}
             >
               {todosMarcados ? 'Quitar todos' : 'Seleccionar todos'}
             </button>
@@ -89,18 +107,35 @@ export function GeneralidadesCampos({
         ) : activos.length === 0 ? (
           <p className="text-sm text-tinta-suave">No hay campus activos. Pide a un administrador que los registre.</p>
         ) : (
-          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-            {activos.map((c) => (
-              <label key={c.id} className="flex items-center gap-2 text-sm text-tinta">
+          <div className="space-y-2">
+            {nacional && (
+              <label className="flex items-start gap-2 rounded-lg border border-azul-niebla bg-azul-niebla/40 p-3 text-sm text-tinta">
                 <input
                   type="checkbox"
-                  checked={valor.campus_ids.includes(c.id)}
-                  onChange={(e) => alternarCampus(c.id, e.target.checked)}
+                  className="mt-0.5"
+                  checked={esNacional}
+                  onChange={(e) => alternarNacional(e.target.checked)}
                 />
-                {c.nombre}
-                {c.siglas && <span className="text-xs text-tinta-suave">({c.siglas})</span>}
+                <span>
+                  <span className="font-semibold">{TEXTO_COBERTURA_NACIONAL}</span>
+                  <span className="block text-xs text-tinta-suave">Incluye todos los campus.</span>
+                </span>
               </label>
-            ))}
+            )}
+            <div className={`grid grid-cols-1 gap-1.5 sm:grid-cols-2 ${esNacional ? 'opacity-50' : ''}`}>
+              {individuales.map((c) => (
+                <label key={c.id} className="flex items-center gap-2 text-sm text-tinta">
+                  <input
+                    type="checkbox"
+                    disabled={esNacional}
+                    checked={valor.campus_ids.includes(c.id)}
+                    onChange={(e) => alternarCampus(c.id, e.target.checked)}
+                  />
+                  {c.nombre}
+                  {c.siglas && <span className="text-xs text-tinta-suave">({c.siglas})</span>}
+                </label>
+              ))}
+            </div>
           </div>
         )}
       </fieldset>

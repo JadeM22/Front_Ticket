@@ -35,6 +35,7 @@ import {
   type Generalidades,
 } from '../../lib/validacionFormularios'
 import { normalizarEnlace } from '../../lib/enlaces'
+import { nombresAlcance } from '../../lib/campus'
 import { coincideTexto } from '../../lib/buscar'
 import { mensajeError } from '../../lib/errors'
 import { formatFechaLarga } from '../../lib/date'
@@ -329,7 +330,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
     tipos: tiposVisibles.filter((t) => categoriaDe(t) === categoria.valor),
   })).filter((grupo) => grupo.tipos.length > 0)
 
-  const nombresCampus = campus.filter((c) => generalidades.campus_ids.includes(c.id)).map((c) => c.nombre)
+  const nombresCampus = nombresAlcance(campus.filter((c) => generalidades.campus_ids.includes(c.id)))
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

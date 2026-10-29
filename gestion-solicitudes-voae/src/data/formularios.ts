@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import type { Json } from '../types/database'
 import { normalizarCampos } from '../lib/validacionFormularios'
+import { nombresAlcance } from '../lib/campus'
 import type { DetalleFormulario, DetalleSolicitud } from '../types/domain'
 
 /** La base valida generalidades, campus y respuestas, y aplica los valores por defecto. */
@@ -43,7 +44,7 @@ export async function esHorarioHabil(): Promise<boolean> {
 }
 
 interface FilaFormularioCampus {
-  Campus: { nombre: string; orden: number } | null
+  Campus: { nombre: string; orden: number; es_cobertura_nacional: boolean } | null
 }
 
 /**
@@ -59,7 +60,7 @@ export async function obtenerDetalleFormulario(formularioId: number): Promise<De
       .select('titulo, dirigido_a, fecha_evento, respuestas, campos_snapshot')
       .eq('id', formularioId)
       .maybeSingle(),
-    sb.from('FormularioCampus').select('Campus(nombre, orden)').eq('formulario_id', formularioId),
+    sb.from('FormularioCampus').select('Campus(nombre, orden, es_cobertura_nacional)').eq('formulario_id', formularioId),
   ])
   if (formulario.error) throw formulario.error
   if (campus.error) throw campus.error
@@ -71,11 +72,12 @@ export async function obtenerDetalleFormulario(formularioId: number): Promise<De
     titulo,
     dirigido_a,
     fecha_evento,
-    campus: ((campus.data ?? []) as unknown as FilaFormularioCampus[])
-      .map((fila) => fila.Campus)
-      .filter((c): c is { nombre: string; orden: number } => c != null)
-      .sort((a, b) => a.orden - b.orden)
-      .map((c) => c.nombre),
+    campus: nombresAlcance(
+      ((campus.data ?? []) as unknown as FilaFormularioCampus[])
+        .map((fila) => fila.Campus)
+        .filter((c): c is NonNullable<FilaFormularioCampus['Campus']> => c != null)
+        .sort((a, b) => a.orden - b.orden),
+    ),
     campos: normalizarCampos(Array.isArray(campos_snapshot) ? campos_snapshot : []),
     respuestas:
       respuestas && typeof respuestas === 'object' && !Array.isArray(respuestas)
