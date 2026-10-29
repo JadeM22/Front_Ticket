@@ -68,7 +68,10 @@ fixes from the QA report in `docs/pruebas/2026-10-25/REPORTE.md`) is the latest:
 resolves designer names for Diseñador/Asignador/Administrador/Analista, `TicketLog` no longer stores designer
 names (only the admin-only `AsignacionLog` does), a designer can take an ACEPTADA excepcional left without
 designer (`data/tickets.ts`, `disenador/Dashboard.tsx`), and automatic approval also notifies the area's
-Jefes. Code comments cite these by number ("Parte 27"), so grep
+Jefes. `cambios_bd_2026-10-28.sql` (Partes 52–58: campus "COBERTURA NACIONAL" via
+`Campus.es_cobertura_nacional`, 1-día-hábil margin after a last-minute corrección, "cambio urgente"
+excepcionales linked by `Ticket.ticket_origen_id`, ETIQUETAS default `[]`; Parte 56 is optional and not
+applied) is the newest. Code comments cite these by number ("Parte 27"), so grep
 `docs/cambios/` for `PARTE <n>` to find the rule a comment refers to. `docs/semilla_datos_prueba.sql` is
 test seed data. All of these are kept here for reference only — `src/types/database.ts` is the authoritative, generated API
 surface and is already regenerated against the live schema. Do not hand-edit `database.ts`; regenerate it

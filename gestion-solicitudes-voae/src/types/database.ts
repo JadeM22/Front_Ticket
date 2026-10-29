@@ -494,6 +494,7 @@ export type Database = {
       }
       Campus: {
         Row: {
+          es_cobertura_nacional: boolean
           estado: boolean
           id: number
           nombre: string
@@ -501,6 +502,7 @@ export type Database = {
           siglas: string | null
         }
         Insert: {
+          es_cobertura_nacional?: boolean
           estado?: boolean
           id?: never
           nombre: string
@@ -508,6 +510,7 @@ export type Database = {
           siglas?: string | null
         }
         Update: {
+          es_cobertura_nacional?: boolean
           estado?: boolean
           id?: never
           nombre?: string
@@ -896,6 +899,8 @@ export type Database = {
           fecha_registro: string
           formulario_id: number
           id: number
+          motivo_cambio_urgente: string | null
+          ticket_origen_id: number | null
           tipo_solicitud_id: number
           usuario_registro: number
         }
@@ -917,6 +922,8 @@ export type Database = {
           fecha_registro?: string
           formulario_id: number
           id?: number
+          motivo_cambio_urgente?: string | null
+          ticket_origen_id?: number | null
           tipo_solicitud_id: number
           usuario_registro: number
         }
@@ -938,6 +945,8 @@ export type Database = {
           fecha_registro?: string
           formulario_id?: number
           id?: number
+          motivo_cambio_urgente?: string | null
+          ticket_origen_id?: number | null
           tipo_solicitud_id?: number
           usuario_registro?: number
         }
@@ -954,6 +963,13 @@ export type Database = {
             columns: null
             isOneToOne: false
             referencedRelation: "Formularios"
+            referencedColumns: null
+          },
+          {
+            foreignKeyName: "fkTicket_TicketOrigen"
+            columns: null
+            isOneToOne: false
+            referencedRelation: "Ticket"
             referencedColumns: null
           },
           {
@@ -1176,6 +1192,14 @@ export type Database = {
         Returns: boolean
       }
       fnRechazarExcepcionalesVencidas: { Args: never; Returns: number }
+      fnSolicitudCambioUrgenteCrearEscalar: {
+        Args: {
+          p_fecha_evento?: string
+          p_motivo: string
+          p_ticket_origen_id: number
+        }
+        Returns: number
+      }
       fnSolicitudCrearEscalar: {
         Args: {
           p_detalle: Json
@@ -1200,6 +1224,14 @@ export type Database = {
       fnSumarHorasHabilesEscalar: {
         Args: { p_desde: string; p_horas: number }
         Returns: string
+      }
+      fnSumarMinutosHabilesEscalar: {
+        Args: { p_desde: string; p_minutos: number }
+        Returns: string
+      }
+      fnTicketEsOrigenVisibleEscalar: {
+        Args: { p_ticket_id: number }
+        Returns: boolean
       }
       fnTicketIdDesdeRutaEscalar: { Args: { p_ruta: string }; Returns: number }
       fnTipoSolicitudFlujoEscalar: {
