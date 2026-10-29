@@ -14,8 +14,11 @@ import { obtenerDecisionValidacion, type DecisionValidacion } from './validacion
  * tabla trae `disenador_id`/`asignado_por`/`fecha_asignacion`/`excepcional_respondido_por`, que la
  * vista sí oculta a quien no debe ver la asignación (E-01).
  */
-const COLUMNAS_TICKET_BASE = 'id, formulario_id, tipo_solicitud_id'
-export type TicketBase = Pick<Tables<{ schema: 'Solicitudes' }, 'Ticket'>, 'id' | 'formulario_id' | 'tipo_solicitud_id'>
+const COLUMNAS_TICKET_BASE = 'id, formulario_id, tipo_solicitud_id, ticket_origen_id, motivo_cambio_urgente'
+export type TicketBase = Pick<
+  Tables<{ schema: 'Solicitudes' }, 'Ticket'>,
+  'id' | 'formulario_id' | 'tipo_solicitud_id' | 'ticket_origen_id' | 'motivo_cambio_urgente'
+>
 export type TicketLog = Tables<{ schema: 'Solicitudes' }, 'TicketLog'>
 
 export interface TicketCompleto {

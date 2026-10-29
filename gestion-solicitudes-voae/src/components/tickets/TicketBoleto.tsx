@@ -48,7 +48,7 @@ export function TicketBoleto({ ticket, mostrarDisenador }: TicketBoletoProps) {
         </div>
         {(ticket.es_excepcional || (muestraAsignacion && ticket.asignado_por_asignador)) && (
           <div className="flex flex-wrap gap-1.5">
-            {ticket.es_excepcional && <BadgeExcepcional />}
+            {ticket.es_excepcional && <BadgeExcepcional ticketId={ticket.ticket_id} />}
             {muestraAsignacion && ticket.asignado_por_asignador && (
               <TagAsignado por={ticket.asignado_por_nombre} fecha={ticket.fecha_asignacion} />
             )}

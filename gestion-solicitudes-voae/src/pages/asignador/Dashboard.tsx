@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ChevronDown, ChevronUp, Hand } from 'lucide-react'
 import { useTicketsDiseno } from '../../hooks/useTickets'
+import { useCambiosUrgentes } from '../../hooks/useCambiosUrgentes'
 import { tomarTicket, reasignarTicket } from '../../data/tickets'
 import { listarDisenadoresAsignables, type DisenadorAsignable } from '../../data/usuarios'
 import { mensajeError } from '../../lib/errors'
@@ -38,6 +39,7 @@ export function AsignadorDashboard() {
   const pestana = params.get('tab') ?? 'sin-asignar'
 
   const [respuesta, setRespuesta] = useState<TicketEstadoReal | null>(null)
+  const { cambioDe } = useCambiosUrgentes()
   const [reasignacionPendiente, setReasignacionPendiente] = useState<{ ticket: TicketEstadoReal; disenador: DisenadorAsignable } | null>(null)
   const [tomando, setTomando] = useState<number | null>(null)
 
@@ -98,6 +100,13 @@ export function AsignadorDashboard() {
       new Date(a.fecha_registro ?? 0).getTime() - new Date(b.fecha_registro ?? 0).getTime() ||
       (a.ticket_id ?? 0) - (b.ticket_id ?? 0),
   )
+
+  // Cambio urgente: se sugiere el diseñador del ticket original, si sigue en el equipo.
+  const cambioRespuesta = cambioDe(respuesta?.ticket_id)
+  const disenadorOriginal = cambioRespuesta
+    ? tickets.find((t) => t.ticket_id === cambioRespuesta.ticketOrigenId)?.disenador_id
+    : null
+  const disenadorSugeridoId = disenadores.some((d) => d.id === disenadorOriginal) ? disenadorOriginal : null
 
   const excepcionalesPendientes = ticketsFifo.filter((t) => t.es_excepcional && t.excepcional_estado === 'PENDIENTE')
   // Las excepcionales ya aceptadas sí entran aquí si quedaron liberadas (su diseñador se desactivó):
@@ -219,7 +228,9 @@ export function AsignadorDashboard() {
       )}
 
       <ResponderExcepcionalModal
+        key={respuesta?.ticket_id ?? 'ninguno'}
         ticket={respuesta}
+        disenadorSugeridoId={disenadorSugeridoId}
         disenadores={disenadores}
         onCerrar={() => setRespuesta(null)}
         onRespondido={invalidar}

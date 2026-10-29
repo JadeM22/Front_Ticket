@@ -49,7 +49,7 @@ export function SolicitudExcepcionalPage() {
                     >
                       {ticket.codigo}
                     </Link>
-                    <BadgeExcepcional />
+                    <BadgeExcepcional ticketId={ticket.ticket_id} />
                   </div>
                   <p className="text-sm text-tinta">{ticket.tipo_solicitud}</p>
                   <p className="text-xs text-tinta-suave">Evento: {formatFecha(ticket.fecha_evento)}</p>

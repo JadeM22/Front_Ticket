@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom'
 import { Button } from './ui/Button'
+import { useCambiosUrgentes } from '../hooks/useCambiosUrgentes'
 import { BadgeExcepcional } from './BadgeExcepcional'
 import { CLASE_CARD_ENLACE, useCardEnlace } from '../hooks/useCardEnlace'
 import { formatFecha } from '../lib/date'
@@ -22,6 +24,8 @@ function fechaRechazoAutomatico(fechaEvento: string | null): string {
 /** Toda la tarjeta abre el detalle; "Dictaminar" no. */
 export function ExcepcionalPendienteCard({ ticket, puedeResponder, onDictaminar }: ExcepcionalPendienteCardProps) {
   const enlace = useCardEnlace(`/tickets/${ticket.ticket_id}`)
+  // Un cambio urgente muestra su motivo y el ticket original, para decidir a quién asignarlo.
+  const cambio = useCambiosUrgentes().cambioDe(ticket.ticket_id)
   return (
     <div
       {...enlace}
@@ -30,8 +34,27 @@ export function ExcepcionalPendienteCard({ ticket, puedeResponder, onDictaminar 
     >
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="whitespace-nowrap font-mono text-xs font-semibold text-ambar">{ticket.codigo}</span>
-        <BadgeExcepcional />
+        <BadgeExcepcional ticketId={ticket.ticket_id} />
       </div>
+      {cambio && (
+        <div className="mt-1 rounded-md bg-white/70 p-2 text-xs text-tinta">
+          <p>
+            Cambio urgente de{' '}
+            {cambio.codigoOrigen ? (
+              <Link
+                to={`/tickets/${cambio.ticketOrigenId}`}
+                onClick={(e) => e.stopPropagation()}
+                className="font-mono font-semibold text-azul-institucional hover:underline"
+              >
+                {cambio.codigoOrigen}
+              </Link>
+            ) : (
+              'otro ticket'
+            )}
+          </p>
+          {cambio.motivo && <p className="mt-0.5 line-clamp-3 whitespace-pre-line text-tinta-suave">{cambio.motivo}</p>}
+        </div>
+      )}
       <p className="text-sm font-semibold text-tinta">{ticket.tipo_solicitud}</p>
       <p className="text-xs text-tinta-suave">{ticket.area}</p>
       <p className="text-xs text-tinta-suave">{ticket.solicitante}</p>

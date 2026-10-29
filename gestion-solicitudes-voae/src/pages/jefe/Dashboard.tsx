@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ChevronDown, Download, FileDown, Search, X } from 'lucide-react'
+import { ChevronDown, Download, FileDown, Search, X, Zap } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { crearDictamen } from '../../data/dictamenes'
 import { listarJefaturasDeUsuario } from '../../data/usuarios'
@@ -26,6 +26,9 @@ import { BadgeExcepcional } from '../../components/BadgeExcepcional'
 import { CLASE_CARD_ENLACE, propsCardEnlace } from '../../hooks/useCardEnlace'
 import { CronometroDictamen } from '../../components/ui/CronometroDictamen'
 import { DictamenModal } from '../../components/DictamenModal'
+import { CambioUrgenteModal } from '../../components/CambioUrgenteModal'
+import { useAreasQueDirige, useCambiosUrgentes } from '../../hooks/useCambiosUrgentes'
+import { puedePedirCambioUrgente } from '../../lib/cambioUrgente'
 import { ETIQUETA_FLUJO, TAG_FLUJO, type DecisionJefe, type Flujo, type TicketEstadoReal } from '../../types/domain'
 
 const DECISIONES = ['Aprobado', 'Corrección', 'Aprobado (Automático)', 'Rechazado', 'Retrasado']
@@ -50,6 +53,14 @@ export function JefeDashboard() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [ticketDictamen, setTicketDictamen] = useState<TicketEstadoReal | null>(null)
+  const [ticketCambioUrgente, setTicketCambioUrgente] = useState<TicketEstadoReal | null>(null)
+  const areasQueDirige = useAreasQueDirige()
+  const { cambios } = useCambiosUrgentes()
+  // Estado guardado de los cambios urgentes de un ticket; uno que no está en la lista cuenta como en curso.
+  const cambiosDelTicket = (origenId: number | null) =>
+    cambios
+      .filter((c) => c.ticketOrigenId === origenId)
+      .map((c) => ({ estado_registrado: tickets.find((t) => t.ticket_id === c.id)?.estado_registrado ?? null }))
   // Parte 37: el Jefe de Área ya no ve quién diseña el ticket, ni la columna ni el filtro.
   const muestraAsignacion = puedeVerAsignacion(perfil?.roles ?? [])
 
@@ -221,7 +232,7 @@ export function JefeDashboard() {
                     <span className="font-semibold text-azul-noche">
                       {ticket.codigo} · {ticket.tipo_solicitud}
                     </span>
-                    {ticket.es_excepcional && <BadgeExcepcional />}
+                    {ticket.es_excepcional && <BadgeExcepcional ticketId={ticket.ticket_id} />}
                   </div>
                   {tieneJefaturas && <p className="text-xs text-tinta-suave">{ticket.area}</p>}
                   {muestraAsignacion && <p className="text-xs text-tinta-suave">{ticket.disenador ?? 'Sin diseñador'}</p>}
@@ -361,6 +372,7 @@ export function JefeDashboard() {
                   {muestraAsignacion && <th className="px-4 py-2">Diseñador</th>}
                   <th className="px-4 py-2">Estado</th>
                   <th className="px-4 py-2">Fecha límite</th>
+                  <th className="px-4 py-2"><span className="sr-only">Acciones</span></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-azul-niebla/60">
@@ -372,7 +384,7 @@ export function JefeDashboard() {
                       </Link>
                       {ticket.es_excepcional && (
                         <span className="ml-1.5">
-                          <BadgeExcepcional />
+                          <BadgeExcepcional ticketId={ticket.ticket_id} />
                         </span>
                       )}
                     </td>
@@ -390,6 +402,13 @@ export function JefeDashboard() {
                       <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="jefe" />
                     </td>
                     <td className="px-4 py-2">{formatFecha(ticket.fecha_limite)}</td>
+                    <td className="whitespace-nowrap px-4 py-2 text-right">
+                      {puedePedirCambioUrgente(ticket, areasQueDirige, cambiosDelTicket(ticket.ticket_id)) && (
+                        <Button variante="secundario" className="px-2.5 py-1 text-xs" onClick={() => setTicketCambioUrgente(ticket)}>
+                          <Zap size={12} /> Cambio urgente
+                        </Button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -397,6 +416,8 @@ export function JefeDashboard() {
           </div>
         )}
       </div>
+
+      <CambioUrgenteModal ticket={ticketCambioUrgente} onCerrar={() => setTicketCambioUrgente(null)} />
 
       {ticketDictamen && (
         <DictamenModal

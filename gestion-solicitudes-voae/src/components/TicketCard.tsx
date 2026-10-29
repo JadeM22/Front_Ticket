@@ -45,7 +45,7 @@ export function TicketCard({ ticket, perspectiva, accion }: TicketCardProps) {
           <span className="whitespace-nowrap rounded-md bg-azul-niebla px-2 py-0.5 font-mono text-xs font-semibold text-azul-institucional">
             {ticket.codigo}
           </span>
-          {ticket.es_excepcional && <BadgeExcepcional />}
+          {ticket.es_excepcional && <BadgeExcepcional ticketId={ticket.ticket_id} />}
         </div>
         <EstadoChip estado={ticket.estado_real ?? ''} perspectiva={perspectiva} />
       </div>

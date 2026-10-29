@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Plus } from 'lucide-react'
+import { Plus, Zap } from 'lucide-react'
 import { obtenerTicketCompleto, tomarTicket } from '../data/tickets'
 import { crearDictamen } from '../data/dictamenes'
 import { INTENTOS_MAXIMOS_IA, revisarEnvioIA } from '../data/afichesIA'
@@ -11,6 +11,9 @@ import { mensajeError } from '../lib/errors'
 import { formatFecha, formatFechaHora } from '../lib/date'
 import { TagAsignado } from '../components/tickets/Etiquetas'
 import { BadgeExcepcional } from '../components/BadgeExcepcional'
+import { CambioUrgenteModal } from '../components/CambioUrgenteModal'
+import { useAreasQueDirige, useCambiosUrgentes, useCambiosUrgentesDe } from '../hooks/useCambiosUrgentes'
+import { puedePedirCambioUrgente } from '../lib/cambioUrgente'
 import { puedeVerAsignacion } from '../lib/permisos'
 import { textoRespuestaExcepcional } from '../lib/excepcional'
 import { etiquetarCambioEstado, perspectivaDetalle } from '../lib/estados'
@@ -58,6 +61,7 @@ export function TicketDetailPage() {
   const [modalRevision, setModalRevision] = useState(false)
   const [modalValidacion, setModalValidacion] = useState(false)
   const [tomando, setTomando] = useState(false)
+  const [modalCambioUrgente, setModalCambioUrgente] = useState(false)
 
   // El historial de cambios es solo para Analista y Administrador; el resto ve la barra de progreso.
   const puedeVerHistorial = tieneRol('Analista') || tieneRol('Administrador')
@@ -77,6 +81,12 @@ export function TicketDetailPage() {
     // El cronómetro del dictamen se detiene fuera de horario hábil y lo calcula la base.
     refetchInterval: 60_000,
   })
+
+  // Cambio urgente (Parte 54): este ticket puede ser uno (banner con el original) o tener varios
+  // ligados (sección "Cambios urgentes" y regla de "no hay otro en curso").
+  const areasQueDirige = useAreasQueDirige()
+  const { cambioDe } = useCambiosUrgentes()
+  const { data: cambiosUrgentes = [] } = useCambiosUrgentesDe(ticketId, Number.isFinite(ticketId) && puedeVerGestion)
 
   function invalidar() {
     void queryClient.invalidateQueries({ queryKey: clave })
@@ -223,6 +233,8 @@ export function TicketDetailPage() {
     ticket.adjuntos.length < MAXIMO_ADJUNTOS_POR_TICKET
   const etiquetas = etiquetasGenerales(tipoSolicitud?.etiquetas_generales)
   const perspectiva = perspectivaDetalle(tieneRol, esDiseno)
+  const puedePedirCambio = puedePedirCambioUrgente(estadoReal, areasQueDirige, cambiosUrgentes)
+  const cambioUrgente = ticket.base.ticket_origen_id != null ? cambioDe(estadoReal.ticket_id) : undefined
 
   const eventosTimeline = ticket.log.flatMap((entrada) => {
     let descripcion = etiquetarCambioEstado(entrada.descripcion_cambio, perspectiva)
@@ -238,12 +250,33 @@ export function TicketDetailPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      {ticket.base.ticket_origen_id != null && (
+        <div className="flex gap-3 rounded-xl border-l-4 border-ambar bg-ambar-bruma p-4 text-sm text-tinta">
+          <Zap size={18} className="mt-0.5 flex-none fill-current text-ambar" aria-hidden />
+          <div className="min-w-0">
+            <p className="font-semibold text-ambar">
+              Cambio urgente de{' '}
+              {cambioUrgente?.codigoOrigen ? (
+                <Link to={`/tickets/${ticket.base.ticket_origen_id}`} className="font-mono underline hover:no-underline">
+                  {cambioUrgente.codigoOrigen}
+                </Link>
+              ) : (
+                'otro ticket'
+              )}
+            </p>
+            {puedeVerGestion && ticket.base.motivo_cambio_urgente && (
+              <p className="mt-1 whitespace-pre-line break-words">{ticket.base.motivo_cambio_urgente}</p>
+            )}
+          </div>
+        </div>
+      )}
+
       <Card>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <p className="whitespace-nowrap font-mono text-sm text-tinta-suave">{estadoReal.codigo}</p>
-              {estadoReal.es_excepcional && <BadgeExcepcional />}
+              {estadoReal.es_excepcional && <BadgeExcepcional ticketId={estadoReal.ticket_id} />}
             </div>
             <h1 className="text-xl font-bold text-azul-noche">{estadoReal.titulo || estadoReal.tipo_solicitud}</h1>
             <p className="text-sm text-tinta-suave">
@@ -348,6 +381,11 @@ export function TicketDetailPage() {
               Dictaminar
             </Button>
           )}
+          {puedePedirCambio && (
+            <Button variante="secundario" onClick={() => setModalCambioUrgente(true)}>
+              <Zap size={14} /> Pedir cambio urgente
+            </Button>
+          )}
         </div>
       </Card>
 
@@ -427,6 +465,29 @@ export function TicketDetailPage() {
         </Card>
       )}
 
+      {puedeVerGestion && cambiosUrgentes.length > 0 && (
+        <Card>
+          <h2 className="mb-3 font-semibold text-azul-noche">Cambios urgentes</h2>
+          <ul className="space-y-2 text-sm">
+            {cambiosUrgentes.map((cambio) => (
+              <li
+                key={cambio.ticket_id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-azul-niebla p-3"
+              >
+                <Link
+                  to={`/tickets/${cambio.ticket_id}`}
+                  className="font-mono font-semibold text-azul-institucional hover:underline"
+                >
+                  {cambio.codigo}
+                </Link>
+                <span className="text-xs text-tinta-suave">{formatFechaHora(cambio.fecha_registro)}</span>
+                <EstadoChip estado={cambio.estado_real ?? ''} perspectiva={perspectiva} />
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
       {puedeVerGestion && ticket.dictamenes.length > 0 && (
         <Card>
           <h2 className="mb-3 font-semibold text-azul-noche">Dictámenes</h2>
@@ -503,6 +564,8 @@ export function TicketDetailPage() {
         onConfirmar={manejarValidacion}
         titulo={`Validar ${estadoReal.codigo ?? ''}`}
       />
+
+      <CambioUrgenteModal ticket={modalCambioUrgente ? estadoReal : null} onCerrar={() => setModalCambioUrgente(false)} />
 
       <DictamenModal
         abierto={modalDictamen}

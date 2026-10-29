@@ -14,13 +14,25 @@ interface ResponderExcepcionalModalProps {
   disenadores: DisenadorAsignable[]
   onCerrar: () => void
   onRespondido: () => void
+  /**
+   * Cambio urgente: quien diseñó el ticket original, si sigue activo. Se preselecciona; el modal debe
+   * montarse de nuevo (`key`) por cada ticket para tomarlo.
+   */
+  disenadorSugeridoId?: number | null
 }
 
 /** Solo el Asignador acepta o rechaza una solicitud excepcional pendiente (`fnSolicitudExcepcionalResponderEscalar`). */
-export function ResponderExcepcionalModal({ ticket, disenadores, onCerrar, onRespondido }: ResponderExcepcionalModalProps) {
+export function ResponderExcepcionalModal({
+  ticket,
+  disenadores,
+  onCerrar,
+  onRespondido,
+  disenadorSugeridoId,
+}: ResponderExcepcionalModalProps) {
   const { perfil } = useAuth()
+  const sugerido: number | 'yo' = disenadorSugeridoId == null || disenadorSugeridoId === perfil?.id ? 'yo' : disenadorSugeridoId
   const [modo, setModo] = useState<'aceptar' | 'rechazar'>('aceptar')
-  const [disenadorId, setDisenadorId] = useState<number | 'yo'>('yo')
+  const [disenadorId, setDisenadorId] = useState<number | 'yo'>(sugerido)
   const [motivo, setMotivo] = useState('')
   const [enviando, setEnviando] = useState(false)
 
@@ -82,7 +94,10 @@ export function ResponderExcepcionalModal({ ticket, disenadores, onCerrar, onRes
         </div>
 
         {modo === 'aceptar' ? (
-          <Campo etiqueta="Asignar a">
+          <Campo
+            etiqueta="Asignar a"
+            ayuda={disenadorSugeridoId != null ? 'Sugerido: quien diseñó el ticket original.' : undefined}
+          >
             <select
               className={CLASE_INPUT}
               value={disenadorId}

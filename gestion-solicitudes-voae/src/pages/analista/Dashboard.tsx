@@ -759,7 +759,7 @@ export function AnalistaDashboard() {
                             </Link>
                             {fila.es_excepcional && (
                               <span className="ml-1.5 font-sans">
-                                <BadgeExcepcional />
+                                <BadgeExcepcional ticketId={fila.ticket_id} />
                               </span>
                             )}
                           </td>

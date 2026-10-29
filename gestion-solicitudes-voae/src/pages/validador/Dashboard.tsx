@@ -125,7 +125,7 @@ function Seccion({
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <p className="font-mono text-sm text-tinta-suave">{ticket.codigo}</p>
-                    {ticket.es_excepcional && <BadgeExcepcional />}
+                    {ticket.es_excepcional && <BadgeExcepcional ticketId={ticket.ticket_id} />}
                   </div>
                   <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="admin" />
                 </div>
