@@ -21,6 +21,7 @@ import {
 } from 'recharts'
 import { obtenerAlcancePorTicket, obtenerEstadisticas, type FilaEstadistica } from '../../data/estadisticas'
 import { TEXTO_COBERTURA_NACIONAL } from '../../lib/campus'
+import { etiquetaEstado } from '../../lib/estados'
 import { listarAreas, listarTiposSolicitud } from '../../data/catalogos'
 import { formatFecha, hoyTegucigalpaISO, mesTegucigalpa } from '../../lib/date'
 import { coincideCodigo, coincideTexto } from '../../lib/buscar'
@@ -39,7 +40,7 @@ const COLOR_POR_ESTADO: Record<string, string> = {
   Enviado: 'var(--color-azul-medio)',
   'En revisión': 'var(--color-indigo-suave)',
   'En proceso': 'var(--color-azul-institucional)',
-  Finalizado: 'var(--color-menta)',
+  Finalizado: 'var(--color-violeta)',
   Corrección: 'var(--color-ambar)',
   Aprobado: 'var(--color-menta-profundo)',
   'Aprobado (Automático)': 'var(--color-menta-profundo)',
@@ -235,7 +236,16 @@ export function AnalistaDashboard() {
       .map(([etiqueta, valor]) => ({ etiqueta, valor }))
       .sort((a, b) => b.valor - a.valor)
   }, [filasFiltradas, alcancePorTicket])
-  const datosPorEstado = useMemo(() => contarPor(filasFiltradas, (f) => f.estado_real), [filasFiltradas])
+  // Se cuenta por estado real (el color sale de ahí) y se muestra con la etiqueta de administración.
+  const datosPorEstado = useMemo(
+    () =>
+      contarPor(filasFiltradas, (f) => f.estado_real).map((d) => ({
+        ...d,
+        estado: d.etiqueta,
+        etiqueta: etiquetaEstado(d.etiqueta, 'admin'),
+      })),
+    [filasFiltradas],
+  )
 
   const cumplimientoPorTipo = useMemo(() => {
     const grupos = new Map<string, { aTiempo: number; tarde: number }>()
@@ -311,7 +321,7 @@ export function AnalistaDashboard() {
     const partes = [
       areaId ? `Área: ${areas.find((a) => a.id === areaId)?.nombre ?? areaId}` : null,
       tipoId ? `Tipo: ${tipos.find((t) => t.id === tipoId)?.nombre ?? tipoId}` : null,
-      estadoFiltro ? `Estado: ${estadoFiltro}` : null,
+      estadoFiltro ? `Estado: ${etiquetaEstado(estadoFiltro, 'admin')}` : null,
       disenadorFiltro ? `Diseñador: ${disenadorFiltro}` : null,
       alcanceFiltro ? `Alcance: ${alcanceFiltro}` : null,
       flujoFiltro ? `Flujo: ${ETIQUETA_FLUJO[flujoFiltro as Flujo] ?? flujoFiltro}` : null,
@@ -326,7 +336,7 @@ export function AnalistaDashboard() {
     { etiqueta: 'Flujo', valor: (f) => ETIQUETA_FLUJO[f.flujo as Flujo] ?? f.flujo },
     { etiqueta: 'Área', valor: (f) => f.area },
     { etiqueta: 'Alcance', valor: (f) => (alcancePorTicket?.get(f.ticket_id) ?? []).join(', ') || '—' },
-    { etiqueta: 'Estado', valor: (f) => f.estado_real },
+    { etiqueta: 'Estado', valor: (f) => etiquetaEstado(f.estado_real, 'admin') },
     { etiqueta: 'Diseñador', valor: (f) => f.disenador ?? '—' },
     { etiqueta: 'Registrado', valor: (f) => formatFecha(f.fecha_registro) },
     { etiqueta: 'Límite', valor: (f) => formatFecha(f.fecha_limite) },
@@ -474,7 +484,7 @@ export function AnalistaDashboard() {
             <option value="">Todos</option>
             {estadosDisponibles.map((e) => (
               <option key={e} value={e ?? ''}>
-                {e}
+                {etiquetaEstado(e, 'admin')}
               </option>
             ))}
           </select>
@@ -608,7 +618,7 @@ export function AnalistaDashboard() {
                   <Legend />
                   <Pie data={datosPorEstado} dataKey="valor" nameKey="etiqueta" innerRadius={60} outerRadius={90}>
                     {datosPorEstado.map((dato, indice) => (
-                      <Cell key={indice} fill={COLOR_POR_ESTADO[dato.etiqueta] ?? 'var(--color-tinta-suave)'} />
+                      <Cell key={indice} fill={COLOR_POR_ESTADO[dato.estado] ?? 'var(--color-tinta-suave)'} />
                     ))}
                   </Pie>
                 </PieChart>
@@ -757,7 +767,7 @@ export function AnalistaDashboard() {
                           </td>
                           <td className="px-3 py-2">{fila.area}</td>
                           <td className="px-3 py-2">
-                            <EstadoChip estado={fila.estado_real ?? ''} />
+                            <EstadoChip estado={fila.estado_real ?? ''} perspectiva="admin" />
                           </td>
                           <td className="px-3 py-2">{fila.disenador ?? '—'}</td>
                           <td className="px-3 py-2">{formatFecha(fila.fecha_registro)}</td>

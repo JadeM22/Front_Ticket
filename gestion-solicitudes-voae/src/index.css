@@ -21,6 +21,9 @@
   --color-coral-bruma: #fbe9e9;
   --color-indigo-suave: #5b63d3;
   --color-indigo-bruma: #eceeff;
+  /* Solo para "Finalizado" (esperando aprobación/dictamen), para no confundirlo con Aprobado. */
+  --color-violeta: #7e4bb5;
+  --color-violeta-bruma: #f3ecfb;
 }
 
 body {

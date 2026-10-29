@@ -4,6 +4,7 @@ import { ChevronDown, Filter, Search, X } from 'lucide-react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { useAuth } from '../../auth/useAuth'
 import { normalizar, soloCodigo } from '../../lib/buscar'
+import { etiquetaEstado } from '../../lib/estados'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { TicketBoleto } from '../../components/tickets/TicketBoleto'
@@ -39,11 +40,17 @@ export function EmpleadoSolicitudesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [texto])
 
-  const estados = useMemo(() => Array.from(new Set(tickets.map((t) => t.estado_real).filter(Boolean))), [tickets])
+  // El filtro usa las etiquetas que ve el solicitante: "En proceso" incluye En proceso y Corrección, y
+  // "Esperando aprobación" es Finalizado.
+  const etiquetaDe = (t: { estado_real: string | null }) => etiquetaEstado(t.estado_real, 'solicitante')
+  const estados = useMemo(
+    () => Array.from(new Set(tickets.map((t) => etiquetaEstado(t.estado_real, 'solicitante')).filter(Boolean))),
+    [tickets],
+  )
   const tipos = useMemo(() => Array.from(new Set(tickets.map((t) => t.tipo_solicitud).filter(Boolean))), [tickets])
 
   const filtradosPorEstadoYTipo = tickets.filter(
-    (t) => (!estado || t.estado_real === estado) && (!tipo || t.tipo_solicitud === tipo),
+    (t) => (!estado || etiquetaDe(t) === estado) && (!tipo || t.tipo_solicitud === tipo),
   )
 
   const filtrados = useMemo(() => {

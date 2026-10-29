@@ -177,7 +177,7 @@ export function AsignadorDashboard() {
                   <span>En cola desde {formatRelativo(ticket.fecha_registro)}</span>
                 </div>
                 <div className="flex-1">
-                  <TicketCard
+                  <TicketCard perspectiva="diseno"
                     ticket={ticket}
                     onClick={() => navigate(`/tickets/${ticket.ticket_id}`)}
                     accion={
@@ -297,7 +297,7 @@ function PestanaDisenador({
                 {ticketsColumna.length === 0 && <p className="text-xs text-tinta-suave">Sin tickets.</p>}
                 {ticketsColumna.map((ticket) => (
                   <div key={ticket.ticket_id}>
-                    <TicketCard ticket={ticket} onClick={() => onAbrir(ticket.ticket_id!)} />
+                    <TicketCard perspectiva="diseno" ticket={ticket} onClick={() => onAbrir(ticket.ticket_id!)} />
                     <select
                       className={`${CLASE_INPUT} mt-1 w-full text-xs`}
                       value=""
@@ -336,7 +336,7 @@ function PestanaDisenador({
             {historial.length === 0 ? (
               <p className="text-sm text-tinta-suave">Sin movimientos en este periodo.</p>
             ) : (
-              historial.map((ticket) => <TicketCard key={ticket.ticket_id} ticket={ticket} onClick={() => onAbrir(ticket.ticket_id!)} />)
+              historial.map((ticket) => <TicketCard perspectiva="diseno" key={ticket.ticket_id} ticket={ticket} onClick={() => onAbrir(ticket.ticket_id!)} />)
             )}
           </div>
         )}

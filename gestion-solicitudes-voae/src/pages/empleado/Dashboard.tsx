@@ -8,6 +8,7 @@ import { SkeletonLista } from '../../components/ui/Skeleton'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { TicketBoleto } from '../../components/tickets/TicketBoleto'
 import { EstadoChip } from '../../components/EstadoChip'
+import { etiquetaEstado } from '../../lib/estados'
 
 export function EmpleadoDashboard() {
   const { data: todos = [], isLoading } = useTicketsEstadoReal()
@@ -17,9 +18,12 @@ export function EmpleadoDashboard() {
   // Analista, Diseñador, Jefe o Administrador, así que aquí sí se filtra por autor.
   const tickets = todos.filter((t) => t.usuario_registro === perfil?.id)
 
-  const conteos = tickets.reduce<Record<string, number>>((acumulado, ticket) => {
+  // Se agrupa por lo que ve el solicitante: "En proceso" junta En proceso y Corrección.
+  const conteos = tickets.reduce<Record<string, { estado: string; total: number }>>((acumulado, ticket) => {
     const estado = ticket.estado_real ?? 'Sin estado'
-    acumulado[estado] = (acumulado[estado] ?? 0) + 1
+    const etiqueta = etiquetaEstado(estado, 'solicitante')
+    acumulado[etiqueta] ??= { estado, total: 0 }
+    acumulado[etiqueta].total++
     return acumulado
   }, {})
 
@@ -41,9 +45,9 @@ export function EmpleadoDashboard() {
         <SkeletonLista filas={2} />
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {Object.entries(conteos).map(([estado, total]) => (
-            <Card key={estado} className="flex flex-col gap-2">
-              <EstadoChip estado={estado} />
+          {Object.entries(conteos).map(([etiqueta, { estado, total }]) => (
+            <Card key={etiqueta} className="flex flex-col gap-2">
+              <EstadoChip estado={estado} perspectiva="solicitante" />
               <p className="font-mono text-2xl font-bold text-azul-noche">{total}</p>
             </Card>
           ))}

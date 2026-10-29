@@ -82,7 +82,8 @@ export function TicketBoleto({ ticket, onClick, mostrarDisenador }: TicketBoleto
           <p className="min-w-0 truncate font-semibold text-tinta" title={ticket.titulo ?? undefined}>
             {ticket.titulo}
           </p>
-          <EstadoChip estado={ticket.estado_real ?? ''} />
+          {/* El boleto solo vive en "Mis solicitudes": siempre se mira como solicitante. */}
+          <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="solicitante" />
         </div>
 
         {(muestraCorrecciones || (ticket.es_excepcional && ticket.excepcional_estado === 'PENDIENTE')) && (

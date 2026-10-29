@@ -8,18 +8,21 @@ import { formatFecha, formatFechaHora } from '../lib/date'
 import { esTicketLiberado } from '../lib/tableroDisenador'
 import { puedeVerAsignacion } from '../lib/permisos'
 import { useAuth } from '../auth/useAuth'
+import type { PerspectivaEstado } from '../lib/estados'
 import type { TicketEstadoReal } from '../types/domain'
 
 const CORRECCIONES_MAXIMAS = 5
 
 interface TicketCardProps {
   ticket: TicketEstadoReal
+  /** Quién mira: decide el texto del estado. */
+  perspectiva: PerspectivaEstado
   onClick?: () => void
   /** Pie de la tarjeta: botones como "Tomar" o el selector "Asignar a…", fuera del área clicable principal. */
   accion?: ReactNode
 }
 
-export function TicketCard({ ticket, onClick, accion }: TicketCardProps) {
+export function TicketCard({ ticket, perspectiva, onClick, accion }: TicketCardProps) {
   const { tieneRol, perfil } = useAuth()
   const correccionesUsadas = ticket.correcciones_usadas ?? 0
   const muestraCronometro =
@@ -42,7 +45,7 @@ export function TicketCard({ ticket, onClick, accion }: TicketCardProps) {
         <span className="whitespace-nowrap rounded-md bg-azul-niebla px-2 py-0.5 font-mono text-xs font-semibold text-azul-institucional">
           {ticket.codigo}
         </span>
-        <EstadoChip estado={ticket.estado_real ?? ''} />
+        <EstadoChip estado={ticket.estado_real ?? ''} perspectiva={perspectiva} />
       </div>
 
       {muestraInsignias && (

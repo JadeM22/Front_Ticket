@@ -12,6 +12,7 @@ import { formatFecha } from '../../lib/date'
 import { coincideCodigo, coincideTexto } from '../../lib/buscar'
 import { exportarCSV, exportarPDF, type ColumnaExportar } from '../../lib/exportar'
 import { puedeVerAsignacion } from '../../lib/permisos'
+import { etiquetaEstado } from '../../lib/estados'
 import { useAuth } from '../../auth/useAuth'
 import { useHorarioHabil } from '../../hooks/useHorarioHabil'
 import { Card } from '../../components/ui/Card'
@@ -107,8 +108,8 @@ export function JefeDashboard() {
       historialCompleto.filter((t) => {
         if (busqueda) {
           const campos = muestraAsignacion
-            ? [t.tipo_solicitud, t.disenador, t.solicitante, t.estado_real]
-            : [t.tipo_solicitud, t.solicitante, t.estado_real]
+            ? [t.tipo_solicitud, t.disenador, t.solicitante, etiquetaEstado(t.estado_real, 'jefe')]
+            : [t.tipo_solicitud, t.solicitante, etiquetaEstado(t.estado_real, 'jefe')]
           const coincide = coincideCodigo(t.codigo, busqueda) || campos.some((campo) => coincideTexto(campo, busqueda))
           if (!coincide) return false
         }
@@ -131,7 +132,7 @@ export function JefeDashboard() {
     ...(muestraAsignacion
       ? [{ etiqueta: 'Diseñador', valor: (t: TicketEstadoReal) => textoDisenador(t, muestraAsignacion) }]
       : []),
-    { etiqueta: 'Estado', valor: (t) => t.estado_real },
+    { etiqueta: 'Estado', valor: (t) => etiquetaEstado(t.estado_real, 'jefe') },
     { etiqueta: 'Registrado', valor: (t) => formatFecha(t.fecha_registro) },
     { etiqueta: 'Fecha límite', valor: (t) => formatFecha(t.fecha_limite) },
   ]
@@ -166,6 +167,8 @@ export function JefeDashboard() {
       await crearDictamen(ticketDictamen.ticket_id!, decision, comentario)
       toast.success(decision === 'APROBADO' ? 'Ticket aprobado.' : 'Se solicitó corrección.')
       void queryClient.invalidateQueries({ queryKey: ['tickets', 'estado-real'] })
+      // El detalle tiene su propia clave: después de una corrección puede cambiar la fecha límite (Parte 53).
+      void queryClient.invalidateQueries({ queryKey: ['ticket-detalle', ticketDictamen.ticket_id] })
       setTicketDictamen(null)
     } catch (error) {
       toast.error(await mensajeError(error, 'No se pudo registrar el dictamen.'))
@@ -268,7 +271,7 @@ export function JefeDashboard() {
               <option value="">Todas</option>
               {DECISIONES.map((d) => (
                 <option key={d} value={d}>
-                  {d}
+                  {etiquetaEstado(d, 'jefe')}
                 </option>
               ))}
             </select>
@@ -351,7 +354,7 @@ export function JefeDashboard() {
                     {tieneJefaturas && <td className="px-4 py-2">{ticket.area}</td>}
                     {muestraAsignacion && <td className="px-4 py-2">{textoDisenador(ticket, muestraAsignacion)}</td>}
                     <td className="px-4 py-2">
-                      <EstadoChip estado={ticket.estado_real ?? ''} />
+                      <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="jefe" />
                     </td>
                     <td className="px-4 py-2">{formatFecha(ticket.fecha_limite)}</td>
                   </tr>

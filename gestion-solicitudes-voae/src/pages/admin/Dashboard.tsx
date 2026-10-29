@@ -1,3 +1,4 @@
+import { etiquetaEstado } from '../../lib/estados'
 import { useMemo } from 'react'
 import { useTicketsEstadoReal } from '../../hooks/useTickets'
 import { Card } from '../../components/ui/Card'
@@ -18,7 +19,7 @@ function contarPor<T>(lista: T[], claveFn: (item: T) => string | null | undefine
 export function AdminDashboard() {
   const { data: tickets = [], isLoading } = useTicketsEstadoReal()
 
-  const porEstado = useMemo(() => contarPor(tickets, (t) => t.estado_real), [tickets])
+  const porEstado = useMemo(() => contarPor(tickets, (t) => etiquetaEstado(t.estado_real, 'admin')), [tickets])
   const porArea = useMemo(() => contarPor(tickets, (t) => t.area), [tickets])
   const porTipo = useMemo(() => contarPor(tickets, (t) => t.tipo_solicitud), [tickets])
 

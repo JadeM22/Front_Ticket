@@ -129,7 +129,7 @@ function Seccion({
                 {miniatura?.(ticket)}
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-mono text-sm text-tinta-suave">{ticket.codigo}</p>
-                  <EstadoChip estado={ticket.estado_real ?? ''} />
+                  <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="admin" />
                 </div>
                 <p className="truncate font-semibold text-tinta" title={ticket.titulo ?? undefined}>
                   {ticket.titulo || ticket.tipo_solicitud}

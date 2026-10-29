@@ -136,7 +136,7 @@ export function DisenadorDashboard() {
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {sinAsignar.map((ticket) => (
-                <TicketCard
+                <TicketCard perspectiva="diseno"
                   key={ticket.ticket_id}
                   ticket={ticket}
                   onClick={() => navigate(`/tickets/${ticket.ticket_id}`)}
@@ -191,7 +191,7 @@ export function DisenadorDashboard() {
                   <div className="space-y-2">
                     {ticketsColumna.length === 0 && <p className="text-xs text-tinta-suave">Sin tickets.</p>}
                     {ticketsColumna.map((ticket) => (
-                      <TicketCard key={ticket.ticket_id} ticket={ticket} onClick={() => navigate(`/tickets/${ticket.ticket_id}`)} />
+                      <TicketCard perspectiva="diseno" key={ticket.ticket_id} ticket={ticket} onClick={() => navigate(`/tickets/${ticket.ticket_id}`)} />
                     ))}
                   </div>
                 </div>
@@ -218,7 +218,7 @@ export function DisenadorDashboard() {
                   <p className="text-sm text-tinta-suave">Sin tickets en el historial.</p>
                 ) : (
                   historial.map((ticket) => (
-                    <TicketCard key={ticket.ticket_id} ticket={ticket} onClick={() => navigate(`/tickets/${ticket.ticket_id}`)} />
+                    <TicketCard perspectiva="diseno" key={ticket.ticket_id} ticket={ticket} onClick={() => navigate(`/tickets/${ticket.ticket_id}`)} />
                   ))
                 )}
               </div>

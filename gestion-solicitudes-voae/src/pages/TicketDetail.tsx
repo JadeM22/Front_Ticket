@@ -12,6 +12,7 @@ import { formatFecha, formatFechaHora } from '../lib/date'
 import { TagAsignado, TagExcepcional } from '../components/tickets/Etiquetas'
 import { puedeVerAsignacion } from '../lib/permisos'
 import { textoRespuestaExcepcional } from '../lib/excepcional'
+import { etiquetarCambioEstado, perspectivaDetalle } from '../lib/estados'
 import { useAuth } from '../auth/useAuth'
 import { useHorarioHabil } from '../hooks/useHorarioHabil'
 import { useNombresUsuarios } from '../hooks/useNombresUsuarios'
@@ -220,9 +221,10 @@ export function TicketDetailPage() {
     estadoReal.estado_real !== 'Aprobado' &&
     ticket.adjuntos.length < MAXIMO_ADJUNTOS_POR_TICKET
   const etiquetas = etiquetasGenerales(tipoSolicitud?.etiquetas_generales)
+  const perspectiva = perspectivaDetalle(tieneRol, esDiseno)
 
   const eventosTimeline = ticket.log.flatMap((entrada) => {
-    let descripcion = entrada.descripcion_cambio
+    let descripcion = etiquetarCambioEstado(entrada.descripcion_cambio, perspectiva)
     if (!muestraAsignacion) {
       const partes = descripcion.split('; ').filter((parte) => !parte.startsWith('Diseñador: '))
       if (partes.length === 0) return []
@@ -246,7 +248,7 @@ export function TicketDetailPage() {
             </p>
           </div>
           <div className="flex flex-col items-end gap-1.5">
-            <EstadoChip estado={estadoReal.estado_real ?? ''} />
+            <EstadoChip estado={estadoReal.estado_real ?? ''} perspectiva={perspectiva} />
             <div className="flex flex-wrap justify-end gap-1.5">
               {estadoReal.es_excepcional && <TagExcepcional />}
               {muestraAsignacion && estadoReal.asignado_por_asignador && (
