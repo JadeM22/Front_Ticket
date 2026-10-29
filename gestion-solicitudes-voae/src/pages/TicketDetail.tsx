@@ -9,7 +9,8 @@ import { INTENTOS_MAXIMOS_IA, revisarEnvioIA } from '../data/afichesIA'
 import { registrarDecisionValidacion } from '../data/validacion'
 import { mensajeError } from '../lib/errors'
 import { formatFecha, formatFechaHora } from '../lib/date'
-import { TagAsignado, TagExcepcional } from '../components/tickets/Etiquetas'
+import { TagAsignado } from '../components/tickets/Etiquetas'
+import { BadgeExcepcional } from '../components/BadgeExcepcional'
 import { puedeVerAsignacion } from '../lib/permisos'
 import { textoRespuestaExcepcional } from '../lib/excepcional'
 import { etiquetarCambioEstado, perspectivaDetalle } from '../lib/estados'
@@ -240,7 +241,10 @@ export function TicketDetailPage() {
       <Card>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="whitespace-nowrap font-mono text-sm text-tinta-suave">{estadoReal.codigo}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="whitespace-nowrap font-mono text-sm text-tinta-suave">{estadoReal.codigo}</p>
+              {estadoReal.es_excepcional && <BadgeExcepcional />}
+            </div>
             <h1 className="text-xl font-bold text-azul-noche">{estadoReal.titulo || estadoReal.tipo_solicitud}</h1>
             <p className="text-sm text-tinta-suave">
               {estadoReal.titulo && <>{estadoReal.tipo_solicitud} · </>}
@@ -249,12 +253,9 @@ export function TicketDetailPage() {
           </div>
           <div className="flex flex-col items-end gap-1.5">
             <EstadoChip estado={estadoReal.estado_real ?? ''} perspectiva={perspectiva} />
-            <div className="flex flex-wrap justify-end gap-1.5">
-              {estadoReal.es_excepcional && <TagExcepcional />}
-              {muestraAsignacion && estadoReal.asignado_por_asignador && (
-                <TagAsignado por={estadoReal.asignado_por_nombre} fecha={estadoReal.fecha_asignacion} />
-              )}
-            </div>
+            {muestraAsignacion && estadoReal.asignado_por_asignador && (
+              <TagAsignado por={estadoReal.asignado_por_nombre} fecha={estadoReal.fecha_asignacion} />
+            )}
           </div>
         </div>
 

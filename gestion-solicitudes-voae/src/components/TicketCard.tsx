@@ -2,7 +2,8 @@ import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Calendar, Clock, PartyPopper, User } from 'lucide-react'
 import { EstadoChip } from './EstadoChip'
-import { TagAsignado, TagExcepcional, TagLiberado } from './tickets/Etiquetas'
+import { TagAsignado, TagLiberado } from './tickets/Etiquetas'
+import { BadgeExcepcional } from './BadgeExcepcional'
 import { CronometroDictamen } from './ui/CronometroDictamen'
 import { formatFecha, formatFechaHora } from '../lib/date'
 import { esTicketLiberado } from '../lib/tableroDisenador'
@@ -29,8 +30,7 @@ export function TicketCard({ ticket, perspectiva, onClick, accion }: TicketCardP
     (tieneRol('Jefe de Área') || tieneRol('Diseñador')) && ticket.minutos_habiles_restantes_dictamen != null
   const liberado = esTicketLiberado(ticket)
   const muestraAsignacion = puedeVerAsignacion(perfil?.roles ?? [])
-  const muestraInsignias =
-    ticket.es_excepcional || (muestraAsignacion && ticket.asignado_por_asignador) || correccionesUsadas > 0 || liberado
+  const muestraInsignias = (muestraAsignacion && ticket.asignado_por_asignador) || correccionesUsadas > 0 || liberado
 
   return (
     <article
@@ -42,15 +42,17 @@ export function TicketCard({ ticket, perspectiva, onClick, accion }: TicketCardP
       className="flex h-full flex-col rounded-xl bg-white p-4 shadow-sm transition-shadow duration-150 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul-institucional"
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="whitespace-nowrap rounded-md bg-azul-niebla px-2 py-0.5 font-mono text-xs font-semibold text-azul-institucional">
-          {ticket.codigo}
-        </span>
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <span className="whitespace-nowrap rounded-md bg-azul-niebla px-2 py-0.5 font-mono text-xs font-semibold text-azul-institucional">
+            {ticket.codigo}
+          </span>
+          {ticket.es_excepcional && <BadgeExcepcional />}
+        </div>
         <EstadoChip estado={ticket.estado_real ?? ''} perspectiva={perspectiva} />
       </div>
 
       {muestraInsignias && (
         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          {ticket.es_excepcional && <TagExcepcional />}
           {muestraAsignacion && ticket.asignado_por_asignador && (
             <TagAsignado por={ticket.asignado_por_nombre} fecha={ticket.fecha_asignacion} />
           )}

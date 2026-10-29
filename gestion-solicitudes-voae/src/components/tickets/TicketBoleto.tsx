@@ -1,7 +1,8 @@
 import type { LucideIcon } from 'lucide-react'
 import { Building2, CalendarClock, CalendarDays, Layers, PartyPopper, User } from 'lucide-react'
 import { EstadoChip } from '../EstadoChip'
-import { TagAsignado, TagExcepcional } from './Etiquetas'
+import { TagAsignado } from './Etiquetas'
+import { BadgeExcepcional } from '../BadgeExcepcional'
 import { CronometroDictamen } from '../ui/CronometroDictamen'
 import { formatFecha, formatFechaHora } from '../../lib/date'
 import { puedeVerAsignacion } from '../../lib/permisos'
@@ -48,7 +49,7 @@ export function TicketBoleto({ ticket, onClick, mostrarDisenador }: TicketBoleto
         </div>
         {(ticket.es_excepcional || (muestraAsignacion && ticket.asignado_por_asignador)) && (
           <div className="flex flex-wrap gap-1.5">
-            {ticket.es_excepcional && <TagExcepcional compacto />}
+            {ticket.es_excepcional && <BadgeExcepcional />}
             {muestraAsignacion && ticket.asignado_por_asignador && (
               <TagAsignado por={ticket.asignado_por_nombre} fecha={ticket.fecha_asignacion} />
             )}

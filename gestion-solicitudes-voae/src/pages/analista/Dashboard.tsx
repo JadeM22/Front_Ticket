@@ -33,6 +33,7 @@ import { Button } from '../../components/ui/Button'
 import { CLASE_INPUT } from '../../components/ui/Campo'
 import { FechaInput } from '../../components/ui/FechaInput'
 import { EstadoChip } from '../../components/EstadoChip'
+import { BadgeExcepcional } from '../../components/BadgeExcepcional'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 
@@ -756,6 +757,11 @@ export function AnalistaDashboard() {
                             <Link to={`/tickets/${fila.ticket_id}`} className="text-azul-institucional hover:underline">
                               {fila.codigo}
                             </Link>
+                            {fila.es_excepcional && (
+                              <span className="ml-1.5 font-sans">
+                                <BadgeExcepcional />
+                              </span>
+                            )}
                           </td>
                           <td className="px-3 py-2">
                             {fila.tipo_solicitud}

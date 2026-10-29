@@ -22,6 +22,7 @@ import { FechaInput } from '../../components/ui/FechaInput'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { EstadoChip } from '../../components/EstadoChip'
+import { BadgeExcepcional } from '../../components/BadgeExcepcional'
 import { CronometroDictamen } from '../../components/ui/CronometroDictamen'
 import { DictamenModal } from '../../components/DictamenModal'
 import { ETIQUETA_FLUJO, TAG_FLUJO, type DecisionJefe, type Flujo, type TicketEstadoReal } from '../../types/domain'
@@ -208,9 +209,12 @@ export function JefeDashboard() {
             return (
               <Card key={ticket.ticket_id} className="space-y-3">
                 <div>
-                  <Link to={`/tickets/${ticket.ticket_id}`} className="font-semibold text-azul-noche hover:underline">
-                    {ticket.codigo} · {ticket.tipo_solicitud}
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Link to={`/tickets/${ticket.ticket_id}`} className="font-semibold text-azul-noche hover:underline">
+                      {ticket.codigo} · {ticket.tipo_solicitud}
+                    </Link>
+                    {ticket.es_excepcional && <BadgeExcepcional />}
+                  </div>
                   {tieneJefaturas && <p className="text-xs text-tinta-suave">{ticket.area}</p>}
                   {muestraAsignacion && <p className="text-xs text-tinta-suave">{ticket.disenador ?? 'Sin diseñador'}</p>}
                   <p className="text-xs text-tinta-suave">
@@ -342,6 +346,11 @@ export function JefeDashboard() {
                       <Link to={`/tickets/${ticket.ticket_id}`} className="font-mono text-azul-institucional hover:underline">
                         {ticket.codigo}
                       </Link>
+                      {ticket.es_excepcional && (
+                        <span className="ml-1.5">
+                          <BadgeExcepcional />
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-2">
                       {ticket.tipo_solicitud}

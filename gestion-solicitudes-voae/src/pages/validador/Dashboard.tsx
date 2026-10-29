@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button'
 import { SkeletonLista } from '../../components/ui/Skeleton'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { EstadoChip } from '../../components/EstadoChip'
+import { BadgeExcepcional } from '../../components/BadgeExcepcional'
 import { MiniaturaAfiche } from '../../components/afichesIA/HistorialEnviosIA'
 import { afichesPorRevisar, validacionesPendientes } from '../../lib/bandejaValidador'
 import type { TicketEstadoReal } from '../../types/domain'
@@ -128,7 +129,10 @@ function Seccion({
               >
                 {miniatura?.(ticket)}
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-mono text-sm text-tinta-suave">{ticket.codigo}</p>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="font-mono text-sm text-tinta-suave">{ticket.codigo}</p>
+                    {ticket.es_excepcional && <BadgeExcepcional />}
+                  </div>
                   <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="admin" />
                 </div>
                 <p className="truncate font-semibold text-tinta" title={ticket.titulo ?? undefined}>

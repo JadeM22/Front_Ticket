@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Zap } from 'lucide-react'
 import { Button } from './ui/Button'
+import { BadgeExcepcional } from './BadgeExcepcional'
 import { formatFecha } from '../lib/date'
 import type { TicketEstadoReal } from '../types/domain'
 
@@ -22,13 +22,14 @@ function fechaRechazoAutomatico(fechaEvento: string | null): string {
 export function ExcepcionalPendienteCard({ ticket, puedeResponder, onDictaminar }: ExcepcionalPendienteCardProps) {
   return (
     <div className="rounded-lg border-2 border-ambar bg-ambar-bruma/40 p-3">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center gap-1.5">
         <Link
           to={`/tickets/${ticket.ticket_id}`}
-          className="flex items-center gap-1.5 whitespace-nowrap font-mono text-xs font-semibold text-ambar"
+          className="whitespace-nowrap font-mono text-xs font-semibold text-ambar"
         >
-          <Zap size={12} /> {ticket.codigo}
+          {ticket.codigo}
         </Link>
+        <BadgeExcepcional />
       </div>
       <p className="text-sm font-semibold text-tinta">{ticket.tipo_solicitud}</p>
       <p className="text-xs text-tinta-suave">{ticket.area}</p>

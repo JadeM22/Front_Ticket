@@ -7,6 +7,7 @@ import { formatFecha } from '../../lib/date'
 import { Card } from '../../components/ui/Card'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { EstadoChip } from '../../components/EstadoChip'
+import { BadgeExcepcional } from '../../components/BadgeExcepcional'
 import { textoRespuestaExcepcional } from '../../lib/excepcional'
 
 export function SolicitudExcepcionalPage() {
@@ -41,12 +42,15 @@ export function SolicitudExcepcionalPage() {
             {excepcionales.map((ticket) => (
               <Card key={ticket.ticket_id} className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <Link
-                    to={`/tickets/${ticket.ticket_id}`}
-                    className="whitespace-nowrap font-mono text-sm font-semibold text-azul-institucional hover:underline"
-                  >
-                    {ticket.codigo}
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Link
+                      to={`/tickets/${ticket.ticket_id}`}
+                      className="whitespace-nowrap font-mono text-sm font-semibold text-azul-institucional hover:underline"
+                    >
+                      {ticket.codigo}
+                    </Link>
+                    <BadgeExcepcional />
+                  </div>
                   <p className="text-sm text-tinta">{ticket.tipo_solicitud}</p>
                   <p className="text-xs text-tinta-suave">Evento: {formatFecha(ticket.fecha_evento)}</p>
                 </div>

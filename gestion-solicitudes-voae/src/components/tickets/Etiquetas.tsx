@@ -1,18 +1,5 @@
-import { Undo2, UserCheck, Zap } from 'lucide-react'
+import { Undo2, UserCheck } from 'lucide-react'
 import { formatFechaHora } from '../../lib/date'
-
-interface TagExcepcionalProps {
-  /** Versión reducida (sin el texto "Excepcional" en algunos contextos muy angostos). */
-  compacto?: boolean
-}
-
-export function TagExcepcional({ compacto = false }: TagExcepcionalProps) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-ambar-bruma px-2 py-0.5 text-xs font-semibold text-ambar">
-      <Zap size={12} /> {!compacto && 'Excepcional'}
-    </span>
-  )
-}
 
 interface TagAsignadoProps {
   por?: string | null
