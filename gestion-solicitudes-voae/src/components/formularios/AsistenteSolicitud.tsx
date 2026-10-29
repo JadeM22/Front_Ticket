@@ -43,6 +43,7 @@ import { useAuth } from '../../auth/useAuth'
 import { useHorarioHabil } from '../../hooks/useHorarioHabil'
 import { DetalleFormularioVista } from './DetalleFormularioVista'
 import { FormularioDinamico } from './FormularioDinamico'
+import { StepperAsistente } from './StepperAsistente'
 import { GeneralidadesCampos } from './Generalidades'
 import { AvisoEnvioModal } from './AvisoEnvioModal'
 import { MultiFileDrop } from '../ui/MultiFileDrop'
@@ -119,6 +120,8 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
   const [progreso, setProgreso] = useState<ProgresoAdjunto[]>([])
   const [solicitudCreada, setSolicitudCreada] = useState(false)
   const [modalAviso, setModalAviso] = useState(false)
+  // Tipo nuevo elegido después de haber llenado algo: espera confirmación porque se pierden las respuestas.
+  const [tipoPendiente, setTipoPendiente] = useState<TipoSolicitud | null>(null)
 
   // Elegir un tipo sin llenar nada no cuenta como cambio; una vez creada la solicitud ya no hay nada que perder.
   const detalleModificado =
@@ -171,7 +174,51 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
     )
   }
 
-  async function elegirTipo(tipo: TipoSolicitud) {
+  // Lo que falta en cada paso, para marcarlo en el stepper y para que "Enviar" lleve al primero con errores.
+  const errorFormulario = tipoSeleccionado ? validarSolicitud(generalidades, campos, respuestas, etiquetas) : null
+  const errorAfiche = esIA
+    ? afiche.archivo
+      ? validarArchivoAfiche(afiche.archivo)
+      : 'Sube el afiche que quieres que se revise.'
+    : null
+
+  /** Volver a un tipo ya elegido no borra nada; cambiarlo sí, y por eso se confirma antes. */
+  function elegirTipo(tipo: TipoSolicitud) {
+    if (tipoSeleccionado?.id === tipo.id) {
+      setPaso(2)
+      return
+    }
+    if (tipoSeleccionado && detalleModificado) {
+      setTipoPendiente(tipo)
+      return
+    }
+    void cargarTipo(tipo)
+  }
+
+  /** El stepper deja ir a cualquier paso; al salir del formulario con faltantes, se resaltan. */
+  function irAPaso(destino: number) {
+    if (destino > 1 && !tipoSeleccionado) return
+    if (paso === 2 && destino !== 2 && errorFormulario) setMostrarErrores(true)
+    setPaso(destino)
+  }
+
+  function enviarConValidacion() {
+    if (errorFormulario) {
+      setMostrarErrores(true)
+      setPaso(2)
+      toast.error(errorFormulario)
+      return
+    }
+    if (errorAfiche) {
+      setPaso(3)
+      toast.error(errorAfiche)
+      return
+    }
+    if (tipoSeleccionado?.aviso) setModalAviso(true)
+    else void enviarSolicitud()
+  }
+
+  async function cargarTipo(tipo: TipoSolicitud) {
     setCargandoTipoId(tipo.id)
     let camposTipo: DefinicionCampo[]
     try {
@@ -209,22 +256,18 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
 
   function continuarAPaso3() {
     if (!tipoSeleccionado) return
-    const error = validarSolicitud(generalidades, campos, respuestas, etiquetas)
-    if (error) {
+    if (errorFormulario) {
       setMostrarErrores(true)
-      toast.error(error)
+      toast.error(errorFormulario)
       return
     }
     setPaso(3)
   }
 
   function continuarAPaso4() {
-    if (esIA) {
-      const error = afiche.archivo ? validarArchivoAfiche(afiche.archivo) : 'Sube el afiche que quieres que se revise.'
-      if (error) {
-        toast.error(error)
-        return
-      }
+    if (errorAfiche) {
+      toast.error(errorAfiche)
+      return
     }
     setPaso(4)
   }
@@ -338,16 +381,24 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="text-xl font-bold text-azul-noche">{excepcional ? 'Solicitud excepcional' : 'Nueva solicitud'}</h1>
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-tinta-suave">
-          {['Tipo', 'Formulario', esIA ? 'Afiche' : 'Adjuntos', 'Revisar y enviar'].map((etiqueta, indice) => (
-            <span
-              key={etiqueta}
-              className={`rounded-full px-2.5 py-1 ${paso === indice + 1 ? 'bg-azul-institucional text-white' : 'bg-azul-niebla'}`}
-            >
-              {indice + 1}. {etiqueta}
-            </span>
-          ))}
-        </div>
+        <StepperAsistente
+          actual={paso}
+          onIr={irAPaso}
+          pasos={[
+            { etiqueta: 'Tipo', habilitado: !enviando && !solicitudCreada, incompleto: false },
+            {
+              etiqueta: 'Formulario',
+              habilitado: tipoSeleccionado !== null && !enviando && !solicitudCreada,
+              incompleto: errorFormulario !== null,
+            },
+            {
+              etiqueta: esIA ? 'Afiche' : 'Adjuntos',
+              habilitado: tipoSeleccionado !== null && !enviando && !solicitudCreada,
+              incompleto: errorAfiche !== null,
+            },
+            { etiqueta: 'Revisar y enviar', habilitado: tipoSeleccionado !== null && !enviando && !solicitudCreada, incompleto: false },
+          ]}
+        />
       </div>
 
       {paso === 1 &&
@@ -642,7 +693,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
               <ArrowLeft size={16} /> Volver
             </Button>
             <Button
-              onClick={() => (tipoSeleccionado?.aviso ? setModalAviso(true) : enviarSolicitud())}
+              onClick={enviarConValidacion}
               cargando={enviando}
               disabled={bloqueadoPorHorario}
               title={bloqueadoPorHorario ? 'Las solicitudes solo se envían en horario hábil.' : undefined}
@@ -652,6 +703,25 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
           </div>
         </Card>
       )}
+
+      <Modal abierto={tipoPendiente !== null} onCerrar={() => setTipoPendiente(null)} titulo="¿Cambiar el tipo de solicitud?">
+        <p className="text-sm text-tinta-suave">Al cambiar el tipo se perderán las respuestas del formulario.</p>
+        <div className="mt-6 flex justify-end gap-2">
+          <Button variante="secundario" onClick={() => setTipoPendiente(null)}>
+            Conservar {tipoSeleccionado?.nombre}
+          </Button>
+          <Button
+            variante="peligro"
+            onClick={() => {
+              const tipo = tipoPendiente
+              setTipoPendiente(null)
+              if (tipo) void cargarTipo(tipo)
+            }}
+          >
+            Cambiar a {tipoPendiente?.nombre}
+          </Button>
+        </div>
+      </Modal>
 
       <Modal abierto={bloqueador.state === 'blocked'} onCerrar={() => bloqueador.reset?.()} titulo="¿Salir sin enviar la solicitud?">
         <p className="text-sm text-tinta-suave">
