@@ -97,3 +97,22 @@ export async function crearUrlFirmada(ruta: string): Promise<string> {
   if (error) throw error
   return data.signedUrl
 }
+
+/** Las descargas usan URLs de vida corta: se piden justo antes de usarlas. */
+const SEGUNDOS_URL_DESCARGA = 60
+
+/** URL firmada que el navegador descarga (no abre) con el nombre legible `nombre`. */
+export async function crearUrlDescarga(ruta: string, nombre: string): Promise<string> {
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(ruta, SEGUNDOS_URL_DESCARGA, { download: nombre })
+  if (error) throw error
+  return data.signedUrl
+}
+
+/** Contenido del archivo, para armar el ZIP en el navegador (también con una URL firmada de 60 s). */
+export async function obtenerArchivoEntregable(ruta: string): Promise<Blob> {
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(ruta, SEGUNDOS_URL_DESCARGA)
+  if (error) throw error
+  const respuesta = await fetch(data.signedUrl)
+  if (!respuesta.ok) throw new Error(`No se pudo descargar el archivo (${respuesta.status}).`)
+  return respuesta.blob()
+}

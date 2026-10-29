@@ -461,7 +461,7 @@ export function TicketDetailPage() {
       {puedeVerEntregables && (
         <Card>
           <h2 className="mb-3 font-semibold text-azul-noche">Entregables</h2>
-          <ListaEntregables entregables={ticket.entregables} />
+          <ListaEntregables entregables={ticket.entregables} codigo={estadoReal.codigo ?? `ticket-${estadoReal.ticket_id}`} />
         </Card>
       )}
 
