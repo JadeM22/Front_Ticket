@@ -38,7 +38,7 @@ export function LoginBannerTicket() {
               </div>
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-tinta-suave">Áreas</p>
-                <p className="font-semibold">ADH · AOAA · ADS</p>
+                <p className="font-semibold">ADH · AOAA · AS</p>
               </div>
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-tinta-suave">Estado</p>
