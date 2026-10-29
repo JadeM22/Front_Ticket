@@ -19,7 +19,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { obtenerEstadisticas, type FilaEstadistica } from '../../data/estadisticas'
+import { obtenerAlcancePorTicket, obtenerEstadisticas, type FilaEstadistica } from '../../data/estadisticas'
+import { TEXTO_COBERTURA_NACIONAL } from '../../lib/campus'
 import { listarAreas, listarTiposSolicitud } from '../../data/catalogos'
 import { formatFecha, hoyTegucigalpaISO, mesTegucigalpa } from '../../lib/date'
 import { coincideCodigo, coincideTexto } from '../../lib/buscar'
@@ -116,6 +117,8 @@ export function AnalistaDashboard() {
   const disenadorFiltro = params.get('disenador') ?? ''
   // La RPC no filtra por flujo: se filtra en el cliente, igual que estado y diseñador.
   const flujoFiltro = params.get('flujo') ?? ''
+  // El alcance tampoco viene en la RPC: se lee aparte por ticket y se filtra en el cliente.
+  const alcanceFiltro = params.get('alcance') ?? ''
 
   function actualizarFiltro(clave: string, valor: string) {
     const siguiente = new URLSearchParams(params)
@@ -141,6 +144,19 @@ export function AnalistaDashboard() {
     queryFn: () => obtenerEstadisticas({ desde: desde || null, hasta: hasta || null, areaId, tipoSolicitudId: tipoId }),
   })
 
+  const { data: alcancePorTicket } = useQuery({
+    queryKey: ['estadisticas', 'alcance', desde, hasta, areaId, tipoId],
+    queryFn: () => obtenerAlcancePorTicket(filas.map((f) => f.ticket_id)),
+    enabled: filas.length > 0,
+  })
+  const alcancesDisponibles = useMemo(() => {
+    const nombres = Array.from(new Set(Array.from(alcancePorTicket?.values() ?? []).flat()))
+    // "Cobertura nacional" primero, como en el formulario.
+    return nombres.sort((a, b) =>
+      a === TEXTO_COBERTURA_NACIONAL ? -1 : b === TEXTO_COBERTURA_NACIONAL ? 1 : a.localeCompare(b),
+    )
+  }, [alcancePorTicket])
+
   const estadosDisponibles = useMemo(() => Array.from(new Set(filas.map((f) => f.estado_real))).sort(), [filas])
   const disenadoresDisponibles = useMemo(
     () => Array.from(new Set(filas.map((f) => f.disenador).filter(Boolean))).sort(),
@@ -153,9 +169,10 @@ export function AnalistaDashboard() {
         (f) =>
           (!estadoFiltro || f.estado_real === estadoFiltro) &&
           (!disenadorFiltro || f.disenador === disenadorFiltro) &&
-          (!flujoFiltro || f.flujo === flujoFiltro),
+          (!flujoFiltro || f.flujo === flujoFiltro) &&
+          (!alcanceFiltro || (alcancePorTicket?.get(f.ticket_id) ?? []).includes(alcanceFiltro)),
       ),
-    [filas, estadoFiltro, disenadorFiltro, flujoFiltro],
+    [filas, estadoFiltro, disenadorFiltro, flujoFiltro, alcanceFiltro, alcancePorTicket],
   )
 
   const kpis = useMemo(() => {
@@ -208,6 +225,16 @@ export function AnalistaDashboard() {
 
   const datosPorTipo = useMemo(() => contarPor(filasFiltradas, (f) => f.tipo_solicitud), [filasFiltradas])
   const datosPorArea = useMemo(() => contarPor(filasFiltradas, (f) => f.area), [filasFiltradas])
+  // Un ticket con varios campus suma en cada uno; "Cobertura nacional" es una sola barra.
+  const datosPorAlcance = useMemo(() => {
+    const conteos = new Map<string, number>()
+    for (const f of filasFiltradas) {
+      for (const nombre of alcancePorTicket?.get(f.ticket_id) ?? []) conteos.set(nombre, (conteos.get(nombre) ?? 0) + 1)
+    }
+    return Array.from(conteos.entries())
+      .map(([etiqueta, valor]) => ({ etiqueta, valor }))
+      .sort((a, b) => b.valor - a.valor)
+  }, [filasFiltradas, alcancePorTicket])
   const datosPorEstado = useMemo(() => contarPor(filasFiltradas, (f) => f.estado_real), [filasFiltradas])
 
   const cumplimientoPorTipo = useMemo(() => {
@@ -286,6 +313,7 @@ export function AnalistaDashboard() {
       tipoId ? `Tipo: ${tipos.find((t) => t.id === tipoId)?.nombre ?? tipoId}` : null,
       estadoFiltro ? `Estado: ${estadoFiltro}` : null,
       disenadorFiltro ? `Diseñador: ${disenadorFiltro}` : null,
+      alcanceFiltro ? `Alcance: ${alcanceFiltro}` : null,
       flujoFiltro ? `Flujo: ${ETIQUETA_FLUJO[flujoFiltro as Flujo] ?? flujoFiltro}` : null,
       busqueda ? `Búsqueda: "${busqueda}"` : null,
     ].filter(Boolean)
@@ -297,6 +325,7 @@ export function AnalistaDashboard() {
     { etiqueta: 'Tipo', valor: (f) => f.tipo_solicitud },
     { etiqueta: 'Flujo', valor: (f) => ETIQUETA_FLUJO[f.flujo as Flujo] ?? f.flujo },
     { etiqueta: 'Área', valor: (f) => f.area },
+    { etiqueta: 'Alcance', valor: (f) => (alcancePorTicket?.get(f.ticket_id) ?? []).join(', ') || '—' },
     { etiqueta: 'Estado', valor: (f) => f.estado_real },
     { etiqueta: 'Diseñador', valor: (f) => f.disenador ?? '—' },
     { etiqueta: 'Registrado', valor: (f) => formatFecha(f.fecha_registro) },
@@ -420,6 +449,22 @@ export function AnalistaDashboard() {
         </label>
 
         <label className="text-xs text-tinta-suave">
+          Alcance
+          <select
+            className={`${CLASE_INPUT} mt-1 w-auto`}
+            value={alcanceFiltro}
+            onChange={(e) => actualizarFiltro('alcance', e.target.value)}
+          >
+            <option value="">Todos</option>
+            {alcancesDisponibles.map((nombre) => (
+              <option key={nombre} value={nombre}>
+                {nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="text-xs text-tinta-suave">
           Estado
           <select
             className={`${CLASE_INPUT} mt-1 w-auto`}
@@ -529,6 +574,30 @@ export function AnalistaDashboard() {
                     ))}
                   </Pie>
                 </PieChart>
+              </ResponsiveContainer>
+            </GraficoCard>
+
+            <GraficoCard titulo="Por alcance" vacio={datosPorAlcance.length === 0}>
+              <ResponsiveContainer width="100%" height={altoBarrasHorizontal(datosPorAlcance.length)}>
+                <BarChart
+                  data={datosPorAlcance}
+                  layout="vertical"
+                  margin={{ top: 8, right: 32, bottom: 8, left: 8 }}
+                  barCategoryGap="28%"
+                >
+                  <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--color-azul-niebla)" />
+                  <XAxis type="number" allowDecimals={false} tickMargin={8} tick={{ fontSize: 12 }} />
+                  <YAxis
+                    type="category"
+                    dataKey="etiqueta"
+                    width={anchoEjeY}
+                    interval={0}
+                    tickLine={false}
+                    tick={<TickEnvuelto ancho={anchoTick} />}
+                  />
+                  <Tooltip />
+                  <Bar dataKey="valor" name="Solicitudes" fill="var(--color-menta-profundo)" radius={[0, 6, 6, 0]} />
+                </BarChart>
               </ResponsiveContainer>
             </GraficoCard>
 
