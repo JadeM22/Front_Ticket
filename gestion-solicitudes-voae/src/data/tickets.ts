@@ -32,6 +32,11 @@ export interface TicketCompleto {
   revisionesIA: RevisionIA[]
   /** Solo en tickets de flujo VALIDACION, una vez que el Validador decidió. */
   decisionValidacion: DecisionValidacion | null
+  /**
+   * Parte 53: la corrección llegó al final del plazo y la base movió `fecha_limite` (el último registro
+   * del historial es "Fecha límite: A -> B"). Solo se calcula para quien gestiona un ticket en Corrección.
+   */
+  conMargenCorreccion: boolean
 }
 
 export async function listarTicketsEstadoReal(): Promise<TicketEstadoReal[]> {
@@ -90,6 +95,23 @@ export async function listarTicketLog(ticketId: number): Promise<TicketLog[]> {
 }
 
 /**
+ * `true` si lo último que registró el historial fue un cambio de fecha límite. Si RLS no deja leer
+ * `TicketLog`, simplemente no hay aviso: no es un error que deba ver el usuario.
+ */
+async function ultimoCambioEsFechaLimite(ticketId: number): Promise<boolean> {
+  const { data, error } = await supabase
+    .schema('Solicitudes')
+    .from('TicketLog')
+    .select('descripcion_cambio')
+    .eq('ticket_id', ticketId)
+    .order('numero_version', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error || !data) return false
+  return data.descripcion_cambio.includes('Fecha límite:')
+}
+
+/**
  * `incluirHistorial` decide si se consulta `TicketLog`: solo Analista y Administrador ven el
  * historial, así que para el resto ni siquiera se pide (queda `log: []`). `incluirGestion` hace lo
  * mismo con `DictamenJefe`: el solicitante no ve dictámenes. Los `Entregables` se piden siempre:
@@ -115,8 +137,17 @@ export async function obtenerTicketCompleto(
   const esValidacion = estadoReal.flujo === 'VALIDACION'
   const esDiseno = !esIA && !esValidacion
 
-  const [detalleFormulario, log, entregables, dictamenes, adjuntos, enviosIA, revisionesIA, decisionValidacion] =
-    await Promise.all([
+  const [
+    detalleFormulario,
+    log,
+    entregables,
+    dictamenes,
+    adjuntos,
+    enviosIA,
+    revisionesIA,
+    decisionValidacion,
+    conMargenCorreccion,
+  ] = await Promise.all([
       obtenerDetalleFormulario(base.formulario_id),
       incluirHistorial ? listarTicketLog(ticketId) : [],
       esDiseno ? listarEntregablesPorTicket(ticketId) : [],
@@ -125,6 +156,7 @@ export async function obtenerTicketCompleto(
       esIA ? listarEnviosIA(ticketId) : [],
       esIA ? listarRevisionesIA(ticketId) : [],
       esValidacion ? obtenerDecisionValidacion(ticketId) : null,
+      incluirGestion && esDiseno && estadoReal.estado_real === 'Corrección' ? ultimoCambioEsFechaLimite(ticketId) : false,
     ])
 
   return {
@@ -139,6 +171,7 @@ export async function obtenerTicketCompleto(
     enviosIA,
     revisionesIA,
     decisionValidacion,
+    conMargenCorreccion,
   }
 }
 

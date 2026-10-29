@@ -264,6 +264,14 @@ export function TicketDetailPage() {
           </div>
         )}
 
+        {/* Parte 53: la base dio 1 día hábil porque la corrección llegó al final del plazo. */}
+        {esDiseno && tieneRol('Diseñador') && estadoReal.estado_real === 'Corrección' && ticket.conMargenCorreccion && (
+          <div className="mt-3 rounded-lg bg-ambar-bruma/60 p-3 text-sm text-ambar">
+            Como la corrección llegó al final del plazo, tienes hasta el {formatFechaHora(estadoReal.fecha_limite)} para
+            entregarla.
+          </div>
+        )}
+
         <div className="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
           <div>
             <p className="text-xs text-tinta-suave">Creado</p>

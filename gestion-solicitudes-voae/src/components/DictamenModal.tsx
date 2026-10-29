@@ -68,6 +68,11 @@ export function DictamenModal({ abierto, onCerrar, onConfirmar, codigo, correcci
               Se permiten hasta {CORRECCIONES_MAXIMAS} correcciones por ticket. Después de la última, el ticket solo
               podrá aprobarse.
             </p>
+            {/* Parte 53: el plazo no se pausa, pero una corrección tardía mueve la entrega. */}
+            <p className="mb-2 rounded-lg bg-ambar-bruma p-2 text-xs text-ambar">
+              Si la corrección llega cuando queda menos de 1 día hábil, el equipo de diseño tendrá 1 día hábil para
+              entregarla.
+            </p>
             <textarea
               className={CLASE_INPUT}
               rows={4}
