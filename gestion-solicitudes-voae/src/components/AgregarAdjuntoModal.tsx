@@ -107,7 +107,7 @@ export function AgregarAdjuntoModal({ abierto, onCerrar, onAgregado, ticketId }:
             <Campo etiqueta="Título">
               <input className={CLASE_INPUT} value={titulo} onChange={(e) => setTitulo(e.target.value)} />
             </Campo>
-            <Campo etiqueta="URL">
+            <Campo etiqueta="Enlace">
               <input
                 type="text"
                 inputMode="url"

@@ -42,7 +42,14 @@ export function ListaAdjuntos({ adjuntos }: { adjuntos: Adjunto[] }) {
                 <Icono size={16} />
               </span>
               <div className="overflow-hidden">
-                <p className="truncate text-sm font-medium text-tinta">{adjunto.nombre_archivo}</p>
+                <p className="truncate text-sm font-medium text-tinta" title={adjunto.nombre_archivo}>
+                  {adjunto.nombre_archivo}
+                </p>
+                {adjunto.tipo === 'LINK' && (
+                  <p className="truncate text-xs text-azul-institucional" title={adjunto.ruta_o_url}>
+                    {adjunto.ruta_o_url}
+                  </p>
+                )}
                 <p className="text-xs text-tinta-suave">
                   {nombreDe(adjunto.usuario_registro)} · {formatFechaHora(adjunto.fecha_registro)}
                 </p>

@@ -7,7 +7,7 @@ export function VistaPreviaEnlace({ valor }: { valor: string }) {
 
   const normalizado = normalizarEnlace(texto)
   if (normalizado) {
-    return <p className="mt-1 text-xs text-tinta-suave">Se guardará como: {normalizado}</p>
+    return <p className="mt-1 break-all text-xs text-tinta-suave">Se guardará como: {normalizado}</p>
   }
   return <p className="mt-1 text-xs text-coral">Escribe un enlace válido, por ejemplo drive.google.com/…</p>
 }

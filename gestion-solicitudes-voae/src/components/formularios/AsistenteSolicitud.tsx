@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useId, useState } from 'react'
 import { useBeforeUnload, useBlocker, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -113,6 +113,8 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
   const [enlaces, setEnlaces] = useState<EnlacePendiente[]>([])
   const [tituloEnlace, setTituloEnlace] = useState('')
   const [urlEnlace, setUrlEnlace] = useState('')
+  const idTituloEnlace = useId()
+  const idUrlEnlace = useId()
   const [enviando, setEnviando] = useState(false)
   const [progreso, setProgreso] = useState<ProgresoAdjunto[]>([])
   const [solicitudCreada, setSolicitudCreada] = useState(false)
@@ -494,39 +496,64 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
 
           <MultiFileDrop archivos={archivos} onCambiar={setArchivos} espacioDisponible={espacioDisponible} />
 
-          <div className="mt-4 space-y-2">
+          <div className="mt-6 space-y-3">
             <p className="text-sm font-medium text-tinta">Agregar un enlace</p>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-              <input
-                className={CLASE_INPUT}
-                placeholder="Título (ej. Fotos del evento)"
-                value={tituloEnlace}
-                onChange={(e) => setTituloEnlace(e.target.value)}
-              />
-              <div className="flex-1">
+            {/* Título arriba y Enlace abajo, a todo el ancho: una URL larga nunca empuja nada fuera. */}
+            <div className="flex flex-col gap-3">
+              <div className="min-w-0">
+                <label htmlFor={idTituloEnlace} className="mb-1 block text-sm font-medium text-tinta">
+                  Título
+                </label>
                 <input
+                  id={idTituloEnlace}
+                  className={`${CLASE_INPUT} min-w-0`}
+                  placeholder="Ej. Fotos del evento"
+                  value={tituloEnlace}
+                  onChange={(e) => setTituloEnlace(e.target.value)}
+                />
+              </div>
+              <div className="min-w-0">
+                <label htmlFor={idUrlEnlace} className="mb-1 block text-sm font-medium text-tinta">
+                  Enlace
+                </label>
+                <input
+                  id={idUrlEnlace}
                   type="text"
                   inputMode="url"
-                  className={CLASE_INPUT}
+                  className={`${CLASE_INPUT} min-w-0`}
                   placeholder="drive.google.com/…"
                   value={urlEnlace}
                   onChange={(e) => setUrlEnlace(e.target.value)}
                 />
                 <VistaPreviaEnlace valor={urlEnlace} />
               </div>
-              <Button variante="secundario" onClick={agregarEnlace} disabled={espacioDisponible <= 0}>
-                Agregar
-              </Button>
+              <div>
+                <Button variante="secundario" onClick={agregarEnlace} disabled={espacioDisponible <= 0}>
+                  Agregar enlace
+                </Button>
+              </div>
             </div>
             {enlaces.length > 0 && (
               <ul className="space-y-2">
                 {enlaces.map((enlace, indice) => (
                   <li key={`${enlace.url}-${indice}`} className="flex items-center justify-between gap-3 rounded-lg border border-azul-niebla p-2">
-                    <div className="flex items-center gap-2 overflow-hidden">
+                    <div className="flex min-w-0 items-center gap-2">
                       <LinkIcon size={14} className="flex-none text-azul-institucional" />
-                      <span className="truncate text-sm text-tinta">{enlace.titulo}</span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm text-tinta" title={enlace.titulo}>
+                          {enlace.titulo}
+                        </p>
+                        <p className="truncate text-xs text-tinta-suave" title={enlace.url}>
+                          {enlace.url}
+                        </p>
+                      </div>
                     </div>
-                    <button type="button" onClick={() => setEnlaces(enlaces.filter((_, i) => i !== indice))}>
+                    <button
+                      type="button"
+                      aria-label={`Quitar ${enlace.titulo}`}
+                      className="flex-none"
+                      onClick={() => setEnlaces(enlaces.filter((_, i) => i !== indice))}
+                    >
                       <XCircle size={16} className="text-tinta-suave hover:text-coral" />
                     </button>
                   </li>
@@ -587,10 +614,10 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
               ) : (
                 <ul className="mt-1 text-sm text-tinta-suave">
                   {archivos.map((a) => (
-                    <li key={a.name}>· {a.name}</li>
+                    <li key={a.name} className="truncate" title={a.name}>· {a.name}</li>
                   ))}
                   {enlaces.map((e) => (
-                    <li key={e.url}>· {e.titulo} (enlace)</li>
+                    <li key={e.url} className="truncate" title={e.url}>· {e.titulo} (enlace)</li>
                   ))}
                 </ul>
               )}
