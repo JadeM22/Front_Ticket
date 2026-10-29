@@ -318,6 +318,28 @@ decimal separator unless `permiteDecimales`) on keydown, and strips anything els
 clamps silently: a value outside `min` (default 0)/`max` shows "El mínimo es N" in red under the field, and the
 form blocks saving with `lib/inputNumero.ts#errorRangoNumero` (same text).
 
+**Estado visible por perspectiva**: `estado_real` is never rendered raw. `lib/estados.ts#etiquetaEstado(estado,
+perspectiva)` maps it per viewer — `'solicitante'` (Finalizado → "Esperando aprobación", Corrección → "En
+proceso"), `'jefe'` ("Por dictaminar"), `'diseno'` ("Entregado – esperando dictamen"), `'admin'`
+("Finalizado (esperando aprobación)"). The *screen* picks the perspective (Mis solicitudes/boletos =
+solicitante, Jefe dashboard = jefe, Diseñador/Asignador boards = diseno, Admin/Estadísticas/Validador =
+admin; `TicketDetail` uses `perspectivaDetalle()`), and `EstadoChip` requires it. Filters, charts and CSV/PDF
+exports go through the same function; colors still follow the real state.
+
+**Cards and badges**: every ticket card opens its detail on the whole surface through
+`hooks/useCardEnlace.ts` (`useCardEnlace`, or `propsCardEnlace` inside a `.map`): `role="link"`, Enter/Space,
+Ctrl/Cmd/middle click → new tab; inner buttons must `stopPropagation()`. `components/BadgeExcepcional.tsx`
+(`ticketId`) is the only "⚡ Excepcional" / "⚡ Cambio urgente" badge, always next to the code.
+
+**Cambio urgente** (Parte 54): `data/cambiosUrgentes.ts` + `hooks/useCambiosUrgentes.ts`. The view has no
+`ticket_origen_id`, so `useCambiosUrgentes()` reads it from `Ticket` once (key under `['tickets',
+'estado-real']`). `lib/cambioUrgente.ts#puedePedirCambioUrgente` shows the button only when the RPC will
+accept it — it checks `estado_registrado` (not `estado_real`), the areas the Jefe directs
+(`useAreasQueDirige`) and that no linked change is still open. "Cobertura nacional" (Parte 52) is identified
+only by `Campus.es_cobertura_nacional` (`lib/campus.ts`); Estadísticas reads each ticket's alcance
+separately because `fnEstadisticasTicketsTabla` doesn't return campus. Deliverable downloads
+(`lib/descargas.ts`, `ListaEntregables`) use 60-second signed URLs and a lazily imported `jszip`.
+
 ## Deployment
 
 Static SPA deploy to Cloudflare via `wrangler.jsonc` in `gestion-solicitudes-voae/` (not the git root) (`assets.directory: "./dist"`,
