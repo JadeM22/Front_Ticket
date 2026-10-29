@@ -1,4 +1,4 @@
-import { useCallback, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useBeforeUnload, useBlocker, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -36,7 +36,7 @@ import {
 } from '../../lib/validacionFormularios'
 import { normalizarEnlace } from '../../lib/enlaces'
 import { nombresAlcance } from '../../lib/campus'
-import { coincideTexto } from '../../lib/buscar'
+import { coincidePalabras, partesResaltadas } from '../../lib/buscar'
 import { mensajeError } from '../../lib/errors'
 import { formatFechaLarga } from '../../lib/date'
 import { useAuth } from '../../auth/useAuth'
@@ -81,7 +81,32 @@ const ICONO_POR_CATEGORIA: Record<CategoriaTipo, typeof Palette> = {
   PROTOCOLO: Landmark,
   OTROS: LayoutGrid,
 }
+/** Título de cada contenedor y chip del paso 1 (en plural donde se lee mejor). */
+const ETIQUETA_GRUPO: Record<CategoriaTipo, string> = {
+  ARTE: 'Arte',
+  VIDEO: 'Video',
+  DIRCOM: 'DIRCOM',
+  PROTOCOLO: 'Protocolos',
+  OTROS: 'Otros',
+}
 const DIAS_PRODUCCION_EXCEPCIONAL = 2
+
+/** Texto con las palabras buscadas resaltadas (sin importar tildes ni mayúsculas). */
+function Resaltado({ texto, busqueda }: { texto: string; busqueda: string }) {
+  return (
+    <>
+      {partesResaltadas(texto, busqueda).map((parte, indice) =>
+        parte.resaltado ? (
+          <mark key={indice} className="rounded-sm bg-menta-bruma px-0.5 text-menta-profundo">
+            {parte.texto}
+          </mark>
+        ) : (
+          <span key={indice}>{parte.texto}</span>
+        ),
+      )}
+    </>
+  )
+}
 
 interface AsistenteSolicitudProps {
   /** `true` solo desde "Solicitud excepcional" del Jefe de Área: sin horario hábil ni anticipación mínima del tipo. */
@@ -99,6 +124,8 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
 
   const [paso, setPaso] = useState(1)
   const [busquedaTipo, setBusquedaTipo] = useState('')
+  const [categoriaFiltro, setCategoriaFiltro] = useState<CategoriaTipo | ''>('')
+  const buscadorTipoRef = useRef<HTMLInputElement>(null)
   const [tipoSeleccionado, setTipoSeleccionado] = useState<TipoSolicitud | null>(null)
   const [cargandoTipoId, setCargandoTipoId] = useState<number | null>(null)
   const [fechaEstimada, setFechaEstimada] = useState<string | null>(null)
@@ -158,6 +185,20 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
       [hayCambiosSinEnviar],
     ),
   )
+
+  // "/" enfoca el buscador de tipos (paso 1), salvo que ya se esté escribiendo en otro campo.
+  useEffect(() => {
+    if (paso !== 1) return
+    function alPresionar(evento: KeyboardEvent) {
+      if (evento.key !== '/' || evento.ctrlKey || evento.metaKey || evento.altKey) return
+      const destino = evento.target as HTMLElement | null
+      if (destino?.closest('input, textarea, select, [contenteditable="true"]')) return
+      evento.preventDefault()
+      buscadorTipoRef.current?.focus()
+    }
+    document.addEventListener('keydown', alPresionar)
+    return () => document.removeEventListener('keydown', alPresionar)
+  }, [paso])
 
   const totalAdjuntos = archivos.length + enlaces.length
   const espacioDisponible = MAXIMO_ADJUNTOS_POR_TICKET - totalAdjuntos
@@ -362,18 +403,28 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
   }
 
   // Solo las solicitudes de diseño pueden ser excepcionales (la base también rechaza las demás).
+  const categoriaDe = (t: TipoSolicitud): CategoriaTipo =>
+    CATEGORIAS_TIPO.some((c) => c.valor === t.categoria) ? (t.categoria as CategoriaTipo) : 'OTROS'
+  // Cada palabra debe aparecer en el nombre, la descripción o la categoría; el chip de categoría se suma.
   const tiposVisibles = tipos.filter(
     (t) =>
       t.estado &&
       (!excepcional || t.flujo === 'DISENO') &&
-      (coincideTexto(t.nombre, busquedaTipo) || coincideTexto(t.descripcion, busquedaTipo)),
+      (!categoriaFiltro || categoriaDe(t) === categoriaFiltro) &&
+      coincidePalabras([t.nombre, t.descripcion, ETIQUETA_GRUPO[categoriaDe(t)]], busquedaTipo),
   )
-  const categoriaDe = (t: TipoSolicitud): CategoriaTipo =>
-    CATEGORIAS_TIPO.some((c) => c.valor === t.categoria) ? (t.categoria as CategoriaTipo) : 'OTROS'
   const gruposTipo = CATEGORIAS_TIPO.map((categoria) => ({
-    ...categoria,
+    valor: categoria.valor,
+    etiqueta: ETIQUETA_GRUPO[categoria.valor],
     tipos: tiposVisibles.filter((t) => categoriaDe(t) === categoria.valor),
   })).filter((grupo) => grupo.tipos.length > 0)
+  const hayFiltroTipo = busquedaTipo.trim() !== '' || categoriaFiltro !== ''
+
+  function limpiarFiltroTipo() {
+    setBusquedaTipo('')
+    setCategoriaFiltro('')
+    buscadorTipoRef.current?.focus()
+  }
 
   const nombresCampus = nombresAlcance(campus.filter((c) => generalidades.campus_ids.includes(c.id)))
 
@@ -405,29 +456,85 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
         (isLoading ? (
           <SkeletonLista />
         ) : (
-          <div className="space-y-6">
-            <div className="relative">
-              <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-tinta-suave" />
-              <input
-                className={`${CLASE_INPUT} pl-9`}
-                placeholder="Buscar tipo de solicitud…"
-                aria-label="Buscar tipo de solicitud"
-                value={busquedaTipo}
-                onChange={(e) => setBusquedaTipo(e.target.value)}
-              />
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <div className="relative">
+                <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-tinta-suave" />
+                <input
+                  ref={buscadorTipoRef}
+                  type="search"
+                  className={`${CLASE_INPUT} pl-9 pr-10`}
+                  placeholder="Buscar tipo de solicitud…"
+                  aria-label="Buscar tipo de solicitud"
+                  aria-keyshortcuts="/"
+                  value={busquedaTipo}
+                  onChange={(e) => setBusquedaTipo(e.target.value)}
+                />
+                <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border border-azul-niebla px-1.5 font-mono text-[10px] text-tinta-suave sm:block">
+                  /
+                </kbd>
+              </div>
+              <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filtrar por categoría">
+                {[{ valor: '' as const, etiqueta: 'Todas' }, ...CATEGORIAS_TIPO.map((c) => ({ valor: c.valor, etiqueta: ETIQUETA_GRUPO[c.valor] }))].map(
+                  (chip) => {
+                    const activo = categoriaFiltro === chip.valor
+                    return (
+                      <button
+                        key={chip.etiqueta}
+                        type="button"
+                        aria-pressed={activo}
+                        onClick={() => setCategoriaFiltro(chip.valor)}
+                        className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors duration-150 ${
+                          activo
+                            ? 'bg-azul-institucional text-white'
+                            : 'bg-azul-niebla text-azul-institucional hover:bg-azul-niebla/70'
+                        }`}
+                      >
+                        {chip.etiqueta}
+                      </button>
+                    )
+                  },
+                )}
+                {hayFiltroTipo && (
+                  <button
+                    type="button"
+                    onClick={limpiarFiltroTipo}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-tinta-suave hover:text-coral"
+                  >
+                    <XCircle size={14} /> Limpiar
+                  </button>
+                )}
+              </div>
             </div>
+
             {gruposTipo.length === 0 && (
-              <EmptyState titulo="Sin resultados" descripcion="Ningún tipo de solicitud coincide con la búsqueda." />
+              <EmptyState
+                titulo={
+                  busquedaTipo.trim()
+                    ? `No hay tipos que coincidan con «${busquedaTipo.trim()}»`
+                    : 'No hay tipos en esta categoría'
+                }
+                accion={
+                  <Button variante="secundario" onClick={limpiarFiltroTipo}>
+                    Limpiar
+                  </Button>
+                }
+              />
             )}
+
             {gruposTipo.map((grupo) => {
               const Icono = ICONO_POR_CATEGORIA[grupo.valor]
               return (
-                <div key={grupo.valor}>
-                  {gruposTipo.length > 1 && (
-                    <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-tinta-suave">
-                      {grupo.etiqueta}
-                    </p>
-                  )}
+                <section key={grupo.valor} className="rounded-2xl border border-azul-niebla bg-white/60 p-4 shadow-sm">
+                  <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-azul-noche">
+                    <span className="rounded-full bg-azul-niebla p-1.5 text-azul-institucional">
+                      <Icono size={16} />
+                    </span>
+                    {grupo.etiqueta}
+                    <span className="rounded-full bg-azul-niebla px-2 py-0.5 text-xs font-medium text-tinta-suave">
+                      {grupo.tipos.length}
+                    </span>
+                  </h2>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {grupo.tipos.map((tipo) => (
                       <button
@@ -435,29 +542,36 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
                         type="button"
                         onClick={() => elegirTipo(tipo)}
                         disabled={cargandoTipoId !== null}
-                        className="flex items-start gap-3 rounded-xl border border-azul-niebla bg-white p-4 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-menta hover:shadow-md disabled:cursor-wait"
+                        aria-current={tipoSeleccionado?.id === tipo.id ? 'true' : undefined}
+                        className={`flex items-start gap-3 rounded-xl border bg-white p-4 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-menta hover:shadow-md disabled:cursor-wait ${
+                          tipoSeleccionado?.id === tipo.id ? 'border-menta ring-2 ring-menta/40' : 'border-azul-niebla'
+                        }`}
                       >
-                        <span className="rounded-full bg-azul-niebla p-2 text-azul-institucional">
+                        <span className="flex-none rounded-full bg-azul-niebla p-2 text-azul-institucional">
                           {cargandoTipoId === tipo.id ? <Loader2 size={20} className="animate-spin" /> : <Icono size={20} />}
                         </span>
-                        <span>
-                          <p className="font-semibold text-tinta">
-                            {tipo.nombre}
+                        <span className="min-w-0">
+                          <span className="block text-base font-semibold text-tinta">
+                            <Resaltado texto={tipo.nombre} busqueda={busquedaTipo} />
                             {TAG_FLUJO[tipo.flujo as Flujo] && (
                               <span className="ml-2 rounded-full bg-indigo-bruma px-2 py-0.5 align-middle text-[10px] font-semibold text-indigo-suave">
                                 {TAG_FLUJO[tipo.flujo as Flujo]}
                               </span>
                             )}
-                          </p>
-                          <p className="text-xs text-tinta-suave">
+                          </span>
+                          <span className="block text-xs text-tinta-suave">
                             {tipo.dias_estimados} día(s) {tipo.dias_habiles ? 'hábiles' : 'corridos'}
-                          </p>
-                          {tipo.descripcion && <p className="mt-1 text-xs text-tinta-suave">{tipo.descripcion}</p>}
+                          </span>
+                          {tipo.descripcion && (
+                            <span className="mt-1 block text-xs text-tinta-suave">
+                              <Resaltado texto={tipo.descripcion} busqueda={busquedaTipo} />
+                            </span>
+                          )}
                         </span>
                       </button>
                     ))}
                   </div>
-                </div>
+                </section>
               )
             })}
           </div>
