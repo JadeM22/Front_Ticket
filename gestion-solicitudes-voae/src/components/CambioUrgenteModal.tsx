@@ -7,6 +7,7 @@ import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { Campo, CLASE_INPUT } from './ui/Campo'
 import { FechaEventoPicker } from './ui/FechaEventoPicker'
+import { AlertaModificacion } from './AlertaModificacion'
 import { pedirCambioUrgente } from '../data/cambiosUrgentes'
 import { obtenerCodigoTicket } from '../data/tickets'
 import { mensajeError } from '../lib/errors'
@@ -66,7 +67,9 @@ export function CambioUrgenteModal({ ticket, onCerrar }: CambioUrgenteModalProps
             El equipo de diseño debe aceptarla y tendrá un plazo corto.
           </p>
 
-          <Campo etiqueta="Motivo *">
+          <AlertaModificacion />
+
+          <Campo etiqueta="Instrucción del cambio *">
             <textarea
               className={CLASE_INPUT}
               rows={4}

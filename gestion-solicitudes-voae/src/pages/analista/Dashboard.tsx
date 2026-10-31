@@ -337,7 +337,7 @@ export function AnalistaDashboard() {
     { etiqueta: 'Flujo', valor: (f) => ETIQUETA_FLUJO[f.flujo as Flujo] ?? f.flujo },
     { etiqueta: 'Área', valor: (f) => f.area },
     { etiqueta: 'Alcance', valor: (f) => (alcancePorTicket?.get(f.ticket_id) ?? []).join(', ') || '—' },
-    { etiqueta: 'Estado', valor: (f) => etiquetaEstado(f.estado_real, 'admin') },
+    { etiqueta: 'Estado', valor: (f) => etiquetaEstado(f.estado_real, 'admin', f.flujo) },
     { etiqueta: 'Diseñador', valor: (f) => f.disenador ?? '—' },
     { etiqueta: 'Registrado', valor: (f) => formatFecha(f.fecha_registro) },
     { etiqueta: 'Límite', valor: (f) => formatFecha(f.fecha_limite) },
@@ -346,7 +346,7 @@ export function AnalistaDashboard() {
     { etiqueta: 'Días resolución', valor: (f) => f.dias_resolucion ?? '—' },
     { etiqueta: 'A tiempo', valor: (f) => (f.entregado_a_tiempo == null ? '—' : f.entregado_a_tiempo ? 'Sí' : 'No') },
     { etiqueta: 'Correcciones', valor: (f) => f.correcciones_usadas ?? 0 },
-    { etiqueta: 'Intentos IA', valor: (f) => (f.flujo === 'APROBACION_IA' ? `${f.intentos_usados ?? 0}/${INTENTOS_MAXIMOS_IA}` : '—') },
+    { etiqueta: 'Intentos', valor: (f) => (f.flujo === 'APROBACION' ? `${f.intentos_usados ?? 0}/${INTENTOS_MAXIMOS_IA}` : '—') },
     { etiqueta: 'Automático', valor: (f) => (f.aprobado_automatico ? 'Sí' : 'No') },
     { etiqueta: 'Excepcional', valor: (f) => (f.es_excepcional ? 'Sí' : 'No') },
   ]
@@ -741,7 +741,7 @@ export function AnalistaDashboard() {
                             ['fecha_registro', 'Registrado'],
                             ['fecha_evento', 'Evento'],
                             ['dias_resolucion', 'Días resolución'],
-                            ['intentos_usados', 'Intentos IA'],
+                            ['intentos_usados', 'Intentos'],
                           ] as [keyof FilaEstadistica, string][]
                         ).map(([columna, etiqueta]) => (
                           <th key={columna} className="cursor-pointer px-3 py-2" onClick={() => alternarOrden(columna)}>
@@ -773,14 +773,14 @@ export function AnalistaDashboard() {
                           </td>
                           <td className="px-3 py-2">{fila.area}</td>
                           <td className="px-3 py-2">
-                            <EstadoChip estado={fila.estado_real ?? ''} perspectiva="admin" />
+                            <EstadoChip estado={fila.estado_real ?? ''} perspectiva="admin" flujo={fila.flujo} />
                           </td>
                           <td className="px-3 py-2">{fila.disenador ?? '—'}</td>
                           <td className="px-3 py-2">{formatFecha(fila.fecha_registro)}</td>
                           <td className="px-3 py-2">{formatFecha(fila.fecha_evento)}</td>
                           <td className="px-3 py-2">{fila.dias_resolucion ?? '—'}</td>
                           <td className="px-3 py-2">
-                            {fila.flujo === 'APROBACION_IA' ? `${fila.intentos_usados ?? 0}/${INTENTOS_MAXIMOS_IA}` : '—'}
+                            {fila.flujo === 'APROBACION' ? `${fila.intentos_usados ?? 0}/${INTENTOS_MAXIMOS_IA}` : '—'}
                           </td>
                         </tr>
                       ))}

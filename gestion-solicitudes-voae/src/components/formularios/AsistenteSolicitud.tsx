@@ -135,7 +135,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
   const [campos, setCampos] = useState<DefinicionCampo[]>([])
   const [respuestas, setRespuestas] = useState<Respuestas>({})
   const [mostrarErrores, setMostrarErrores] = useState(false)
-  // Solo para tipos de flujo APROBACION_IA: el afiche que revisará el Validador.
+  // Solo para tipos de flujo APROBACION: el archivo que revisará el Validador.
   const [afiche, setAfiche] = useState<AficheSeleccionado>(AFICHE_VACIO)
   const [archivos, setArchivos] = useState<File[]>([])
   const [enlaces, setEnlaces] = useState<EnlacePendiente[]>([])
@@ -164,8 +164,8 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
       tituloEnlace.trim() !== '' ||
       urlEnlace.trim() !== '')
 
-  const esIA = tipoSeleccionado?.flujo === 'APROBACION_IA'
-  const esValidacion = tipoSeleccionado?.flujo === 'VALIDACION'
+  const esAprobacion = tipoSeleccionado?.flujo === 'APROBACION'
+  const esConfirmacion = tipoSeleccionado?.flujo === 'CONFIRMACION'
   const etiquetas = etiquetasGenerales(tipoSeleccionado?.etiquetas_generales)
 
   const bloqueador = useBlocker(
@@ -217,10 +217,10 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
 
   // Lo que falta en cada paso, para marcarlo en el stepper y para que "Enviar" lleve al primero con errores.
   const errorFormulario = tipoSeleccionado ? validarSolicitud(generalidades, campos, respuestas, etiquetas) : null
-  const errorAfiche = esIA
+  const errorAfiche = esAprobacion
     ? afiche.archivo
       ? validarArchivoAfiche(afiche.archivo)
-      : 'Sube el afiche que quieres que se revise.'
+      : 'Sube el archivo que quieres que se revise.'
     : null
 
   /** Volver a un tipo ya elegido no borra nada; cambiarlo sí, y por eso se confirma antes. */
@@ -347,23 +347,23 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
 
     let huboError = false
 
-    // Flujo IA, en este orden: ticket creado → subir el afiche → registrarlo en EnvioIA (subirAficheIA
+    // Flujo IA, en este orden: ticket creado → subir el archivo → registrarlo en EnvioIA (subirAficheIA
     // borra el archivo si el registro falla). Si falla, el ticket queda sin envío y el detalle ofrece
-    // "Subir afiche".
-    if (esIA && afiche.archivo) {
-      setProgreso([{ etiqueta: `Afiche: ${afiche.archivo.name}`, estado: 'subiendo' }])
+    // "Subir archivo".
+    if (esAprobacion && afiche.archivo) {
+      setProgreso([{ etiqueta: `Archivo: ${afiche.archivo.name}`, estado: 'subiendo' }])
       try {
         await subirAficheIA({ ticketId, archivo: afiche.archivo, comentario: afiche.comentario })
-        setProgreso([{ etiqueta: `Afiche: ${afiche.archivo.name}`, estado: 'listo' }])
+        setProgreso([{ etiqueta: `Archivo: ${afiche.archivo.name}`, estado: 'listo' }])
       } catch (error) {
         huboError = true
-        setProgreso([{ etiqueta: `Afiche: ${afiche.archivo.name}`, estado: 'error' }])
+        setProgreso([{ etiqueta: `Archivo: ${afiche.archivo.name}`, estado: 'error' }])
         toast.error(
-          `${await mensajeError(error, 'No se pudo subir el afiche.')} La solicitud quedó creada: súbelo desde el detalle con "Subir afiche".`,
+          `${await mensajeError(error, 'No se pudo subir el archivo.')} La solicitud quedó creada: súbelo desde el detalle con "Subir archivo".`,
         )
       }
     }
-    const desplazamiento = esIA && afiche.archivo ? 1 : 0
+    const desplazamiento = esAprobacion && afiche.archivo ? 1 : 0
 
     const items: ProgresoAdjunto[] = [
       ...archivos.map((a) => ({ etiqueta: a.name, estado: 'subiendo' as const })),
@@ -402,14 +402,13 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
     setTimeout(() => navigate(`/tickets/${ticketId}`), huboError ? 1500 : 300)
   }
 
-  // Solo las solicitudes de diseño pueden ser excepcionales (la base también rechaza las demás).
+  // Desde la Parte 61 cualquier flujo admite excepcionales (Diseño, Aprobación y Confirmación).
   const categoriaDe = (t: TipoSolicitud): CategoriaTipo =>
     CATEGORIAS_TIPO.some((c) => c.valor === t.categoria) ? (t.categoria as CategoriaTipo) : 'OTROS'
   // Cada palabra debe aparecer en el nombre, la descripción o la categoría; el chip de categoría se suma.
   const tiposVisibles = tipos.filter(
     (t) =>
       t.estado &&
-      (!excepcional || t.flujo === 'DISENO') &&
       (!categoriaFiltro || categoriaDe(t) === categoriaFiltro) &&
       coincidePalabras([t.nombre, t.descripcion, ETIQUETA_GRUPO[categoriaDe(t)]], busquedaTipo),
   )
@@ -443,7 +442,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
               incompleto: errorFormulario !== null,
             },
             {
-              etiqueta: esIA ? 'Afiche' : 'Adjuntos',
+              etiqueta: esAprobacion ? 'Archivo' : 'Adjuntos',
               habilitado: tipoSeleccionado !== null && !enviando && !solicitudCreada,
               incompleto: errorAfiche !== null,
             },
@@ -551,7 +550,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
                           {cargandoTipoId === tipo.id ? <Loader2 size={20} className="animate-spin" /> : <Icono size={20} />}
                         </span>
                         <span className="min-w-0">
-                          <span className="block text-base font-semibold text-tinta">
+                          <span className="block text-lg font-bold leading-snug text-azul-noche">
                             <Resaltado texto={tipo.nombre} busqueda={busquedaTipo} />
                             {TAG_FLUJO[tipo.flujo as Flujo] && (
                               <span className="ml-2 rounded-full bg-indigo-bruma px-2 py-0.5 align-middle text-[10px] font-semibold text-indigo-suave">
@@ -563,7 +562,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
                             {tipo.dias_estimados} día(s) {tipo.dias_habiles ? 'hábiles' : 'corridos'}
                           </span>
                           {tipo.descripcion && (
-                            <span className="mt-1 block text-xs text-tinta-suave">
+                            <span className="mt-1 block text-sm text-tinta-suave">
                               <Resaltado texto={tipo.descripcion} busqueda={busquedaTipo} />
                             </span>
                           )}
@@ -580,13 +579,13 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
       {paso === 2 && tipoSeleccionado && (
         <Card>
           <h2 className="font-semibold text-azul-noche">{tipoSeleccionado.nombre}</h2>
-          {!excepcional && (esIA || esValidacion) && (
+          {!excepcional && (esAprobacion || esConfirmacion) && (
             // Sin diseño no hay entrega: lo que corre es el plazo para responder la solicitud.
             <p className="mb-4 text-sm text-tinta-suave">
               Plazo de respuesta: {tipoSeleccionado.dias_estimados} día(s) {tipoSeleccionado.dias_habiles ? 'hábiles' : 'corridos'}
             </p>
           )}
-          {!excepcional && !esIA && !esValidacion && (
+          {!excepcional && !esAprobacion && !esConfirmacion && (
             <p className="mb-4 text-sm text-tinta-suave">
               {cargandoFecha
                 ? 'Calculando fecha estimada…'
@@ -616,7 +615,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
             tipoId={tipoSeleccionado.id}
             excepcional={excepcional}
             diasProduccion={excepcional ? DIAS_PRODUCCION_EXCEPCIONAL : tipoSeleccionado.dias_estimados}
-            conProduccion={!esIA && !esValidacion}
+            conProduccion={!esAprobacion && !esConfirmacion}
             etiquetas={etiquetas}
           />
 
@@ -639,13 +638,19 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
 
       {paso === 3 && (
         <Card>
-          {/* Afiches con IA: solo se sube el afiche, sin otros adjuntos (la base los rechaza). */}
-          {esIA ? (
+          {/* Aprobación: solo se sube el archivo a revisar, sin otros adjuntos (la base los rechaza). */}
+          {esAprobacion ? (
             <>
-              <h2 className="mb-1 font-semibold text-azul-noche">Afiche *</h2>
+              <h2 className="mb-1 font-semibold text-azul-noche">Archivo a revisar *</h2>
               <p className="mb-4 text-sm text-tinta-suave">
-                El afiche será revisado. Tienes hasta 5 intentos y {tipoSeleccionado?.dias_estimados} día(s){' '}
-                {tipoSeleccionado?.dias_habiles ? 'hábiles' : 'corridos'} para que sea aprobado.
+                {excepcional ? (
+                  <>Primero se acepta la solicitud excepcional y luego se revisa el archivo. Tienes hasta 5 intentos.</>
+                ) : (
+                  <>
+                    El archivo será revisado. Tienes hasta 5 intentos y {tipoSeleccionado?.dias_estimados} día(s){' '}
+                    {tipoSeleccionado?.dias_habiles ? 'hábiles' : 'corridos'} para que sea aprobado.
+                  </>
+                )}
               </p>
               <SelectorAfiche valor={afiche} onCambiar={setAfiche} />
             </>
@@ -653,7 +658,7 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
           <>
           <h2 className="mb-1 font-semibold text-azul-noche">Adjuntos</h2>
           <p className="mb-4 text-sm text-tinta-suave">
-            {esValidacion
+            {esConfirmacion
               ? 'Adjunta lo que se necesite para decidir (programa, invitación, referencias).'
               : 'Adjunta logos, imágenes, textos o referencias que sirvan para tu solicitud.'}{' '}
             Si son muchas fotos, comparte un enlace de Drive. ({totalAdjuntos} / {MAXIMO_ADJUNTOS_POR_TICKET})
@@ -765,13 +770,13 @@ export function AsistenteSolicitud({ excepcional }: AsistenteSolicitudProps) {
             </div>
           )}
 
-          {esIA && afiche.archivo && (
+          {esAprobacion && afiche.archivo && (
             <p className="mt-4 text-sm text-tinta-suave">
-              Afiche: <span className="font-medium text-tinta">{afiche.archivo.name}</span>
+              Archivo: <span className="font-medium text-tinta">{afiche.archivo.name}</span>
             </p>
           )}
 
-          {!esIA && (
+          {!esAprobacion && (
             <>
               <p className="mt-4 text-sm font-semibold text-tinta">Adjuntos ({totalAdjuntos})</p>
               {totalAdjuntos === 0 ? (

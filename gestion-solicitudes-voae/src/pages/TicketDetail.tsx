@@ -3,7 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Plus, Zap } from 'lucide-react'
-import { obtenerTicketCompleto, tomarTicket } from '../data/tickets'
+import { obtenerTicketCompleto, responderExcepcional, tomarTicket } from '../data/tickets'
 import { crearDictamen } from '../data/dictamenes'
 import { INTENTOS_MAXIMOS_IA, revisarEnvioIA } from '../data/afichesIA'
 import { registrarDecisionValidacion } from '../data/validacion'
@@ -12,6 +12,7 @@ import { formatFecha, formatFechaHora } from '../lib/date'
 import { TagAsignado } from '../components/tickets/Etiquetas'
 import { BadgeExcepcional } from '../components/BadgeExcepcional'
 import { CambioUrgenteModal } from '../components/CambioUrgenteModal'
+import { AlertaModificacion } from '../components/AlertaModificacion'
 import { useAreasQueDirige, useCambiosUrgentes, useCambiosUrgentesDe } from '../hooks/useCambiosUrgentes'
 import { puedePedirCambioUrgente } from '../lib/cambioUrgente'
 import { puedeVerAsignacion } from '../lib/permisos'
@@ -102,18 +103,24 @@ export function TicketDetailPage() {
     if (!abrir) return
     yaAbrioDictamenRef.current = true
     const { estadoReal } = ticket
-    const esIATicket = estadoReal.flujo === 'APROBACION_IA'
-    const esValidacionTicket = estadoReal.flujo === 'VALIDACION'
+    const esAprobacionTicket = estadoReal.flujo === 'APROBACION'
+    const esConfirmacionTicket = estadoReal.flujo === 'CONFIRMACION'
     const esperando = estadoReal.estado_registrado === 'Enviado' || estadoReal.estado_registrado === 'Retrasado'
     const ultimoEnvio = ultimoEnvioDe(ticket.enviosIA)
     const ultimoEnvioRevisado = ultimoEnvio != null && ticket.revisionesIA.some((r) => r.envio_id === ultimoEnvio.id)
+    const pendienteAceptar = estadoReal.es_excepcional && estadoReal.excepcional_estado === 'PENDIENTE'
     // setState se dispara desde el callback, no de forma síncrona en el cuerpo del efecto.
     const temporizador = setTimeout(() => {
-      if (esIATicket && tieneRol('Validador') && esperando && ultimoEnvio != null && !ultimoEnvioRevisado) {
+      if (
+        esAprobacionTicket &&
+        tieneRol('Validador') &&
+        esperando &&
+        (pendienteAceptar || (ultimoEnvio != null && !ultimoEnvioRevisado))
+      ) {
         setModalRevision(true)
-      } else if (esValidacionTicket && tieneRol('Validador') && esperando && ticket.decisionValidacion == null) {
+      } else if (esConfirmacionTicket && tieneRol('Validador') && esperando && ticket.decisionValidacion == null) {
         setModalValidacion(true)
-      } else if (!esIATicket && !esValidacionTicket && tieneRol('Jefe de Área') && estadoReal.estado_real === 'Finalizado') {
+      } else if (!esAprobacionTicket && !esConfirmacionTicket && tieneRol('Jefe de Área') && estadoReal.estado_real === 'Finalizado') {
         setModalDictamen(true)
       }
     }, 0)
@@ -142,11 +149,38 @@ export function TicketDetailPage() {
     if (!envio) return
     try {
       await revisarEnvioIA(envio.id, decision, comentario)
-      toast.success(decision === 'APROBADO' ? 'Afiche aprobado.' : 'Afiche rechazado.')
+      toast.success(decision === 'APROBADO' ? 'Archivo aprobado.' : 'Archivo denegado.')
       invalidar()
       setModalRevision(false)
     } catch (error) {
       toast.error(await mensajeError(error, 'No se pudo registrar la revisión.'))
+    }
+  }
+
+  /**
+   * Paso 1 de una aprobación excepcional (Parte 62): el Validador la acepta (sigue en "Enviado" y pasa al
+   * dictamen) o la rechaza con motivo. Devuelve `true` si el diálogo debe seguir al paso 2.
+   */
+  async function manejarRespuestaExcepcional(aceptar: boolean, motivo: string): Promise<boolean> {
+    if (!ticket) return false
+    try {
+      await responderExcepcional(ticket.estadoReal.ticket_id!, aceptar, aceptar ? {} : { motivo })
+      invalidar()
+      if (!aceptar) {
+        toast.success('Solicitud excepcional rechazada.')
+        setModalRevision(false)
+        return false
+      }
+      toast.success('Solicitud excepcional aceptada.')
+      if (!ultimoEnvioDe(ticket.enviosIA)) {
+        // Sin archivo todavía no hay qué dictaminar: se revisa cuando el solicitante lo suba.
+        setModalRevision(false)
+        return false
+      }
+      return true
+    } catch (error) {
+      toast.error(await mensajeError(error, 'No se pudo responder la solicitud excepcional.'))
+      return false
     }
   }
 
@@ -159,7 +193,7 @@ export function TicketDetailPage() {
         decision,
         comentario,
       })
-      toast.success(decision === 'APROBADO' ? 'Solicitud aprobada.' : 'Solicitud rechazada.')
+      toast.success(decision === 'APROBADO' ? 'Solicitud confirmada.' : 'Solicitud rechazada.')
       invalidar()
       setModalValidacion(false)
     } catch (error) {
@@ -195,11 +229,11 @@ export function TicketDetailPage() {
   }
 
   const { estadoReal, tipoSolicitud } = ticket
-  // Solo los tickets de diseño tienen diseñador, entregables y dictamen. Los IA y los de validación
+  // Solo los tickets de diseño tienen diseñador, entregables y dictamen. Los de aprobación y confirmación
   // los resuelve un Validador.
-  const esIA = estadoReal.flujo === 'APROBACION_IA'
-  const esValidacion = estadoReal.flujo === 'VALIDACION'
-  const esDiseno = !esIA && !esValidacion
+  const esAprobacion = estadoReal.flujo === 'APROBACION'
+  const esConfirmacion = estadoReal.flujo === 'CONFIRMACION'
+  const esDiseno = !esAprobacion && !esConfirmacion
   const registrado = estadoReal.estado_registrado
   const correccionesUsadas = estadoReal.correcciones_usadas ?? 0
   const esExcepcionalPendiente = estadoReal.es_excepcional && estadoReal.excepcional_estado === 'PENDIENTE'
@@ -216,28 +250,33 @@ export function TicketDetailPage() {
   const ultimoEnvio = ultimoEnvioDe(ticket.enviosIA)
   const ultimoEnvioRevisado = ultimoEnvio != null && ticket.revisionesIA.some((r) => r.envio_id === ultimoEnvio.id)
   const esperandoAprobador = registrado === 'Enviado' || registrado === 'Retrasado'
-  const puedeSubirPrimerAfiche = esIA && esSolicitante && esperandoAprobador && ticket.enviosIA.length === 0
-  const puedeReenviarAfiche = esIA && esSolicitante && registrado === 'Corrección'
+  const puedeSubirPrimerAfiche = esAprobacion && esSolicitante && esperandoAprobador && ticket.enviosIA.length === 0
+  const puedeReenviarAfiche = esAprobacion && esSolicitante && registrado === 'Corrección'
   const puedeRevisarAfiche =
-    esIA && tieneRol('Validador') && esperandoAprobador && ultimoEnvio != null && !ultimoEnvioRevisado
+    esAprobacion && tieneRol('Validador') && esperandoAprobador && ultimoEnvio != null && !ultimoEnvioRevisado
+  // Aprobación excepcional sin responder: "Dictaminar" abre primero el paso de aceptar (Parte 62).
+  const puedeAceptarExcepcional =
+    esAprobacion && tieneRol('Validador') && esperandoAprobador && Boolean(esExcepcionalPendiente)
   // Validación: una sola decisión, mientras el ticket sigue en "Enviado"/"Retrasado".
   const decision = ticket.decisionValidacion
-  const puedeDecidirValidacion = esValidacion && tieneRol('Validador') && esperandoAprobador && decision == null
+  const puedeDecidirValidacion = esConfirmacion && tieneRol('Validador') && esperandoAprobador && decision == null
   const intentosRestantes = INTENTOS_MAXIMOS_IA - (estadoReal.intentos_usados ?? 0)
   const puedeVerEntregables = esDiseno && (puedeVerGestion || esSolicitante)
-  // Los tickets IA solo admiten el afiche (Parte 32).
+  // Los tickets de aprobación solo admiten el archivo a revisar (Parte 32).
   const puedeAgregarAdjunto =
-    !esIA &&
+    !esAprobacion &&
     esSolicitante &&
     estadoReal.estado_real !== 'Aprobado' &&
     ticket.adjuntos.length < MAXIMO_ADJUNTOS_POR_TICKET
   const etiquetas = etiquetasGenerales(tipoSolicitud?.etiquetas_generales)
   const perspectiva = perspectivaDetalle(tieneRol, esDiseno)
   const puedePedirCambio = puedePedirCambioUrgente(estadoReal, areasQueDirige, cambiosUrgentes)
-  const cambioUrgente = ticket.base.ticket_origen_id != null ? cambioDe(estadoReal.ticket_id) : undefined
+  // Cambio urgente (Parte 63): una sola instrucción, sin "Pedir corrección" ni contador de correcciones.
+  const esModificacion = ticket.base.ticket_origen_id != null
+  const cambioUrgente = esModificacion ? cambioDe(estadoReal.ticket_id) : undefined
 
   const eventosTimeline = ticket.log.flatMap((entrada) => {
-    let descripcion = etiquetarCambioEstado(entrada.descripcion_cambio, perspectiva)
+    let descripcion = etiquetarCambioEstado(entrada.descripcion_cambio, perspectiva, estadoReal.flujo)
     if (!muestraAsignacion) {
       const partes = descripcion.split('; ').filter((parte) => !parte.startsWith('Diseñador: '))
       if (partes.length === 0) return []
@@ -265,8 +304,12 @@ export function TicketDetailPage() {
               )}
             </p>
             {puedeVerGestion && ticket.base.motivo_cambio_urgente && (
-              <p className="mt-1 whitespace-pre-line break-words">{ticket.base.motivo_cambio_urgente}</p>
+              <div className="mt-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-tinta-suave">Instrucción del cambio</p>
+                <p className="mt-0.5 whitespace-pre-line break-words">{ticket.base.motivo_cambio_urgente}</p>
+              </div>
             )}
+            <AlertaModificacion className="mt-3" />
           </div>
         </div>
       )}
@@ -285,7 +328,7 @@ export function TicketDetailPage() {
             </p>
           </div>
           <div className="flex flex-col items-end gap-1.5">
-            <EstadoChip estado={estadoReal.estado_real ?? ''} perspectiva={perspectiva} />
+            <EstadoChip estado={estadoReal.estado_real ?? ''} perspectiva={perspectiva} flujo={estadoReal.flujo} />
             {muestraAsignacion && estadoReal.asignado_por_asignador && (
               <TagAsignado por={estadoReal.asignado_por_nombre} fecha={estadoReal.fecha_asignacion} />
             )}
@@ -324,7 +367,7 @@ export function TicketDetailPage() {
               )}
             </p>
           </div>
-          {esIA && (
+          {esAprobacion && (
             <div>
               <p className="text-xs text-tinta-suave">Intentos restantes</p>
               <p className={intentosRestantes <= 1 ? 'font-semibold text-coral' : undefined}>
@@ -343,7 +386,7 @@ export function TicketDetailPage() {
               )}
             </div>
           )}
-          {puedeVerGestion && esDiseno && (
+          {puedeVerGestion && esDiseno && !esModificacion && (
             <div>
               <p className="text-xs text-tinta-suave">Correcciones</p>
               <p>{correccionesUsadas} / {CORRECCIONES_MAXIMAS}</p>
@@ -368,9 +411,9 @@ export function TicketDetailPage() {
           )}
           {puedeSubirEntregable && <Button onClick={() => setModalEntregable(true)}>Subir entregable</Button>}
           {(puedeSubirPrimerAfiche || puedeReenviarAfiche) && (
-            <Button onClick={() => setModalAfiche(true)}>{puedeReenviarAfiche ? 'Reenviar afiche' : 'Subir afiche'}</Button>
+            <Button onClick={() => setModalAfiche(true)}>{puedeReenviarAfiche ? 'Reenviar archivo' : 'Subir archivo'}</Button>
           )}
-          {puedeRevisarAfiche && <Button onClick={() => setModalRevision(true)}>Dictaminar</Button>}
+          {(puedeRevisarAfiche || puedeAceptarExcepcional) && <Button onClick={() => setModalRevision(true)}>Dictaminar</Button>}
           {puedeDecidirValidacion && <Button onClick={() => setModalValidacion(true)}>Dictaminar</Button>}
           {puedeDictaminar && (
             <Button
@@ -398,9 +441,9 @@ export function TicketDetailPage() {
         )}
       </Card>
 
-      {esIA && (
+      {esAprobacion && (
         <Card>
-          <h2 className="mb-3 font-semibold text-azul-noche">Afiche</h2>
+          <h2 className="mb-3 font-semibold text-azul-noche">Archivo a revisar</h2>
           {ultimoEnvio ? (
             <>
               <p className="mb-2 text-xs text-tinta-suave">
@@ -411,8 +454,8 @@ export function TicketDetailPage() {
           ) : (
             <p className="text-sm text-tinta-suave">
               {puedeSubirPrimerAfiche
-                ? 'Tu solicitud se creó, pero el afiche no se llegó a subir. Usa "Subir afiche" para enviarlo a revisión.'
-                : 'El solicitante todavía no ha subido el afiche.'}
+                ? 'Tu solicitud se creó, pero el archivo no se llegó a subir. Usa "Subir archivo" para enviarlo a revisión.'
+                : 'El solicitante todavía no ha subido el archivo.'}
             </p>
           )}
 
@@ -425,24 +468,24 @@ export function TicketDetailPage() {
         </Card>
       )}
 
-      {esValidacion && decision && (
+      {esConfirmacion && decision && (
         <Card>
-          <h2 className="mb-3 font-semibold text-azul-noche">Decisión de validación</h2>
+          <h2 className="mb-3 font-semibold text-azul-noche">Decisión</h2>
           <div
             className={`rounded-lg p-3 text-sm ${
               decision.decision === 'APROBADO' ? 'bg-menta-bruma text-menta-profundo' : 'bg-coral-bruma text-coral'
             }`}
           >
             <p className="font-semibold">
-              {decision.decision === 'APROBADO' ? 'Aprobada' : 'Rechazada'} · {formatFechaHora(decision.fecha_decision)}
+              {decision.decision === 'APROBADO' ? 'Confirmada' : 'Rechazada'} · {formatFechaHora(decision.fecha_decision)}
             </p>
             {decision.comentario && <p className="mt-1 whitespace-pre-line text-tinta">{decision.comentario}</p>}
           </div>
         </Card>
       )}
 
-      {/* Un ticket IA solo lleva su afiche; se muestran los adjuntos que tuviera de antes. */}
-      {(!esIA || ticket.adjuntos.length > 0) && (
+      {/* Un ticket de aprobación solo lleva su archivo; se muestran los adjuntos que tuviera de antes. */}
+      {(!esAprobacion || ticket.adjuntos.length > 0) && (
       <Card>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold text-azul-noche">
@@ -454,7 +497,7 @@ export function TicketDetailPage() {
             </Button>
           )}
         </div>
-        <ListaAdjuntos adjuntos={ticket.adjuntos} />
+        <ListaAdjuntos adjuntos={ticket.adjuntos} codigo={estadoReal.codigo ?? `ticket-${estadoReal.ticket_id}`} />
       </Card>
       )}
 
@@ -481,7 +524,7 @@ export function TicketDetailPage() {
                   {cambio.codigo}
                 </Link>
                 <span className="text-xs text-tinta-suave">{formatFechaHora(cambio.fecha_registro)}</span>
-                <EstadoChip estado={cambio.estado_real ?? ''} perspectiva={perspectiva} />
+                <EstadoChip estado={cambio.estado_real ?? ''} perspectiva={perspectiva} flujo={cambio.flujo} />
               </li>
             ))}
           </ul>
@@ -515,10 +558,10 @@ export function TicketDetailPage() {
           <h2 className="mb-4 font-semibold text-azul-noche">Progreso de la solicitud</h2>
           <Stepper
             pasos={
-              esIA
+              esAprobacion
                 ? pasosProgresoIA(estadoReal, INTENTOS_MAXIMOS_IA)
-                : esValidacion
-                  ? pasosProgresoValidacion(estadoReal, decision?.comentario ?? null)
+                : esConfirmacion
+                  ? pasosProgresoValidacion(estadoReal, decision?.comentario ?? estadoReal.excepcional_motivo_rechazo ?? null)
                   : pasosProgresoTicket(estadoReal)
             }
           />
@@ -547,22 +590,26 @@ export function TicketDetailPage() {
         onCerrar={() => setModalAfiche(false)}
         onSubido={invalidar}
         ticketId={estadoReal.ticket_id!}
-        titulo={puedeReenviarAfiche ? 'Reenviar afiche' : 'Subir afiche'}
+        titulo={puedeReenviarAfiche ? 'Reenviar archivo' : 'Subir archivo'}
       />
 
       <RevisarAficheModal
         abierto={modalRevision}
         onCerrar={() => setModalRevision(false)}
         onConfirmar={manejarRevision}
-        titulo={`Revisar afiche de ${estadoReal.codigo ?? ''}`}
+        titulo={`Revisar archivo de ${estadoReal.codigo ?? ''}`}
         intento={ultimoEnvio?.intento ?? 1}
+        excepcional={Boolean(estadoReal.es_excepcional)}
+        pendienteAceptar={puedeAceptarExcepcional}
+        onResponderExcepcional={manejarRespuestaExcepcional}
       />
 
       <RevisarAficheModal
         abierto={modalValidacion}
         onCerrar={() => setModalValidacion(false)}
         onConfirmar={manejarValidacion}
-        titulo={`Validar ${estadoReal.codigo ?? ''}`}
+        titulo={`Confirmar ${estadoReal.codigo ?? ''}`}
+        excepcional={Boolean(estadoReal.es_excepcional)}
       />
 
       <CambioUrgenteModal ticket={modalCambioUrgente ? estadoReal : null} onCerrar={() => setModalCambioUrgente(false)} />
@@ -573,6 +620,7 @@ export function TicketDetailPage() {
         onConfirmar={manejarDictamen}
         codigo={estadoReal.codigo ?? ''}
         correccionesUsadas={correccionesUsadas}
+        esModificacion={esModificacion}
       />
     </div>
   )

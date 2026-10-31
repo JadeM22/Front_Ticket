@@ -10,7 +10,7 @@ import { Skeleton } from '../ui/Skeleton'
 /** Las URLs firmadas duran 1 h; se reusan 50 min para no pedir una nueva en cada render o refetch. */
 const VIGENCIA_URL_MS = 50 * 60 * 1000
 
-/** Vista grande del afiche: la imagen en línea, o un enlace si es PDF. */
+/** Vista grande del archivo: la imagen en línea, o un enlace si es PDF. */
 export function VistaAfiche({ envio }: { envio: EnvioIA }) {
   const esImagen = (envio.tipo_mime ?? '').startsWith('image/')
   const { data: url, isLoading, isError } = useQuery({
@@ -21,7 +21,7 @@ export function VistaAfiche({ envio }: { envio: EnvioIA }) {
   })
 
   if (isLoading) return <Skeleton className="h-64 w-full" />
-  if (isError || !url) return <p className="text-sm text-coral">No se pudo cargar el afiche.</p>
+  if (isError || !url) return <p className="text-sm text-coral">No se pudo cargar el archivo.</p>
 
   if (!esImagen) {
     return (
@@ -40,7 +40,7 @@ export function VistaAfiche({ envio }: { envio: EnvioIA }) {
     <a href={url} target="_blank" rel="noopener noreferrer" title="Abrir en tamaño completo">
       <img
         src={url}
-        alt={`Afiche, intento ${envio.intento}`}
+        alt={`Archivo, intento ${envio.intento}`}
         className="max-h-[480px] w-full rounded-lg border border-azul-niebla bg-azul-niebla/20 object-contain"
       />
     </a>
@@ -63,7 +63,7 @@ export function MiniaturaAfiche({ envio }: { envio: EnvioIA }) {
   return (
     <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-lg border border-azul-niebla bg-azul-niebla/20">
       {esImagen && url ? (
-        <img src={url} alt={`Afiche, intento ${envio.intento}`} className="h-full w-full object-cover" />
+        <img src={url} alt={`Archivo, intento ${envio.intento}`} className="h-full w-full object-cover" />
       ) : (
         <span className="flex flex-col items-center gap-1 text-xs text-tinta-suave">
           <FileText size={28} />
@@ -88,13 +88,13 @@ export function HistorialEnviosIA({ envios, revisiones }: HistorialEnviosIAProps
     try {
       window.open(await crearUrlFirmadaAfiche(envio.ruta_archivo), '_blank', 'noopener,noreferrer')
     } catch (error) {
-      toast.error(await mensajeError(error, 'No se pudo abrir el afiche.'))
+      toast.error(await mensajeError(error, 'No se pudo abrir el archivo.'))
     } finally {
       setAbriendo(null)
     }
   }
 
-  if (envios.length === 0) return <p className="text-sm text-tinta-suave">Todavía no se ha enviado ningún afiche.</p>
+  if (envios.length === 0) return <p className="text-sm text-tinta-suave">Todavía no se ha enviado ningún archivo.</p>
 
   const revisionPorEnvio = new Map(revisiones.map((r) => [r.envio_id, r]))
   const ordenados = [...envios].sort((a, b) => b.intento - a.intento)
@@ -132,7 +132,7 @@ export function HistorialEnviosIA({ envios, revisiones }: HistorialEnviosIAProps
                     }`}
                   >
                     {revision.decision === 'APROBADO' ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                    {revision.decision === 'APROBADO' ? 'Aprobado' : 'Rechazado'} · {formatFechaHora(revision.fecha_revision)}
+                    {revision.decision === 'APROBADO' ? 'Aprobado' : 'Denegado'} · {formatFechaHora(revision.fecha_revision)}
                   </p>
                   {revision.comentario && <p className="mt-1 whitespace-pre-line text-tinta-suave">{revision.comentario}</p>}
                 </>

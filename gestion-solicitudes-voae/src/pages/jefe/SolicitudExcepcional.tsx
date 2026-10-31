@@ -55,7 +55,7 @@ export function SolicitudExcepcionalPage() {
                   <p className="text-xs text-tinta-suave">Evento: {formatFecha(ticket.fecha_evento)}</p>
                 </div>
                 <div className="flex flex-col items-end gap-1 text-right">
-                  <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="solicitante" />
+                  <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="solicitante" flujo={ticket.flujo} />
                   <p className="text-xs text-tinta-suave">
                     {textoRespuestaExcepcional(ticket)}
                   </p>

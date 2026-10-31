@@ -19,7 +19,7 @@ export function useTicketsEstadoReal(habilitado = true) {
 
 /**
  * Igual que `useTicketsEstadoReal` (misma consulta y caché) pero solo con los tickets de flujo DISENO:
- * los de APROBACION_IA y VALIDACION nunca tienen diseñador. RLS ya se los oculta a Asignador y
+ * los de APROBACION y CONFIRMACION nunca tienen diseñador. RLS ya se los oculta a Asignador y
  * Diseñador; este filtro evita que alguien que además sea Administrador los vea en tableros o
  * contadores de diseño.
  */

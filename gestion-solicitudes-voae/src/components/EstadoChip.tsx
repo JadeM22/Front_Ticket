@@ -23,11 +23,13 @@ interface EstadoChipProps {
   estado: string
   /** Quién mira: decide el texto visible (`lib/estados.ts`). */
   perspectiva: PerspectivaEstado
+  /** Flujo del ticket (`TipoSolicitud.flujo`): en Aprobación, "Rechazado" se lee "Denegado". */
+  flujo?: string | null
   /** Para colocarlo sobre la franja azul oscura del boleto: fondo semitransparente, texto blanco. */
   sobreOscuro?: boolean
 }
 
-export function EstadoChip({ estado, perspectiva, sobreOscuro = false }: EstadoChipProps) {
+export function EstadoChip({ estado, perspectiva, flujo, sobreOscuro = false }: EstadoChipProps) {
   const estiloEstado = sobreOscuro
     ? 'bg-white/15 text-white ring-1 ring-inset ring-white/30'
     : perspectiva === 'solicitante' && estado === 'Corrección'
@@ -37,7 +39,7 @@ export function EstadoChip({ estado, perspectiva, sobreOscuro = false }: EstadoC
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${estiloEstado}`}>
       {estado === 'Aprobado (Automático)' && <Clock size={12} />}
-      {etiquetaEstado(estado, perspectiva)}
+      {etiquetaEstado(estado, perspectiva, flujo)}
     </span>
   )
 }

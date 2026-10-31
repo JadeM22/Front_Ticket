@@ -47,7 +47,7 @@ export function TicketCard({ ticket, perspectiva, accion }: TicketCardProps) {
           </span>
           {ticket.es_excepcional && <BadgeExcepcional ticketId={ticket.ticket_id} />}
         </div>
-        <EstadoChip estado={ticket.estado_real ?? ''} perspectiva={perspectiva} />
+        <EstadoChip estado={ticket.estado_real ?? ''} perspectiva={perspectiva} flujo={ticket.flujo} />
       </div>
 
       {muestraInsignias && (
@@ -62,7 +62,7 @@ export function TicketCard({ ticket, perspectiva, accion }: TicketCardProps) {
                 correccionesUsadas >= CORRECCIONES_MAXIMAS ? 'bg-coral-bruma text-coral' : 'bg-ambar-bruma text-ambar'
               }`}
             >
-              {ticket.flujo === 'APROBACION_IA' ? 'Rechazos' : 'Correcciones'} {correccionesUsadas}/{CORRECCIONES_MAXIMAS}
+              {ticket.flujo === 'APROBACION' ? 'Denegaciones' : 'Correcciones'} {correccionesUsadas}/{CORRECCIONES_MAXIMAS}
             </span>
           )}
         </div>

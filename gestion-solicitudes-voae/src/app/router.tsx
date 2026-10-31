@@ -68,7 +68,7 @@ export const router = createBrowserRouter([
               {
                 element: <RequireRole roles={['Validador']} />,
                 children: [
-                  { path: '/validador', element: <ValidadorDashboard vista="afiches" /> },
+                  { path: '/validador', element: <ValidadorDashboard vista="revisiones" /> },
                   { path: '/validador/solicitudes', element: <ValidadorDashboard vista="solicitudes" /> },
                 ],
               },

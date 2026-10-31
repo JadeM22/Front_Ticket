@@ -19,8 +19,15 @@ import {
 
 const EXPLICACION_FLUJO: Record<Flujo, string> = {
   DISENO: 'El equipo de diseño toma la solicitud, entrega y el Jefe de Área dictamina.',
-  APROBACION_IA: 'El solicitante sube su afiche y se aprueba o rechaza con IA (hasta 5 intentos).',
-  VALIDACION: 'La solicitud se aprueba o rechaza una sola vez, sin diseño (p. ej. Cobertura de evento).',
+  APROBACION: 'El solicitante sube un archivo y se aprueba o deniega (hasta 5 intentos).',
+  CONFIRMACION: 'La solicitud se confirma o rechaza una sola vez, sin diseño (p. ej. Cobertura de evento).',
+}
+
+/** Texto de cada opción del selector de flujo (el nombre corto sigue siendo `ETIQUETA_FLUJO`). */
+const OPCION_FLUJO: Record<Flujo, string> = {
+  DISENO: ETIQUETA_FLUJO.DISENO,
+  APROBACION: 'Aprobación (aprobar o denegar un archivo)',
+  CONFIRMACION: 'Confirmación (confirmar o rechazar)',
 }
 
 const DIAS_MINIMOS = 10
@@ -160,7 +167,7 @@ function FormularioTipoSolicitud({
           <select className={CLASE_INPUT} value={flujo} onChange={(e) => setFlujo(e.target.value as Flujo)}>
             {(Object.keys(ETIQUETA_FLUJO) as Flujo[]).map((valor) => (
               <option key={valor} value={valor}>
-                {ETIQUETA_FLUJO[valor]}
+                {OPCION_FLUJO[valor]}
               </option>
             ))}
           </select>

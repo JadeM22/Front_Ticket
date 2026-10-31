@@ -24,8 +24,8 @@ export const AFICHE_VACIO: AficheSeleccionado = { archivo: null, comentario: '' 
 
 /** Mensaje de error si el archivo no cumple las reglas del bucket, o `null` si está bien. */
 export function validarArchivoAfiche(archivo: File): string | null {
-  if (!TIPOS_MIME_AFICHE.includes(archivo.type)) return 'El afiche debe ser una imagen PNG, JPG o WEBP, o un PDF.'
-  if (archivo.size > LIMITE_BYTES_AFICHE) return 'El afiche no puede pesar más de 10 MB.'
+  if (!TIPOS_MIME_AFICHE.includes(archivo.type)) return 'El archivo debe ser una imagen PNG, JPG o WEBP, o un PDF.'
+  if (archivo.size > LIMITE_BYTES_AFICHE) return 'El archivo no puede pesar más de 10 MB.'
   return null
 }
 
@@ -78,7 +78,7 @@ interface SubirAficheInput {
 }
 
 /**
- * Sube el afiche a "afiches-ia/<ticket_id>/…" y lo registra en `EnvioIA`. La base calcula `intento`
+ * Sube el archivo a "afiches-ia/<ticket_id>/…" y lo registra en `EnvioIA`. La base calcula `intento`
  * y `usuario_registro`, y cambia el estado del ticket. Si el registro falla se borra el archivo
  * (la política de Storage lo permite mientras no esté registrado en `EnvioIA`).
  */

@@ -30,10 +30,10 @@ export interface TicketCompleto {
   entregables: Entregable[]
   dictamenes: DictamenJefe[]
   adjuntos: Adjunto[]
-  /** Solo en tickets de flujo APROBACION_IA; vacíos en los de diseño. */
+  /** Solo en tickets de flujo APROBACION; vacíos en los de diseño. */
   enviosIA: EnvioIA[]
   revisionesIA: RevisionIA[]
-  /** Solo en tickets de flujo VALIDACION, una vez que el Validador decidió. */
+  /** Solo en tickets de flujo CONFIRMACION, una vez que el Validador decidió. */
   decisionValidacion: DecisionValidacion | null
   /**
    * Parte 53: la corrección llegó al final del plazo y la base movió `fecha_limite` (el último registro
@@ -136,9 +136,9 @@ export async function obtenerTicketCompleto(
 
   const tipoSolicitud = await obtenerTipoSolicitud(base.tipo_solicitud_id)
 
-  const esIA = estadoReal.flujo === 'APROBACION_IA'
-  const esValidacion = estadoReal.flujo === 'VALIDACION'
-  const esDiseno = !esIA && !esValidacion
+  const esAprobacion = estadoReal.flujo === 'APROBACION'
+  const esConfirmacion = estadoReal.flujo === 'CONFIRMACION'
+  const esDiseno = !esAprobacion && !esConfirmacion
 
   const [
     detalleFormulario,
@@ -156,9 +156,9 @@ export async function obtenerTicketCompleto(
       esDiseno ? listarEntregablesPorTicket(ticketId) : [],
       incluirGestion && esDiseno ? listarDictamenesPorTicket(ticketId) : [],
       listarAdjuntosPorTicket(ticketId),
-      esIA ? listarEnviosIA(ticketId) : [],
-      esIA ? listarRevisionesIA(ticketId) : [],
-      esValidacion ? obtenerDecisionValidacion(ticketId) : null,
+      esAprobacion ? listarEnviosIA(ticketId) : [],
+      esAprobacion ? listarRevisionesIA(ticketId) : [],
+      esConfirmacion ? obtenerDecisionValidacion(ticketId) : null,
       incluirGestion && esDiseno && estadoReal.estado_real === 'Corrección' ? ultimoCambioEsFechaLimite(ticketId) : false,
     ])
 

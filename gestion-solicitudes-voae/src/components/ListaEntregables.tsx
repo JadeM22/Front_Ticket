@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, Download, ExternalLink, FileText, Image as ImageIcon, Video, File as FileIcon } from 'lucide-react'
 import { toast } from 'sonner'
-import { crearUrlDescarga, crearUrlFirmada, obtenerArchivoEntregable } from '../data/entregables'
+import { crearUrlDescarga, crearUrlVer, obtenerArchivoEntregable } from '../data/entregables'
 import { mensajeError } from '../lib/errors'
 import { formatFechaHora } from '../lib/date'
-import { descargarBlob, descargarDesdeUrl, nombreDescarga } from '../lib/descargas'
+import { descargarBlob, descargarDesdeUrl, nombreDescarga, tipoVistaPrevia } from '../lib/descargas'
 import { Button } from './ui/Button'
+import { BotonesArchivo, VistaPreviaModal, type VistaPrevia } from './VistaPreviaArchivo'
 import type { Entregable } from '../data/entregables'
 
 const ICONO_POR_TIPO = {
@@ -41,6 +42,7 @@ export function ListaEntregables({ entregables, codigo }: ListaEntregablesProps)
   const [descargando, setDescargando] = useState<number | null>(null)
   const [progreso, setProgreso] = useState<string | null>(null)
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const [vistaPrevia, setVistaPrevia] = useState<VistaPrevia | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -60,16 +62,33 @@ export function ListaEntregables({ entregables, codigo }: ListaEntregablesProps)
   const ultimaVersion = entregables.reduce((maxima, e) => Math.max(maxima, e.version), 0)
   const hayArchivos = entregables.some((e) => e.tipo_entregable !== 'LINK')
 
+  /** Imagen o PDF: vista previa en el modal. Otro archivo: pestaña nueva. Enlace: se abre tal cual. */
   async function abrir(entregable: Entregable) {
     if (entregable.tipo_entregable === 'LINK') {
       window.open(entregable.url_o_ruta, '_blank', 'noopener,noreferrer')
       return
     }
+    const tipo =
+      entregable.tipo_entregable === 'IMAGEN'
+        ? 'imagen'
+        : entregable.tipo_entregable === 'PDF'
+          ? 'pdf'
+          : tipoVistaPrevia(null, entregable.url_o_ruta)
+    // La pestaña se abre antes de esperar la URL: si no, el navegador la bloquea por no venir de un clic.
+    const pestana = tipo ? null : window.open('', '_blank')
     setAbriendo(entregable.id)
     try {
-      const url = await crearUrlFirmada(entregable.url_o_ruta)
-      window.open(url, '_blank', 'noopener,noreferrer')
+      const url = await crearUrlVer(entregable.url_o_ruta)
+      if (tipo) {
+        setVistaPrevia({ url, tipo, nombre: entregable.descripcion || nombres.get(entregable.id) || 'Entregable' })
+      } else if (pestana) {
+        pestana.opener = null
+        pestana.location.href = url
+      } else {
+        window.open(url, '_blank', 'noopener,noreferrer')
+      }
     } catch (error) {
+      pestana?.close()
       toast.error(await mensajeError(error, 'No se pudo abrir el archivo.'))
     } finally {
       setAbriendo(null)
@@ -200,8 +219,8 @@ export function ListaEntregables({ entregables, codigo }: ListaEntregablesProps)
               const Icono = ICONO_POR_TIPO[entregable.tipo_entregable as keyof typeof ICONO_POR_TIPO] ?? FileIcon
               const esLink = entregable.tipo_entregable === 'LINK'
               return (
-                <li key={entregable.id} className="flex items-center justify-between gap-3 rounded-lg border border-azul-niebla p-3">
-                  <div className="flex min-w-0 items-center gap-3">
+                <li key={entregable.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-azul-niebla p-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
                     <span className="flex-none rounded-full bg-azul-niebla p-2 text-azul-institucional">
                       <Icono size={16} />
                     </span>
@@ -210,43 +229,22 @@ export function ListaEntregables({ entregables, codigo }: ListaEntregablesProps)
                       <p className="text-xs text-tinta-suave">{formatFechaHora(entregable.fecha_subida)}</p>
                     </div>
                   </div>
-                  <div className="flex flex-none items-center gap-3">
-                    {esLink ? (
-                      <button
-                        type="button"
-                        onClick={() => abrir(entregable)}
-                        className="text-sm font-medium text-azul-institucional hover:underline"
-                      >
-                        Abrir enlace
-                      </button>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => abrir(entregable)}
-                          disabled={abriendo === entregable.id}
-                          className="text-sm font-medium text-azul-institucional hover:underline disabled:opacity-50"
-                        >
-                          {abriendo === entregable.id ? 'Abriendo…' : 'Ver'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => descargarUno(entregable)}
-                          disabled={descargando === entregable.id || ocupado}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-azul-institucional hover:underline disabled:opacity-50"
-                        >
-                          <Download size={14} />
-                          {descargando === entregable.id ? 'Descargando…' : 'Descargar'}
-                        </button>
-                      </>
-                    )}
-                  </div>
+                  <BotonesArchivo
+                    esEnlace={esLink}
+                    onVer={() => void abrir(entregable)}
+                    onDescargar={() => void descargarUno(entregable)}
+                    viendo={abriendo === entregable.id}
+                    descargando={descargando === entregable.id}
+                    deshabilitado={ocupado}
+                  />
                 </li>
               )
             })}
           </ul>
         </div>
       ))}
+
+      <VistaPreviaModal vista={vistaPrevia} onCerrar={() => setVistaPrevia(null)} />
     </div>
   )
 }

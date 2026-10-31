@@ -80,8 +80,19 @@ export async function subirAdjuntoLink({ ticketId, titulo, url, descripcion }: S
   return data
 }
 
-export async function crearUrlFirmadaAdjunto(ruta: string): Promise<string> {
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(ruta, 3600)
+/** Ver y descargar usan URLs de vida corta (60 s): se piden justo antes de usarlas. */
+const SEGUNDOS_URL = 60
+
+/** URL firmada para ver el adjunto (vista previa o pestaña nueva), sin forzar la descarga. */
+export async function crearUrlVerAdjunto(ruta: string): Promise<string> {
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(ruta, SEGUNDOS_URL)
+  if (error) throw error
+  return data.signedUrl
+}
+
+/** URL firmada que el navegador descarga (no abre) con el nombre legible `nombre`. */
+export async function crearUrlDescargaAdjunto(ruta: string, nombre: string): Promise<string> {
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(ruta, SEGUNDOS_URL, { download: nombre })
   if (error) throw error
   return data.signedUrl
 }

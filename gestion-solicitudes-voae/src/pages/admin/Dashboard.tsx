@@ -19,7 +19,7 @@ function contarPor<T>(lista: T[], claveFn: (item: T) => string | null | undefine
 export function AdminDashboard() {
   const { data: tickets = [], isLoading } = useTicketsEstadoReal()
 
-  const porEstado = useMemo(() => contarPor(tickets, (t) => etiquetaEstado(t.estado_real, 'admin')), [tickets])
+  const porEstado = useMemo(() => contarPor(tickets, (t) => etiquetaEstado(t.estado_real, 'admin', t.flujo)), [tickets])
   const porArea = useMemo(() => contarPor(tickets, (t) => t.area), [tickets])
   const porTipo = useMemo(() => contarPor(tickets, (t) => t.tipo_solicitud), [tickets])
 

@@ -14,9 +14,18 @@ const ETIQUETAS: Record<PerspectivaEstado, Partial<Record<string, string>>> = {
   admin: { Finalizado: 'Finalizado (esperando aprobación)' },
 }
 
-/** Texto visible de `estado_real` para una perspectiva. Los estados sin regla se muestran igual. */
-export function etiquetaEstado(estadoReal: string | null | undefined, perspectiva: PerspectivaEstado): string {
+/**
+ * Texto visible de `estado_real` para una perspectiva. Los estados sin regla se muestran igual. En el
+ * flujo de Aprobación el Validador "deniega" (la base guarda `RECHAZADO`), así que su `Rechazado` se lee
+ * "Denegado" para todos; en Confirmación sigue siendo "Rechazado".
+ */
+export function etiquetaEstado(
+  estadoReal: string | null | undefined,
+  perspectiva: PerspectivaEstado,
+  flujo?: string | null,
+): string {
   if (!estadoReal) return ''
+  if (flujo === 'APROBACION' && estadoReal === 'Rechazado') return 'Denegado'
   return ETIQUETAS[perspectiva][estadoReal] ?? estadoReal
 }
 
@@ -32,10 +41,10 @@ export function perspectivaDetalle(tieneRol: (rol: RolNombre) => boolean, esDise
 }
 
 /** Reescribe la parte `Estado: "A" -> "B"` de una línea del historial (TicketLog) con las etiquetas visibles. */
-export function etiquetarCambioEstado(descripcion: string, perspectiva: PerspectivaEstado): string {
+export function etiquetarCambioEstado(descripcion: string, perspectiva: PerspectivaEstado, flujo?: string | null): string {
   return descripcion.replace(
     /Estado: "([^"]*)" -> "([^"]*)"/g,
     (_, antes: string, despues: string) =>
-      `Estado: "${etiquetaEstado(antes, perspectiva)}" -> "${etiquetaEstado(despues, perspectiva)}"`,
+      `Estado: "${etiquetaEstado(antes, perspectiva, flujo)}" -> "${etiquetaEstado(despues, perspectiva, flujo)}"`,
   )
 }

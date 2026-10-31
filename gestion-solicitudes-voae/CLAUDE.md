@@ -71,7 +71,9 @@ designer (`data/tickets.ts`, `disenador/Dashboard.tsx`), and automatic approval 
 Jefes. `cambios_bd_2026-10-28.sql` (Partes 52–58: campus "COBERTURA NACIONAL" via
 `Campus.es_cobertura_nacional`, 1-día-hábil margin after a last-minute corrección, "cambio urgente"
 excepcionales linked by `Ticket.ticket_origen_id`, ETIQUETAS default `[]`; Parte 56 is optional and not
-applied) is the newest. Code comments cite these by number ("Parte 27"), so grep
+applied), and `cambios_bd_2026-10-30.sql` (Partes 59–64: horario centralizado sin cambios, flujos renombrados
+`APROBACION_IA`→`APROBACION` / `VALIDACION`→`CONFIRMACION`, excepcionales en todos los flujos, aceptar antes de
+dictaminar, cambio urgente sin correcciones) is the newest. Code comments cite these by number ("Parte 27"), so grep
 `docs/cambios/` for `PARTE <n>` to find the rule a comment refers to. `docs/semilla_datos_prueba.sql` is
 test seed data. All of these are kept here for reference only — `src/types/database.ts` is the authoritative, generated API
 surface and is already regenerated against the live schema. Do not hand-edit `database.ts`; regenerate it
@@ -126,7 +128,8 @@ and `intentos_usados` (IA tickets only). It does **not** carry `tipo_solicitud_i
 `src/data/tickets.ts#obtenerTicketCompleto()` is what the detail page actually uses — it joins the view +
 base `Ticket` row + the ticket's `TipoSolicitud` (for `dias_estimados`/`dias_habiles`) + the form
 (`Formularios` + `FormularioCampus`→`Campus`) + `TicketLog` + `Entregables` + `DictamenJefe` + `Adjuntos`,
-and for IA tickets `EnvioIA` + `RevisionIA` (VALIDACION: `DecisionValidacion`) instead of entregables/dictamen.
+and for APROBACION tickets `EnvioIA` + `RevisionIA` (CONFIRMACION: `DecisionValidacion`) instead of
+entregables/dictamen.
 
 **Ticket state machine lives in DB triggers, not here.** Valid transitions (`Enviado → En revisión/En
 proceso`, `Finalizado → Corrección (max 1) | Aprobado`, `Corrección → Finalizado`, `Retrasado → Finalizado`
@@ -155,13 +158,18 @@ time, same columns as `CampoFormulario`), and `DetalleFormularioVista.tsx` rende
 snapshot, never from current `CampoFormulario`**. Admins manage fields per type (`CamposTipoModal` +
 `EditorCampo`: `clave`/`tipo_campo` are immutable after insert, nothing is ever deleted — `estado = false`).
 `TipoSolicitud.flujo`
-(`'DISENO'|'APROBACION_IA'|'VALIDACION'`) is chosen only on create; only DISENO types can be excepcional.
+(`'DISENO'|'APROBACION'|'CONFIRMACION'`) is chosen only on create; since Parte 61 every flujo can be
+excepcional (the Jefe's wizard offers all types; the new-excepcional notice goes to the Asignador for DISENO
+and to the Validador otherwise).
 Validation `min`/`max` can't be negative and `max_longitud` must be > 0 (DB check, Parte 31). Form dates
 use `hoyTegucigalpaISO()` (`lib/date.ts`) as the `min` / "not in the past" check, plus the días-hábiles
 rule described below.
 
-**Aprobación de afiches con IA** (`flujo = 'APROBACION_IA'`): no designer, entregables, dictamen,
-excepcional or `Adjuntos` (the DB rejects them — only the poster). The requester uploads the poster to the
+**Aprobación** (`flujo = 'APROBACION'`, any type — "Aprobación de afiches con IA" is just one; UI copy says
+"archivo", not "afiche"): no designer, entregables, dictamen or `Adjuntos` (the DB rejects them — only the
+file to review). The tables keep their old names (`EnvioIA`, `RevisionIA`, bucket `afiches-ia`). The
+Validador *deniega* instead of rejecting: the DB still stores `RECHAZADO`, and `etiquetaEstado(…, flujo)`
+shows `Rechazado` as "Denegado" for this flujo only. The requester uploads the file to the
 private `afiches-ia` bucket (`<ticket_id>/…`, ≤10 MB,
 png/jpeg/webp/pdf) and inserts `EnvioIA`; a **Validador** (role formerly "Aprobador IA"; `/validador`,
 `pages/validador/`)
@@ -173,12 +181,21 @@ create ticket → upload → insert `EnvioIA` (storage object removed if the ins
 fails the detail page offers "Subir afiche". Asignador/Diseñador screens read tickets through
 `hooks/useTickets.ts#useTicketsDiseno` (same cache, only `flujo = 'DISENO'`).
 
-**Validación** (`flujo = 'VALIDACION'`, e.g. "Cobertura de evento"): a normal form + optional adjuntos, then
-one decision by the Validador — insert into `DecisionValidacion` (`data/validacion.ts`, one row per ticket,
-immutable, comment required to reject). The DB moves the ticket Enviado/Retrasado → Aprobado | Rechazado and
-notifies; no designer, entregables, dictamen or corrections. The Validador's tray shows both IA posters and
-pending validations; the decision is taken from `TicketDetail` (reusing `RevisarAficheModal` without
+**Confirmación** (`flujo = 'CONFIRMACION'`, e.g. "Cobertura de evento"): a normal form + optional adjuntos,
+then one decision by the Validador (Confirmar / Rechazar) — insert into `DecisionValidacion`
+(`data/validacion.ts`, one row per ticket, immutable, comment required to reject). The DB moves the ticket
+Enviado/Retrasado → Aprobado | Rechazado and notifies; no designer, entregables, dictamen or corrections. The
+Validador has two trays (`lib/bandejaValidador.ts`, shared with the sidebar counters): "Revisiones
+pendientes" (`/validador`, APROBACION) and "Solicitudes pendientes" (`/validador/solicitudes`, CONFIRMACION),
+excepcionales first; the decision is taken from `TicketDetail` (reusing `RevisarAficheModal` without
 `intento`).
+
+**Excepcionales sin diseño** (Parte 62): an APROBACION excepcional is answered in two steps inside the same
+`RevisarAficheModal` (`pendienteAceptar`): first accept/reject via `responderExcepcional` (no designer; the
+ticket stays "Enviado" with `excepcional_estado = 'ACEPTADA'`), then the normal Aprobar/Denegar — the DB
+refuses a `RevisionIA` while the excepcional is still `PENDIENTE`. A CONFIRMACION excepcional is one step:
+the `DecisionValidacion` itself answers it (calling "aceptar" on it is rejected by the DB).
+`lib/excepcional.ts#textoRespuestaExcepcional` words the answer per flujo.
 
 **Date fields**: every date input in the app is `components/ui/FechaInput.tsx` — never a raw
 `<input type="date">`. It takes/emits the same `'YYYY-MM-DD'`-or-`''` string a native date input would
@@ -319,7 +336,7 @@ clamps silently: a value outside `min` (default 0)/`max` shows "El mínimo es N"
 form blocks saving with `lib/inputNumero.ts#errorRangoNumero` (same text).
 
 **Estado visible por perspectiva**: `estado_real` is never rendered raw. `lib/estados.ts#etiquetaEstado(estado,
-perspectiva)` maps it per viewer — `'solicitante'` (Finalizado → "Esperando aprobación", Corrección → "En
+perspectiva, flujo?)` maps it per viewer — `'solicitante'` (Finalizado → "Esperando aprobación", Corrección → "En
 proceso"), `'jefe'` ("Por dictaminar"), `'diseno'` ("Entregado – esperando dictamen"), `'admin'`
 ("Finalizado (esperando aprobación)"). The *screen* picks the perspective (Mis solicitudes/boletos =
 solicitante, Jefe dashboard = jefe, Diseñador/Asignador boards = diseno, Admin/Estadísticas/Validador =
@@ -337,8 +354,12 @@ Ctrl/Cmd/middle click → new tab; inner buttons must `stopPropagation()`. `comp
 accept it — it checks `estado_registrado` (not `estado_real`), the areas the Jefe directs
 (`useAreasQueDirige`) and that no linked change is still open. "Cobertura nacional" (Parte 52) is identified
 only by `Campus.es_cobertura_nacional` (`lib/campus.ts`); Estadísticas reads each ticket's alcance
-separately because `fnEstadisticasTicketsTabla` doesn't return campus. Deliverable downloads
-(`lib/descargas.ts`, `ListaEntregables`) use 60-second signed URLs and a lazily imported `jszip`.
+separately because `fnEstadisticasTicketsTabla` doesn't return campus. A cambio urgente has a single
+instruction and no corrections (Parte 63): `DictamenModal esModificacion` hides "Pedir corrección" and the
+counter, and `components/AlertaModificacion.tsx` carries the DB's own wording. Entregables and adjuntos share
+`components/VistaPreviaArchivo.tsx` (separate "Ver" — image/PDF preview modal, else new tab — and
+"Descargar"); both use 60-second signed URLs, downloads are named by `lib/descargas.ts`
+(`{codigo}_v{n}.{ext}`, `{codigo}_adjunto{n}.{ext}`), and the entregables ZIP lazily imports `jszip`.
 
 ## Deployment
 

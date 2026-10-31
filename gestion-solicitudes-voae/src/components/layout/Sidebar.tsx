@@ -4,7 +4,7 @@ import { NAV_POR_ROL, TITULO_SECCION } from './navegacion'
 import { JERARQUIA_ROLES } from '../../types/domain'
 import type { Perfil } from '../../types/domain'
 import { useConteoSinAsignar, useTicketsEstadoReal } from '../../hooks/useTickets'
-import { afichesPorRevisar, validacionesPendientes } from '../../lib/bandejaValidador'
+import { revisionesPorHacer, confirmacionesPendientes } from '../../lib/bandejaValidador'
 import { MarcaITickets } from '../MarcaITickets'
 
 interface SidebarProps {
@@ -30,8 +30,8 @@ export function Sidebar({ perfil, onNavegar, plegado = false, onTogglePlegado }:
   const { data: tickets = [] } = useTicketsEstadoReal(esValidador)
   const contadores: Record<string, number> = {
     '/disenador': pendientesDisenador,
-    '/validador': esValidador ? afichesPorRevisar(tickets).length : 0,
-    '/validador/solicitudes': esValidador ? validacionesPendientes(tickets).length : 0,
+    '/validador': esValidador ? revisionesPorHacer(tickets).length : 0,
+    '/validador/solicitudes': esValidador ? confirmacionesPendientes(tickets).length : 0,
   }
 
   return (

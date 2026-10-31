@@ -55,7 +55,7 @@ export function JefeDashboard() {
   const [ticketDictamen, setTicketDictamen] = useState<TicketEstadoReal | null>(null)
   const [ticketCambioUrgente, setTicketCambioUrgente] = useState<TicketEstadoReal | null>(null)
   const areasQueDirige = useAreasQueDirige()
-  const { cambios } = useCambiosUrgentes()
+  const { cambios, cambioDe } = useCambiosUrgentes()
   // Estado guardado de los cambios urgentes de un ticket; uno que no está en la lista cuenta como en curso.
   const cambiosDelTicket = (origenId: number | null) =>
     cambios
@@ -122,8 +122,8 @@ export function JefeDashboard() {
       historialCompleto.filter((t) => {
         if (busqueda) {
           const campos = muestraAsignacion
-            ? [t.tipo_solicitud, t.disenador, t.solicitante, etiquetaEstado(t.estado_real, 'jefe')]
-            : [t.tipo_solicitud, t.solicitante, etiquetaEstado(t.estado_real, 'jefe')]
+            ? [t.tipo_solicitud, t.disenador, t.solicitante, etiquetaEstado(t.estado_real, 'jefe', t.flujo)]
+            : [t.tipo_solicitud, t.solicitante, etiquetaEstado(t.estado_real, 'jefe', t.flujo)]
           const coincide = coincideCodigo(t.codigo, busqueda) || campos.some((campo) => coincideTexto(campo, busqueda))
           if (!coincide) return false
         }
@@ -146,7 +146,7 @@ export function JefeDashboard() {
     ...(muestraAsignacion
       ? [{ etiqueta: 'Diseñador', valor: (t: TicketEstadoReal) => textoDisenador(t, muestraAsignacion) }]
       : []),
-    { etiqueta: 'Estado', valor: (t) => etiquetaEstado(t.estado_real, 'jefe') },
+    { etiqueta: 'Estado', valor: (t) => etiquetaEstado(t.estado_real, 'jefe', t.flujo) },
     { etiqueta: 'Registrado', valor: (t) => formatFecha(t.fecha_registro) },
     { etiqueta: 'Fecha límite', valor: (t) => formatFecha(t.fecha_limite) },
   ]
@@ -362,58 +362,121 @@ export function JefeDashboard() {
         {historial.length === 0 ? (
           <EmptyState titulo="No hay registros con estos filtros" />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-azul-niebla bg-white">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-azul-niebla/50 text-xs uppercase text-tinta-suave">
-                <tr>
-                  <th className="px-4 py-2">Ticket</th>
-                  <th className="px-4 py-2">Tipo</th>
-                  {tieneJefaturas && <th className="px-4 py-2">Área</th>}
-                  {muestraAsignacion && <th className="px-4 py-2">Diseñador</th>}
-                  <th className="px-4 py-2">Estado</th>
-                  <th className="px-4 py-2">Fecha límite</th>
-                  <th className="px-4 py-2"><span className="sr-only">Acciones</span></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-azul-niebla/60">
-                {historial.map((ticket) => (
-                  <tr key={ticket.ticket_id}>
-                    <td className="whitespace-nowrap px-4 py-2">
-                      <Link to={`/tickets/${ticket.ticket_id}`} className="font-mono text-azul-institucional hover:underline">
-                        {ticket.codigo}
-                      </Link>
-                      {ticket.es_excepcional && (
-                        <span className="ml-1.5">
-                          <BadgeExcepcional ticketId={ticket.ticket_id} />
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2">
+          <>
+            {/* Toda la fila (o la tarjeta en móvil) abre el detalle; los controles internos hacen stopPropagation. */}
+            <div className="hidden overflow-hidden rounded-xl border border-azul-niebla bg-white md:block">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-azul-niebla/50 text-xs uppercase text-tinta-suave">
+                  <tr>
+                    <th className="px-4 py-2">Ticket</th>
+                    <th className="px-4 py-2">Tipo</th>
+                    {tieneJefaturas && <th className="px-4 py-2">Área</th>}
+                    {muestraAsignacion && <th className="px-4 py-2">Diseñador</th>}
+                    <th className="px-4 py-2">Estado</th>
+                    <th className="px-4 py-2">Fecha límite</th>
+                    <th className="px-4 py-2"><span className="sr-only">Acciones</span></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-azul-niebla/60">
+                  {historial.map((ticket) => (
+                    <tr
+                      key={ticket.ticket_id}
+                      {...propsCardEnlace(`/tickets/${ticket.ticket_id}`, navigate)}
+                      aria-label={`Ticket ${ticket.codigo}`}
+                      className="cursor-pointer transition-colors duration-150 hover:bg-azul-niebla/40 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-azul-institucional"
+                    >
+                      <td className="whitespace-nowrap px-4 py-2">
+                        <Link
+                          to={`/tickets/${ticket.ticket_id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="font-mono text-azul-institucional hover:underline"
+                        >
+                          {ticket.codigo}
+                        </Link>
+                        {ticket.es_excepcional && (
+                          <span className="ml-1.5">
+                            <BadgeExcepcional ticketId={ticket.ticket_id} />
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2">
+                        {ticket.tipo_solicitud}
+                        {TAG_FLUJO[ticket.flujo as Flujo] && (
+                          <span className="ml-1.5 rounded-full bg-indigo-bruma px-2 py-0.5 text-xs text-indigo-suave">
+                            {TAG_FLUJO[ticket.flujo as Flujo]}
+                          </span>
+                        )}
+                      </td>
+                      {tieneJefaturas && <td className="px-4 py-2">{ticket.area}</td>}
+                      {muestraAsignacion && <td className="px-4 py-2">{textoDisenador(ticket, muestraAsignacion)}</td>}
+                      <td className="px-4 py-2">
+                        <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="jefe" flujo={ticket.flujo} />
+                      </td>
+                      <td className="px-4 py-2">{formatFecha(ticket.fecha_limite)}</td>
+                      <td className="whitespace-nowrap px-4 py-2 text-right">
+                        {puedePedirCambioUrgente(ticket, areasQueDirige, cambiosDelTicket(ticket.ticket_id)) && (
+                          <Button
+                            variante="secundario"
+                            className="px-2.5 py-1 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setTicketCambioUrgente(ticket)
+                            }}
+                          >
+                            <Zap size={12} /> Cambio urgente
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <ul className="space-y-2 md:hidden">
+              {historial.map((ticket) => (
+                <li key={ticket.ticket_id}>
+                  <article
+                    {...propsCardEnlace(`/tickets/${ticket.ticket_id}`, navigate)}
+                    aria-label={`Ticket ${ticket.codigo}`}
+                    className={`rounded-xl border border-azul-niebla bg-white p-4 ${CLASE_CARD_ENLACE}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-mono text-sm text-azul-institucional">{ticket.codigo}</span>
+                        {ticket.es_excepcional && <BadgeExcepcional ticketId={ticket.ticket_id} />}
+                      </div>
+                      <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="jefe" flujo={ticket.flujo} />
+                    </div>
+                    <p className="mt-1 text-sm text-tinta">
                       {ticket.tipo_solicitud}
                       {TAG_FLUJO[ticket.flujo as Flujo] && (
                         <span className="ml-1.5 rounded-full bg-indigo-bruma px-2 py-0.5 text-xs text-indigo-suave">
                           {TAG_FLUJO[ticket.flujo as Flujo]}
                         </span>
                       )}
-                    </td>
-                    {tieneJefaturas && <td className="px-4 py-2">{ticket.area}</td>}
-                    {muestraAsignacion && <td className="px-4 py-2">{textoDisenador(ticket, muestraAsignacion)}</td>}
-                    <td className="px-4 py-2">
-                      <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="jefe" />
-                    </td>
-                    <td className="px-4 py-2">{formatFecha(ticket.fecha_limite)}</td>
-                    <td className="whitespace-nowrap px-4 py-2 text-right">
-                      {puedePedirCambioUrgente(ticket, areasQueDirige, cambiosDelTicket(ticket.ticket_id)) && (
-                        <Button variante="secundario" className="px-2.5 py-1 text-xs" onClick={() => setTicketCambioUrgente(ticket)}>
-                          <Zap size={12} /> Cambio urgente
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </p>
+                    <div className="mt-1 space-y-0.5 text-xs text-tinta-suave">
+                      {tieneJefaturas && <p>{ticket.area}</p>}
+                      {muestraAsignacion && <p>Diseñador: {textoDisenador(ticket, muestraAsignacion)}</p>}
+                      <p>Fecha límite: {formatFecha(ticket.fecha_limite)}</p>
+                    </div>
+                    {puedePedirCambioUrgente(ticket, areasQueDirige, cambiosDelTicket(ticket.ticket_id)) && (
+                      <Button
+                        variante="secundario"
+                        className="mt-3 px-2.5 py-1 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setTicketCambioUrgente(ticket)
+                        }}
+                      >
+                        <Zap size={12} /> Cambio urgente
+                      </Button>
+                    )}
+                  </article>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </div>
 
@@ -424,6 +487,7 @@ export function JefeDashboard() {
           abierto
           codigo={ticketDictamen.codigo ?? ''}
           correccionesUsadas={ticketDictamen.correcciones_usadas ?? 0}
+          esModificacion={cambioDe(ticketDictamen.ticket_id) != null}
           onCerrar={() => setTicketDictamen(null)}
           onConfirmar={manejarConfirmar}
         />

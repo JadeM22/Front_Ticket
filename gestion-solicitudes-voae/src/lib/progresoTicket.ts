@@ -87,7 +87,7 @@ export function pasosProgresoTicket(ticket: TicketEstadoReal): PasoStepper[] {
 }
 
 /**
- * Etapas de un ticket de aprobación de afiches con IA: no hay diseñador ni dictamen, sino envíos del
+ * Etapas de un ticket de aprobación (flujo APROBACION): no hay diseñador ni dictamen, sino envíos del
  * solicitante y revisiones del Validador, con hasta `intentosMaximos` envíos.
  */
 export function pasosProgresoIA(ticket: TicketEstadoReal, intentosMaximos: number): PasoStepper[] {
@@ -99,14 +99,26 @@ export function pasosProgresoIA(ticket: TicketEstadoReal, intentosMaximos: numbe
   const enviada: PasoStepper = { etiqueta: 'Enviada', estado: 'completado' }
 
   if (registrado === 'Aprobado') {
-    return [enviada, { etiqueta: 'Revisión del afiche', estado: 'completado' }, { etiqueta: 'Aprobada', estado: 'completado' }]
+    return [enviada, { etiqueta: 'Revisión del archivo', estado: 'completado' }, { etiqueta: 'Aprobada', estado: 'completado' }]
   }
   if (registrado === 'Rechazado') {
+    // Una excepcional se puede rechazar antes de revisarla (Parte 62): eso no es una denegación.
+    if (ticket.excepcional_estado === 'RECHAZADA') {
+      return [
+        enviada,
+        {
+          etiqueta: 'Rechazada',
+          estado: 'actual',
+          alerta: true,
+          descripcion: ticket.excepcional_motivo_rechazo ?? undefined,
+        },
+      ]
+    }
     return [
       enviada,
-      { etiqueta: 'Revisión del afiche', estado: 'completado' },
+      { etiqueta: 'Revisión del archivo', estado: 'completado' },
       {
-        etiqueta: 'Rechazada',
+        etiqueta: 'Denegada',
         estado: 'actual',
         alerta: true,
         descripcion: `Se usaron los ${intentosMaximos} intentos`,
@@ -116,20 +128,20 @@ export function pasosProgresoIA(ticket: TicketEstadoReal, intentosMaximos: numbe
 
   const pasos: PasoStepper[] = []
   if (intentosUsados === 0) {
-    pasos.push({ etiqueta: 'Enviada', estado: 'actual', descripcion: 'Falta subir el afiche', alerta: retrasado })
-    pasos.push({ etiqueta: 'Revisión del afiche', estado: 'pendiente' })
+    pasos.push({ etiqueta: 'Enviada', estado: 'actual', descripcion: 'Falta subir el archivo', alerta: retrasado })
+    pasos.push({ etiqueta: 'Revisión del archivo', estado: 'pendiente' })
   } else if (registrado === 'Corrección') {
     pasos.push(enviada)
-    pasos.push({ etiqueta: 'Revisión del afiche', estado: 'completado' })
+    pasos.push({ etiqueta: 'Revisión del archivo', estado: 'completado' })
     pasos.push({
       etiqueta: 'Corrección',
       estado: 'actual',
-      descripcion: `Corrige y reenvía el afiche (quedan ${intentosMaximos - intentosUsados} intento(s))`,
+      descripcion: `Corrige y reenvía el archivo (quedan ${intentosMaximos - intentosUsados} intento(s))`,
     })
   } else {
     pasos.push(enviada)
     pasos.push({
-      etiqueta: 'Revisión del afiche',
+      etiqueta: 'Revisión del archivo',
       estado: 'actual',
       alerta: retrasado,
       descripcion: retrasado
@@ -143,18 +155,18 @@ export function pasosProgresoIA(ticket: TicketEstadoReal, intentosMaximos: numbe
   return pasos
 }
 
-/** Etapas de una solicitud de validación (Cobertura de evento): una sola decisión del Validador. */
+/** Etapas de una solicitud de confirmación (p. ej. Cobertura de evento): una sola decisión del Validador. */
 export function pasosProgresoValidacion(ticket: TicketEstadoReal, motivoRechazo: string | null): PasoStepper[] {
   const registrado = ticket.estado_registrado
   const enviada: PasoStepper = { etiqueta: 'Enviada', estado: 'completado' }
 
   if (registrado === 'Aprobado') {
-    return [enviada, { etiqueta: 'Validación', estado: 'completado' }, { etiqueta: 'Aprobada', estado: 'completado' }]
+    return [enviada, { etiqueta: 'Confirmación', estado: 'completado' }, { etiqueta: 'Confirmada', estado: 'completado' }]
   }
   if (registrado === 'Rechazado') {
     return [
       enviada,
-      { etiqueta: 'Validación', estado: 'completado' },
+      { etiqueta: 'Confirmación', estado: 'completado' },
       { etiqueta: 'Rechazada', estado: 'actual', alerta: true, descripcion: motivoRechazo ?? undefined },
     ]
   }
@@ -162,11 +174,11 @@ export function pasosProgresoValidacion(ticket: TicketEstadoReal, motivoRechazo:
   return [
     enviada,
     {
-      etiqueta: 'Validación',
+      etiqueta: 'Confirmación',
       estado: 'actual',
       alerta: retrasado,
       descripcion: retrasado ? 'Fuera de plazo' : 'En revisión',
     },
-    { etiqueta: 'Aprobada', estado: 'pendiente' },
+    { etiqueta: 'Confirmada', estado: 'pendiente' },
   ]
 }

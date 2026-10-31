@@ -1178,6 +1178,8 @@ export type Database = {
         Args: { p_tipo_solicitud_id: number }
         Returns: string
       }
+      fnHorarioFinEscalar: { Args: never; Returns: string }
+      fnHorarioInicioEscalar: { Args: never; Returns: string }
       fnLiberarTicketsDisenadorEscalar: {
         Args: { p_motivo: string; p_usuario_id: number }
         Returns: number

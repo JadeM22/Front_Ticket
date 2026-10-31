@@ -7,7 +7,7 @@ interface SelectorAficheProps {
   onCambiar: (valor: AficheSeleccionado) => void
 }
 
-/** Archivo del afiche + comentario opcional. Se usa al crear la solicitud y al subir o reenviar desde el detalle. */
+/** Archivo del archivo + comentario opcional. Se usa al crear la solicitud y al subir o reenviar desde el detalle. */
 export function SelectorAfiche({ valor, onCambiar }: SelectorAficheProps) {
   const error = valor.archivo ? validarArchivoAfiche(valor.archivo) : null
 
@@ -18,7 +18,7 @@ export function SelectorAfiche({ valor, onCambiar }: SelectorAficheProps) {
         onArchivo={(archivo) => onCambiar({ ...valor, archivo })}
         aceptar={ACEPTAR_AFICHE}
         error={error}
-        indicacion="Haz clic o arrastra el afiche (PNG, JPG, WEBP o PDF, máx. 10 MB)"
+        indicacion="Haz clic o arrastra el archivo (PNG, JPG, WEBP o PDF, máx. 10 MB)"
       />
       <Campo etiqueta="Comentario para quien revisa (opcional)">
         <textarea

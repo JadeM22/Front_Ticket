@@ -83,7 +83,7 @@ export function TicketBoleto({ ticket, mostrarDisenador }: TicketBoletoProps) {
             {ticket.titulo}
           </p>
           {/* El boleto solo vive en "Mis solicitudes": siempre se mira como solicitante. */}
-          <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="solicitante" />
+          <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="solicitante" flujo={ticket.flujo} />
         </div>
 
         {(muestraCorrecciones || (ticket.es_excepcional && ticket.excepcional_estado === 'PENDIENTE')) && (
@@ -94,7 +94,7 @@ export function TicketBoleto({ ticket, mostrarDisenador }: TicketBoletoProps) {
                   correccionesUsadas >= CORRECCIONES_MAXIMAS ? 'bg-coral-bruma text-coral' : 'bg-ambar-bruma text-ambar'
                 }`}
               >
-                {ticket.flujo === 'APROBACION_IA' ? 'Rechazos' : 'Correcciones'} {correccionesUsadas}/{CORRECCIONES_MAXIMAS}
+                {ticket.flujo === 'APROBACION' ? 'Denegaciones' : 'Correcciones'} {correccionesUsadas}/{CORRECCIONES_MAXIMAS}
               </span>
             )}
             {ticket.es_excepcional && ticket.excepcional_estado === 'PENDIENTE' && (

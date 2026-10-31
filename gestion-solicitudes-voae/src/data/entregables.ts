@@ -92,14 +92,15 @@ export async function subirEntregableLink({
   return data
 }
 
-export async function crearUrlFirmada(ruta: string): Promise<string> {
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(ruta, 3600)
+/** Ver y descargar usan URLs de vida corta: se piden justo antes de usarlas. */
+const SEGUNDOS_URL_DESCARGA = 60
+
+/** URL firmada para ver el archivo (vista previa o pestaña nueva), sin forzar la descarga. */
+export async function crearUrlVer(ruta: string): Promise<string> {
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(ruta, SEGUNDOS_URL_DESCARGA)
   if (error) throw error
   return data.signedUrl
 }
-
-/** Las descargas usan URLs de vida corta: se piden justo antes de usarlas. */
-const SEGUNDOS_URL_DESCARGA = 60
 
 /** URL firmada que el navegador descarga (no abre) con el nombre legible `nombre`. */
 export async function crearUrlDescarga(ruta: string, nombre: string): Promise<string> {

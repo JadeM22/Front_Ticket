@@ -11,7 +11,7 @@ interface SubirAficheModalProps {
   onCerrar: () => void
   onSubido: () => void
   ticketId: number
-  /** "Subir afiche" (primer envío que quedó pendiente) o "Reenviar afiche" (en Corrección). */
+  /** "Subir archivo" (primer envío que quedó pendiente) o "Reenviar archivo" (en Corrección). */
   titulo: string
 }
 
@@ -29,7 +29,7 @@ function Formulario({ ticketId, onCerrar, onSubido }: Pick<SubirAficheModalProps
 
   async function enviar() {
     if (!afiche.archivo) {
-      toast.error('Selecciona el archivo del afiche.')
+      toast.error('Selecciona el archivo a revisar.')
       return
     }
     const error = validarArchivoAfiche(afiche.archivo)
@@ -40,11 +40,11 @@ function Formulario({ ticketId, onCerrar, onSubido }: Pick<SubirAficheModalProps
     setEnviando(true)
     try {
       await subirAficheIA({ ticketId, archivo: afiche.archivo, comentario: afiche.comentario })
-      toast.success('Afiche enviado a revisión.')
+      toast.success('Archivo enviado a revisión.')
       onSubido()
       onCerrar()
     } catch (err) {
-      toast.error(await mensajeError(err, 'No se pudo enviar el afiche.'))
+      toast.error(await mensajeError(err, 'No se pudo enviar el archivo.'))
     } finally {
       setEnviando(false)
     }
@@ -58,7 +58,7 @@ function Formulario({ ticketId, onCerrar, onSubido }: Pick<SubirAficheModalProps
           Cancelar
         </Button>
         <Button onClick={enviar} cargando={enviando} disabled={!afiche.archivo}>
-          Enviar afiche
+          Enviar archivo
         </Button>
       </div>
     </div>

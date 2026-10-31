@@ -53,7 +53,7 @@ export const NAV_POR_ROL: Record<RolNombre, ItemNav[]> = {
   ],
   Asignador: [{ etiqueta: 'Asignación', ruta: '/asignador', icono: Shuffle }],
   Validador: [
-    { etiqueta: 'Afiches pendientes', ruta: '/validador', icono: Sparkles },
+    { etiqueta: 'Revisiones pendientes', ruta: '/validador', icono: Sparkles },
     { etiqueta: 'Solicitudes pendientes', ruta: '/validador/solicitudes', icono: ClipboardCheck },
   ],
   Diseñador: [{ etiqueta: 'Mi tablero', ruta: '/disenador', icono: Kanban }],

@@ -41,22 +41,23 @@ export interface Perfil {
 }
 
 /**
- * Cómo se atiende un tipo de solicitud: por el equipo de diseño, subiendo un afiche que revisa un
- * Validador (IA), o con una sola decisión del Validador (Cobertura de evento).
+ * Cómo se atiende un tipo de solicitud: por el equipo de diseño, subiendo un archivo que un Validador
+ * aprueba o deniega (Aprobación), o con una sola decisión del Validador (Confirmación, p. ej. Cobertura
+ * de evento).
  */
-export type Flujo = 'DISENO' | 'APROBACION_IA' | 'VALIDACION'
+export type Flujo = 'DISENO' | 'APROBACION' | 'CONFIRMACION'
 
 export const ETIQUETA_FLUJO: Record<Flujo, string> = {
   DISENO: 'Diseño',
-  APROBACION_IA: 'Aprobación con IA',
-  VALIDACION: 'Validación',
+  APROBACION: 'Aprobación',
+  CONFIRMACION: 'Confirmación',
 }
 
 /** Etiqueta corta para distinguir en listas los tickets que no son de diseño. */
 export const TAG_FLUJO: Record<Flujo, string | null> = {
   DISENO: null,
-  APROBACION_IA: 'IA',
-  VALIDACION: 'Validación',
+  APROBACION: 'Aprobación',
+  CONFIRMACION: 'Confirmación',
 }
 
 /** Agrupación visual de los tipos en "Nueva solicitud" (`TipoSolicitud.categoria`). */
@@ -102,7 +103,7 @@ export type DecisionJefe = 'APROBADO' | 'CORRECCION'
 
 export type DecisionIA = 'APROBADO' | 'RECHAZADO'
 
-/** Decisión única del Validador en el flujo VALIDACION (`DecisionValidacion`). */
+/** Decisión única del Validador en el flujo CONFIRMACION (`DecisionValidacion`). */
 export type DecisionValidacion = 'APROBADO' | 'RECHAZADO'
 
 export type TipoCampo =

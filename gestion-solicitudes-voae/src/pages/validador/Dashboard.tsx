@@ -13,29 +13,31 @@ import { EstadoChip } from '../../components/EstadoChip'
 import { propsCardEnlace } from '../../hooks/useCardEnlace'
 import { BadgeExcepcional } from '../../components/BadgeExcepcional'
 import { MiniaturaAfiche } from '../../components/afichesIA/HistorialEnviosIA'
-import { afichesPorRevisar, validacionesPendientes } from '../../lib/bandejaValidador'
+import { revisionesPorHacer, confirmacionesPendientes } from '../../lib/bandejaValidador'
 import type { TicketEstadoReal } from '../../types/domain'
 
-/** El más urgente primero; los que no tienen fecha límite al final. */
-function porFechaLimite(a: TicketEstadoReal, b: TicketEstadoReal): number {
+/** Las excepcionales primero; dentro de cada grupo, el más urgente primero y sin fecha límite al final. */
+function porPrioridad(a: TicketEstadoReal, b: TicketEstadoReal): number {
+  if (Boolean(a.es_excepcional) !== Boolean(b.es_excepcional)) return a.es_excepcional ? -1 : 1
   return (a.fecha_limite ?? '9999').localeCompare(b.fecha_limite ?? '9999')
 }
 
 /**
- * Bandeja del Validador, en dos páginas con su propio ítem de menú (E-09): `afiches` (con IA, esperando
- * revisión) y `solicitudes` (validación, p. ej. Cobertura de evento, esperando su decisión). RLS ya
- * limita qué tickets recibe; aquí solo se filtra por flujo y estado. La decisión se toma desde el detalle.
+ * Bandeja del Validador, en dos páginas con su propio ítem de menú (E-09): `revisiones` (flujo
+ * APROBACION, con un archivo esperando revisión) y `solicitudes` (flujo CONFIRMACION, p. ej. Cobertura de
+ * evento, esperando su decisión). RLS ya limita qué tickets recibe; aquí solo se filtra por flujo y
+ * estado. La decisión se toma desde el detalle.
  */
-export function ValidadorDashboard({ vista }: { vista: 'afiches' | 'solicitudes' }) {
+export function ValidadorDashboard({ vista }: { vista: 'revisiones' | 'solicitudes' }) {
   const { data: tickets = [], isLoading } = useTicketsEstadoReal()
-  const afiches = afichesPorRevisar(tickets).sort(porFechaLimite)
-  const idsAfiches = afiches.map((t) => t.ticket_id!)
+  const revisiones = revisionesPorHacer(tickets).sort(porPrioridad)
+  const idsRevisiones = revisiones.map((t) => t.ticket_id!)
 
-  // Miniaturas: el último envío de cada afiche, en una sola consulta (E-08).
+  // Miniaturas: el último envío de cada ticket, en una sola consulta (E-08).
   const { data: ultimosEnvios } = useQuery({
-    queryKey: ['afiches-ia', 'ultimos-envios', idsAfiches],
-    queryFn: () => listarUltimosEnviosIA(idsAfiches),
-    enabled: vista === 'afiches' && idsAfiches.length > 0,
+    queryKey: ['afiches-ia', 'ultimos-envios', idsRevisiones],
+    queryFn: () => listarUltimosEnviosIA(idsRevisiones),
+    enabled: vista === 'revisiones' && idsRevisiones.length > 0,
   })
 
   if (isLoading) return <SkeletonLista filas={4} />
@@ -44,20 +46,20 @@ export function ValidadorDashboard({ vista }: { vista: 'afiches' | 'solicitudes'
     return (
       <Seccion
         titulo="Solicitudes pendientes"
-        tickets={validacionesPendientes(tickets).sort(porFechaLimite)}
+        tickets={confirmacionesPendientes(tickets).sort(porPrioridad)}
         vacio="No hay solicitudes pendientes"
         detalle={() => null}
       />
     )
   }
 
-  const enCorreccion = tickets.filter((t) => t.flujo === 'APROBACION_IA' && t.estado_registrado === 'Corrección').length
+  const enCorreccion = tickets.filter((t) => t.flujo === 'APROBACION' && t.estado_registrado === 'Corrección').length
 
   return (
     <Seccion
-      titulo="Afiches pendientes"
-      tickets={afiches}
-      vacio="No hay afiches pendientes"
+      titulo="Revisiones pendientes"
+      tickets={revisiones}
+      vacio="No hay revisiones pendientes"
       extra={enCorreccion > 0 ? <> · {enCorreccion} esperando que el solicitante reenvíe</> : null}
       miniatura={(ticket) => {
         const envio = ultimosEnvios?.get(ticket.ticket_id!)
@@ -127,11 +129,18 @@ function Seccion({
                     <p className="font-mono text-sm text-tinta-suave">{ticket.codigo}</p>
                     {ticket.es_excepcional && <BadgeExcepcional ticketId={ticket.ticket_id} />}
                   </div>
-                  <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="admin" />
+                  <EstadoChip estado={ticket.estado_real ?? ''} perspectiva="admin" flujo={ticket.flujo} />
                 </div>
-                <p className="truncate font-semibold text-tinta" title={ticket.titulo ?? undefined}>
-                  {ticket.titulo || ticket.tipo_solicitud}
-                </p>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-tinta" title={ticket.titulo ?? undefined}>
+                    {ticket.titulo || ticket.tipo_solicitud}
+                  </p>
+                  {ticket.titulo && (
+                    <p className="truncate text-xs font-medium text-azul-institucional" title={ticket.tipo_solicitud ?? undefined}>
+                      {ticket.tipo_solicitud}
+                    </p>
+                  )}
+                </div>
                 <div className="space-y-0.5">
                   <p
                     className="flex items-start gap-1.5 truncate text-sm font-medium text-tinta"
@@ -145,6 +154,11 @@ function Seccion({
                     <span className="line-clamp-2">{ticket.area}</span>
                   </p>
                 </div>
+                {ticket.es_excepcional && (
+                  <p className="rounded-lg bg-ambar-bruma/60 px-2 py-1 text-xs font-medium text-ambar">
+                    Solicitud excepcional: plazo de 2 días hábiles.
+                  </p>
+                )}
                 <div className="space-y-0.5 border-t border-azul-niebla/60 pt-2 text-xs text-tinta-suave">
                   {detalle(ticket)}
                   <p className={ticket.fuera_de_plazo ? 'flex items-center gap-1 font-semibold text-coral' : undefined}>

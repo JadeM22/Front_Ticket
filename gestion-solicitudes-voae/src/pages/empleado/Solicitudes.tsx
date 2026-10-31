@@ -41,9 +41,9 @@ export function EmpleadoSolicitudesPage() {
 
   // El filtro usa las etiquetas que ve el solicitante: "En proceso" incluye En proceso y Corrección, y
   // "Esperando aprobación" es Finalizado.
-  const etiquetaDe = (t: { estado_real: string | null }) => etiquetaEstado(t.estado_real, 'solicitante')
+  const etiquetaDe = (t: { estado_real: string | null; flujo: string | null }) => etiquetaEstado(t.estado_real, 'solicitante', t.flujo)
   const estados = useMemo(
-    () => Array.from(new Set(tickets.map((t) => etiquetaEstado(t.estado_real, 'solicitante')).filter(Boolean))),
+    () => Array.from(new Set(tickets.map((t) => etiquetaEstado(t.estado_real, 'solicitante', t.flujo)).filter(Boolean))),
     [tickets],
   )
   const tipos = useMemo(() => Array.from(new Set(tickets.map((t) => t.tipo_solicitud).filter(Boolean))), [tickets])

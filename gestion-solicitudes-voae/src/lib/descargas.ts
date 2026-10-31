@@ -1,5 +1,5 @@
 /**
- * Nombres y disparadores de descarga de entregables. La ruta en Storage es
+ * Nombres y disparadores de descarga de entregables y adjuntos. La ruta en Storage es
  * `${ticketId}/${uuid}-${nombreLimpio}` (`lib/entregables.ts`): de ahí solo se toma la extensión, para
  * que el archivo descargado nunca exponga la ruta interna.
  */
@@ -19,6 +19,27 @@ export function nombreDescarga(codigo: string, version: number, ruta: string, in
   const ext = extensionDe(ruta)
   const sufijo = totalEnVersion > 1 ? `_${indice + 1}` : ''
   return `${codigo}_v${version}${sufijo}${ext ? `.${ext}` : ''}`
+}
+
+/** `{codigo}_adjunto{n}.{ext}`: los adjuntos no tienen versión, se numeran por orden de subida (desde 1). */
+export function nombreDescargaAdjunto(codigo: string, numero: number, ruta: string): string {
+  const ext = extensionDe(ruta)
+  return `${codigo}_adjunto${numero}${ext ? `.${ext}` : ''}`
+}
+
+const EXTENSIONES_IMAGEN = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'bmp', 'avif']
+
+/**
+ * Qué vista previa admite un archivo: `imagen` o `pdf` se abren en el modal; `null` (cualquier otro tipo)
+ * se abre en una pestaña nueva. Manda el MIME si se conoce; si no, la extensión de la ruta.
+ */
+export function tipoVistaPrevia(mime: string | null | undefined, ruta: string): 'imagen' | 'pdf' | null {
+  if (mime?.startsWith('image/')) return 'imagen'
+  if (mime === 'application/pdf') return 'pdf'
+  const ext = extensionDe(ruta)
+  if (EXTENSIONES_IMAGEN.includes(ext)) return 'imagen'
+  if (ext === 'pdf') return 'pdf'
+  return null
 }
 
 /** La URL firmada ya trae `Content-Disposition: attachment`, así que basta con seguirla. */

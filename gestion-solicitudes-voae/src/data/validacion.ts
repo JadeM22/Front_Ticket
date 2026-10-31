@@ -4,7 +4,7 @@ import type { DecisionValidacion as Decision } from '../types/domain'
 
 export type DecisionValidacion = Tables<{ schema: 'Solicitudes' }, 'DecisionValidacion'>
 
-/** Una solicitud de flujo VALIDACION tiene a lo sumo una decisión (la base lo garantiza). */
+/** Una solicitud de flujo CONFIRMACION tiene a lo sumo una decisión (la base lo garantiza). */
 export async function obtenerDecisionValidacion(ticketId: number): Promise<DecisionValidacion | null> {
   const { data, error } = await supabase
     .schema('Solicitudes')

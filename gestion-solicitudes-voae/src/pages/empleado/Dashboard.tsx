@@ -18,10 +18,10 @@ export function EmpleadoDashboard() {
   const tickets = todos.filter((t) => t.usuario_registro === perfil?.id)
 
   // Se agrupa por lo que ve el solicitante: "En proceso" junta En proceso y Corrección.
-  const conteos = tickets.reduce<Record<string, { estado: string; total: number }>>((acumulado, ticket) => {
+  const conteos = tickets.reduce<Record<string, { estado: string; flujo: string | null; total: number }>>((acumulado, ticket) => {
     const estado = ticket.estado_real ?? 'Sin estado'
-    const etiqueta = etiquetaEstado(estado, 'solicitante')
-    acumulado[etiqueta] ??= { estado, total: 0 }
+    const etiqueta = etiquetaEstado(estado, 'solicitante', ticket.flujo)
+    acumulado[etiqueta] ??= { estado, flujo: ticket.flujo, total: 0 }
     acumulado[etiqueta].total++
     return acumulado
   }, {})
@@ -44,9 +44,9 @@ export function EmpleadoDashboard() {
         <SkeletonLista filas={2} />
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {Object.entries(conteos).map(([etiqueta, { estado, total }]) => (
+          {Object.entries(conteos).map(([etiqueta, { estado, flujo, total }]) => (
             <Card key={etiqueta} className="flex flex-col gap-2">
-              <EstadoChip estado={estado} perspectiva="solicitante" />
+              <EstadoChip estado={estado} perspectiva="solicitante" flujo={flujo} />
               <p className="font-mono text-2xl font-bold text-azul-noche">{total}</p>
             </Card>
           ))}
